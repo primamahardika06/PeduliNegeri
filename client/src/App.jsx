@@ -1,8 +1,92 @@
-function App() {
+import React, { useState, useEffect } from 'react'
+import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom'
+import LoginPages from './pages/public_pages/LoginPages'
+import HomePages from './pages/public_pages/HomePages'
+import AdminDashboard from './components/admin/adminDashboard'
+import { authService } from './services/authService'
+
+export default function App() {
+  const [currentUser, setCurrentUser] = useState(() => authService.getCurrentUser())
+
+  useEffect(() => {
+    // Sinkronisasi user saat render awal
+    const user = authService.getCurrentUser()
+    setCurrentUser(user)
+  }, [])
 
   return (
-    <h1 className="text-blue-950 flex justify-center text-6xl">Hello World</h1>
+    <BrowserRouter>
+      <Routes>
+        {/* Halaman Login & Registrasi */}
+        <Route 
+          path="/login" 
+          element={
+            currentUser ? (
+              currentUser.role === 'admin' ? (
+                <Navigate to="/admin" replace />
+              ) : (
+                <Navigate to="/home" replace />
+              )
+            ) : (
+              <LoginPages onLoginSuccess={(user) => setCurrentUser(user)} />
+            )
+          } 
+        />
+
+        {/* Halaman Beranda Pengguna Biasa (User) */}
+        <Route 
+          path="/home" 
+          element={
+            currentUser ? (
+              <HomePages 
+                currentUser={currentUser} 
+                onLogout={() => setCurrentUser(null)} 
+              />
+            ) : (
+              <Navigate to="/login" replace />
+            )
+          } 
+        />
+
+        {/* Halaman Dashboard Khusus Administrator */}
+        <Route 
+          path="/admin" 
+          element={
+            currentUser ? (
+              currentUser.role === 'admin' ? (
+                <AdminDashboard 
+                  currentUser={currentUser} 
+                  onLogout={() => setCurrentUser(null)} 
+                />
+              ) : (
+                // Jika user biasa mencoba masuk ke admin, arahkan ke beranda user
+                <Navigate to="/home" replace />
+              )
+            ) : (
+              <Navigate to="/login" replace />
+            )
+          } 
+        />
+
+        {/* Root Redirect */}
+        <Route 
+          path="/" 
+          element={
+            currentUser ? (
+              currentUser.role === 'admin' ? (
+                <Navigate to="/admin" replace />
+              ) : (
+                <Navigate to="/home" replace />
+              )
+            ) : (
+              <Navigate to="/login" replace />
+            )
+          } 
+        />
+
+        {/* Catch all fallback */}
+        <Route path="*" element={<Navigate to="/login" replace />} />
+      </Routes>
+    </BrowserRouter>
   )
 }
-
-export default App
