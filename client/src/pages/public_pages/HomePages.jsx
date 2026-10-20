@@ -1,25 +1,59 @@
-import React from 'react'
+import React, { useState } from 'react'
 import { useNavigate } from 'react-router-dom'
-import { 
-  HeartHandshake, 
-  LogOut, 
-  User, 
-  FileText, 
-  PlusCircle, 
-  Clock, 
-  CheckCircle, 
-  MessageSquare, 
-  MapPin, 
-  ShieldAlert,
+import {
+  HeartHandshake,
+  LogOut,
+  User,
+  FileText,
+  PlusCircle,
+  Clock,
+  CheckCircle,
+  MapPin,
   ChevronRight,
   TrendingUp,
-  Award
+  Send,
+  ArrowRight,
+  Menu,
+  X,
 } from 'lucide-react'
 import { authService } from '../../services/authService'
+
+const STATUS_STYLES = {
+  'Sedang Diproses': {
+    bg: 'bg-[var(--color-apricot)]',
+    text: 'text-[var(--color-ink)]',
+    border: 'border-[var(--color-coral)]',
+    dot: 'bg-[var(--color-coral)]',
+  },
+  Selesai: {
+    bg: 'bg-emerald-100',
+    text: 'text-emerald-800',
+    border: 'border-emerald-300',
+    dot: 'bg-emerald-500',
+  },
+  Diverifikasi: {
+    bg: 'bg-[color:var(--color-periwinkle)]/15',
+    text: 'text-[var(--color-periwinkle-deep)]',
+    border: 'border-[var(--color-periwinkle)]',
+    dot: 'bg-[var(--color-periwinkle)]',
+  },
+}
+
+function getStatusStyle(status) {
+  return (
+    STATUS_STYLES[status] || {
+      bg: 'bg-[var(--color-cream)]',
+      text: 'text-[var(--color-ink)]',
+      border: 'border-[var(--color-line)]',
+      dot: 'bg-[var(--color-muted)]',
+    }
+  )
+}
 
 export default function HomePages({ currentUser, onLogout }) {
   const navigate = useNavigate()
   const user = currentUser || authService.getCurrentUser()
+  const [mobileMenuOpen, setMobileMenuOpen] = useState(false)
 
   const handleLogout = () => {
     authService.logout()
@@ -27,7 +61,8 @@ export default function HomePages({ currentUser, onLogout }) {
     navigate('/login')
   }
 
-  // Dummy activity data for demo
+  const displayName = user?.fullName || user?.email?.split('@')[0] || 'Pengguna'
+
   const sampleReports = [
     {
       id: 'LAP-1029',
@@ -36,7 +71,6 @@ export default function HomePages({ currentUser, onLogout }) {
       location: 'Kecamatan Gambir, Jakarta Pusat',
       date: '19 Okt 2026',
       status: 'Sedang Diproses',
-      statusColor: 'bg-amber-500/10 text-amber-400 border-amber-500/30'
     },
     {
       id: 'LAP-1028',
@@ -45,7 +79,6 @@ export default function HomePages({ currentUser, onLogout }) {
       location: 'Kelurahan Sukajadi, Bandung',
       date: '18 Okt 2026',
       status: 'Selesai',
-      statusColor: 'bg-emerald-500/10 text-emerald-400 border-emerald-500/30'
     },
     {
       id: 'LAP-1027',
@@ -54,190 +87,398 @@ export default function HomePages({ currentUser, onLogout }) {
       location: 'Wonokromo, Surabaya',
       date: '17 Okt 2026',
       status: 'Diverifikasi',
-      statusColor: 'bg-blue-500/10 text-blue-400 border-blue-500/30'
-    }
+    },
+  ]
+
+  const summaryCards = [
+    {
+      label: 'Total Laporan Anda',
+      value: sampleReports.length,
+      icon: FileText,
+      accent: 'var(--color-coral)',
+      accentBg: 'var(--color-coral)',
+    },
+    {
+      label: 'Sedang Diproses',
+      value: sampleReports.filter((r) => r.status === 'Sedang Diproses').length,
+      icon: Clock,
+      accent: 'var(--color-periwinkle-deep)',
+      accentBg: 'var(--color-periwinkle)',
+    },
+    {
+      label: 'Terselesaikan',
+      value: sampleReports.filter((r) => r.status === 'Selesai').length,
+      icon: CheckCircle,
+      accent: '#2e7d5b',
+      accentBg: '#4ade80',
+    },
   ]
 
   return (
-    <div className="min-h-screen bg-slate-950 text-slate-100 font-sans">
-      
-      {/* Top Navbar */}
-      <nav className="border-b border-slate-800 bg-slate-900/80 backdrop-blur-md sticky top-0 z-50">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-16 flex items-center justify-between">
-          
+    <div
+      className="min-h-screen font-[family-name:var(--font-sans)]"
+      style={{ backgroundColor: 'var(--color-surface)' }}
+    >
+      {/* ── Navbar ──────────────────────────────────────────── */}
+      <nav
+        className="sticky top-0 z-50 backdrop-blur-md"
+        style={{
+          backgroundColor: 'rgba(255, 246, 239, 0.85)',
+          borderBottom: '1px solid var(--color-line)',
+        }}
+      >
+        <div className="mx-auto max-w-6xl flex items-center justify-between px-5 h-16">
           {/* Brand */}
-          <div className="flex items-center gap-3">
-            <div className="w-10 h-10 rounded-xl bg-linear-to-tr from-red-600 to-rose-500 flex items-center justify-center text-white shadow-md shadow-red-600/30">
-              <HeartHandshake className="w-5 h-5" />
-            </div>
-            <div>
-              <span className="text-xl font-bold tracking-tight text-white">
-                Peduli<span className="text-red-500">Negeri</span>
-              </span>
-              <span className="hidden sm:inline-block ml-2 text-xs px-2 py-0.5 rounded-full bg-slate-800 text-slate-400 border border-slate-700">
-                Portal Warga
-              </span>
-            </div>
-          </div>
+          <a href="/home" className="flex items-center gap-2.5 select-none">
+            <span
+              className="w-9 h-9 rounded-xl flex items-center justify-center text-white"
+              style={{ backgroundColor: 'var(--color-coral)' }}
+            >
+              <HeartHandshake className="w-[18px] h-[18px]" />
+            </span>
+            <span
+              className="text-lg font-[family-name:var(--font-display)] tracking-tight"
+              style={{ color: 'var(--color-ink)' }}
+            >
+              Peduli
+              <span style={{ color: 'var(--color-coral)' }}>Negeri</span>
+            </span>
+          </a>
 
-          {/* User Profile & Logout */}
-          <div className="flex items-center gap-3 sm:gap-4">
-            <div className="flex items-center gap-2.5 bg-slate-800/80 border border-slate-700/60 rounded-xl px-3 py-1.5">
-              <div className="w-7 h-7 rounded-lg bg-red-500/20 text-red-400 flex items-center justify-center font-bold text-xs">
-                <User className="w-4 h-4" />
-              </div>
-              <div className="text-left hidden sm:block">
-                <p className="text-xs font-semibold text-slate-200 leading-none">
-                  {user?.fullName || user?.email?.split('@')[0] || 'Pengguna'}
+          {/* Desktop user section */}
+          <div className="hidden sm:flex items-center gap-3">
+            <div
+              className="flex items-center gap-2 px-3 py-1.5 rounded-xl"
+              style={{
+                backgroundColor: 'var(--color-cream)',
+                border: '1px solid var(--color-line)',
+              }}
+            >
+              <span
+                className="w-7 h-7 rounded-lg flex items-center justify-center text-xs font-bold"
+                style={{
+                  backgroundColor: 'var(--color-apricot)',
+                  color: 'var(--color-coral-deep)',
+                }}
+              >
+                {displayName.charAt(0).toUpperCase()}
+              </span>
+              <div className="text-left">
+                <p
+                  className="text-xs font-semibold leading-none"
+                  style={{ color: 'var(--color-ink)' }}
+                >
+                  {displayName}
                 </p>
-                <span className="text-[10px] text-red-400 font-medium uppercase tracking-wider">
-                  User
+                <span
+                  className="text-[10px] font-medium uppercase tracking-wider"
+                  style={{ color: 'var(--color-muted)' }}
+                >
+                  Warga
                 </span>
               </div>
             </div>
 
             <button
               onClick={handleLogout}
-              className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-medium bg-slate-800 hover:bg-red-500/20 text-slate-300 hover:text-red-400 border border-slate-700 hover:border-red-500/30 transition-all duration-200"
+              className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-medium transition-colors duration-200"
+              style={{
+                backgroundColor: 'var(--color-cream)',
+                color: 'var(--color-muted)',
+                border: '1px solid var(--color-line)',
+              }}
+              onMouseEnter={(e) => {
+                e.currentTarget.style.backgroundColor = 'var(--color-coral)'
+                e.currentTarget.style.color = '#fff'
+                e.currentTarget.style.borderColor = 'var(--color-coral)'
+              }}
+              onMouseLeave={(e) => {
+                e.currentTarget.style.backgroundColor = 'var(--color-cream)'
+                e.currentTarget.style.color = 'var(--color-muted)'
+                e.currentTarget.style.borderColor = 'var(--color-line)'
+              }}
               title="Keluar dari akun"
             >
               <LogOut className="w-3.5 h-3.5" />
-              <span className="hidden sm:inline">Keluar</span>
+              Keluar
             </button>
           </div>
 
+          {/* Mobile hamburger */}
+          <button
+            className="sm:hidden w-9 h-9 flex items-center justify-center rounded-lg"
+            style={{ color: 'var(--color-ink)' }}
+            onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
+            aria-label={mobileMenuOpen ? 'Tutup menu' : 'Buka menu'}
+          >
+            {mobileMenuOpen ? <X className="w-5 h-5" /> : <Menu className="w-5 h-5" />}
+          </button>
         </div>
+
+        {/* Mobile menu dropdown */}
+        {mobileMenuOpen && (
+          <div
+            className="sm:hidden px-5 pb-4 space-y-3"
+            style={{ borderTop: '1px solid var(--color-line)' }}
+          >
+            <div className="flex items-center gap-2 pt-3">
+              <span
+                className="w-8 h-8 rounded-lg flex items-center justify-center text-sm font-bold"
+                style={{
+                  backgroundColor: 'var(--color-apricot)',
+                  color: 'var(--color-coral-deep)',
+                }}
+              >
+                {displayName.charAt(0).toUpperCase()}
+              </span>
+              <div>
+                <p className="text-sm font-semibold" style={{ color: 'var(--color-ink)' }}>
+                  {displayName}
+                </p>
+                <span className="text-xs" style={{ color: 'var(--color-muted)' }}>
+                  Warga
+                </span>
+              </div>
+            </div>
+            <button
+              onClick={handleLogout}
+              className="w-full flex items-center justify-center gap-2 py-2.5 rounded-xl text-sm font-medium"
+              style={{
+                backgroundColor: 'var(--color-cream)',
+                color: 'var(--color-coral-deep)',
+                border: '1px solid var(--color-line)',
+              }}
+            >
+              <LogOut className="w-4 h-4" />
+              Keluar dari Akun
+            </button>
+          </div>
+        )}
       </nav>
 
-      {/* Main Content */}
-      <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 space-y-8">
-        
-        {/* Hero Section */}
-        <div className="relative overflow-hidden rounded-3xl bg-linear-to-r from-red-950/40 via-slate-900 to-indigo-950/30 border border-slate-800 p-6 sm:p-10 shadow-2xl">
-          <div className="max-w-2xl relative z-10 space-y-4">
-            <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-red-500/10 border border-red-500/20 text-red-400 text-xs font-medium">
-              <Award className="w-3.5 h-3.5" />
-              <span>Ruang Partisipasi Publik Indonesia</span>
+      {/* ── Main Content ────────────────────────────────────── */}
+      <main className="mx-auto max-w-6xl px-5 py-8 space-y-8">
+        {/* ── Hero ────────────────────────────────────────── */}
+        <section
+          className="relative overflow-hidden rounded-3xl p-6 sm:p-10"
+          style={{
+            background:
+              'linear-gradient(135deg, var(--color-cream) 0%, var(--color-apricot) 60%, var(--color-coral) 100%)',
+          }}
+        >
+          <div className="max-w-xl relative z-10 space-y-4">
+            <div
+              className="inline-flex items-center gap-2 px-3 py-1 rounded-full text-xs font-semibold"
+              style={{
+                backgroundColor: 'rgba(255,255,255,0.55)',
+                color: 'var(--color-coral-deep)',
+              }}
+            >
+              <Send className="w-3.5 h-3.5" />
+              <span>Ruang Partisipasi Publik</span>
             </div>
-            <h1 className="text-3xl sm:text-4xl font-extrabold text-white tracking-tight">
-              Halo, <span className="text-red-400">{user?.fullName || 'Sahabat Peduli'}</span>! 👋
+
+            <h1
+              className="text-2xl sm:text-3xl lg:text-4xl font-[family-name:var(--font-display)] tracking-tight"
+              style={{ color: 'var(--color-ink)' }}
+            >
+              Halo, {displayName}!
             </h1>
-            <p className="text-slate-300 text-sm sm:text-base leading-relaxed">
-              Selamat datang di portal <span className="text-white font-semibold">Peduli Negeri</span>. Sampaikan aspirasi, laporkan kendala fasilitas di lingkungan Anda, dan pantau proses penyelesaian secara transparan.
+
+            <p className="text-sm sm:text-base leading-relaxed" style={{ color: 'var(--color-coral-deep)' }}>
+              Sampaikan aspirasi dan laporkan kendala fasilitas di lingkungan Anda.
+              Pantau proses penyelesaian secara transparan.
             </p>
-            <div className="pt-2 flex flex-wrap gap-3">
-              <button className="flex items-center gap-2 px-5 py-2.5 rounded-xl bg-linear-to-r from-red-600 to-rose-600 text-white font-medium text-sm shadow-lg shadow-red-600/30 hover:from-red-500 hover:to-rose-500 transition-all">
+
+            <div className="flex flex-wrap gap-3 pt-1">
+              <button
+                className="flex items-center gap-2 px-5 py-2.5 rounded-xl text-sm font-semibold text-white shadow-md transition-transform duration-200 hover:scale-[1.03] active:scale-[0.98]"
+                style={{
+                  backgroundColor: 'var(--color-coral)',
+                  boxShadow: '0 4px 14px rgba(161,74,48,0.25)',
+                }}
+              >
                 <PlusCircle className="w-4 h-4" />
-                <span>Buat Laporan Baru</span>
+                Buat Laporan Baru
               </button>
-              <button className="flex items-center gap-2 px-5 py-2.5 rounded-xl bg-slate-800/80 hover:bg-slate-800 text-slate-200 font-medium text-sm border border-slate-700 transition-all">
+              <button
+                className="flex items-center gap-2 px-5 py-2.5 rounded-xl text-sm font-semibold transition-transform duration-200 hover:scale-[1.03] active:scale-[0.98]"
+                style={{
+                  backgroundColor: 'rgba(255,255,255,0.6)',
+                  color: 'var(--color-ink)',
+                  border: '1px solid var(--color-line)',
+                }}
+              >
                 <FileText className="w-4 h-4" />
-                <span>Lihat Laporan Saya</span>
+                Lihat Laporan Saya
               </button>
             </div>
           </div>
 
-          <div className="absolute -right-10 -bottom-10 w-72 h-72 bg-red-500/10 rounded-full blur-3xl pointer-events-none" />
-        </div>
+          {/* Decorative circle */}
+          <div
+            className="absolute -right-16 -bottom-16 w-64 h-64 rounded-full opacity-30 pointer-events-none"
+            style={{ backgroundColor: 'var(--color-periwinkle)' }}
+          />
+        </section>
 
-        {/* Quick Stats Grid */}
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-          <div className="p-5 rounded-2xl bg-slate-900/60 border border-slate-800 flex items-center justify-between">
-            <div>
-              <p className="text-xs text-slate-400 font-medium">Total Laporan Anda</p>
-              <p className="text-2xl font-bold text-white mt-1">3</p>
-            </div>
-            <div className="w-10 h-10 rounded-xl bg-indigo-500/10 text-indigo-400 flex items-center justify-center">
-              <FileText className="w-5 h-5" />
-            </div>
-          </div>
+        {/* ── Summary Cards ───────────────────────────────── */}
+        <section className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+          {summaryCards.map((card) => {
+            const Icon = card.icon
+            return (
+              <div
+                key={card.label}
+                className="flex items-center justify-between p-5 rounded-2xl transition-shadow duration-200 hover:shadow-md"
+                style={{
+                  backgroundColor: '#fff',
+                  border: '1px solid var(--color-line)',
+                }}
+              >
+                <div>
+                  <p className="text-xs font-medium" style={{ color: 'var(--color-muted)' }}>
+                    {card.label}
+                  </p>
+                  <p
+                    className="text-2xl font-bold mt-1"
+                    style={{ color: card.accent }}
+                  >
+                    {card.value}
+                  </p>
+                </div>
+                <span
+                  className="w-11 h-11 rounded-xl flex items-center justify-center"
+                  style={{
+                    backgroundColor: card.accentBg,
+                    opacity: 0.15,
+                  }}
+                >
+                  <Icon className="w-5 h-5" style={{ color: card.accent, opacity: 1 }} />
+                </span>
+              </div>
+            )
+          })}
+        </section>
 
-          <div className="p-5 rounded-2xl bg-slate-900/60 border border-slate-800 flex items-center justify-between">
-            <div>
-              <p className="text-xs text-slate-400 font-medium">Sedang Diproses</p>
-              <p className="text-2xl font-bold text-amber-400 mt-1">1</p>
-            </div>
-            <div className="w-10 h-10 rounded-xl bg-amber-500/10 text-amber-400 flex items-center justify-center">
-              <Clock className="w-5 h-5" />
-            </div>
-          </div>
-
-          <div className="p-5 rounded-2xl bg-slate-900/60 border border-slate-800 flex items-center justify-between">
-            <div>
-              <p className="text-xs text-slate-400 font-medium">Laporan Terselesaikan</p>
-              <p className="text-2xl font-bold text-emerald-400 mt-1">2</p>
-            </div>
-            <div className="w-10 h-10 rounded-xl bg-emerald-500/10 text-emerald-400 flex items-center justify-center">
-              <CheckCircle className="w-5 h-5" />
-            </div>
-          </div>
-
-          <div className="p-5 rounded-2xl bg-slate-900/60 border border-slate-800 flex items-center justify-between">
-            <div>
-              <p className="text-xs text-slate-400 font-medium">Status Akun</p>
-              <p className="text-sm font-semibold text-emerald-400 mt-1 flex items-center gap-1.5">
-                <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse"></span>
-                Terverifikasi Supabase
-              </p>
-            </div>
-            <div className="w-10 h-10 rounded-xl bg-emerald-500/10 text-emerald-400 flex items-center justify-center">
-              <ShieldAlert className="w-5 h-5" />
-            </div>
-          </div>
-        </div>
-
-        {/* Recent Reports Section */}
-        <div className="bg-slate-900/70 border border-slate-800 rounded-3xl p-6 sm:p-8">
+        {/* ── Recent Reports ──────────────────────────────── */}
+        <section
+          className="rounded-3xl p-6 sm:p-8"
+          style={{
+            backgroundColor: '#fff',
+            border: '1px solid var(--color-line)',
+          }}
+        >
+          {/* Header */}
           <div className="flex items-center justify-between mb-6">
             <div>
-              <h2 className="text-lg font-bold text-white flex items-center gap-2">
-                <TrendingUp className="w-5 h-5 text-red-500" />
-                Daftar Aspirasi & Laporan Terkini
+              <h2
+                className="text-base sm:text-lg font-bold flex items-center gap-2"
+                style={{ color: 'var(--color-ink)' }}
+              >
+                <TrendingUp className="w-5 h-5" style={{ color: 'var(--color-coral)' }} />
+                Laporan Terkini
               </h2>
-              <p className="text-xs text-slate-400 mt-0.5">
-                Perkembangan laporan fasilitas dan aspirasi publik
+              <p className="text-xs mt-0.5" style={{ color: 'var(--color-muted)' }}>
+                Perkembangan laporan dan aspirasi publik
               </p>
             </div>
-            <button className="text-xs text-red-400 hover:text-red-300 font-medium flex items-center gap-1">
+            <button
+              className="text-xs font-medium flex items-center gap-1 transition-colors duration-150"
+              style={{ color: 'var(--color-coral-deep)' }}
+              onMouseEnter={(e) => (e.currentTarget.style.color = 'var(--color-coral)')}
+              onMouseLeave={(e) => (e.currentTarget.style.color = 'var(--color-coral-deep)')}
+            >
               Lihat Semua <ChevronRight className="w-3.5 h-3.5" />
             </button>
           </div>
 
+          {/* Report list */}
           <div className="space-y-3">
-            {sampleReports.map((item) => (
-              <div
-                key={item.id}
-                className="p-4 rounded-2xl bg-slate-800/40 hover:bg-slate-800/70 border border-slate-800/80 hover:border-slate-700 transition-all flex flex-col sm:flex-row sm:items-center justify-between gap-3"
-              >
-                <div className="space-y-1">
-                  <div className="flex items-center gap-2">
-                    <span className="text-[11px] font-mono text-slate-400">{item.id}</span>
-                    <span className="text-[11px] px-2 py-0.5 rounded-md bg-slate-800 text-slate-300 border border-slate-700">
-                      {item.category}
-                    </span>
+            {sampleReports.map((item) => {
+              const style = getStatusStyle(item.status)
+              return (
+                <article
+                  key={item.id}
+                  className="group p-4 rounded-2xl flex flex-col sm:flex-row sm:items-center justify-between gap-3 transition-all duration-200 cursor-pointer"
+                  style={{
+                    backgroundColor: 'var(--color-cream)',
+                    border: '1px solid transparent',
+                  }}
+                  onMouseEnter={(e) => {
+                    e.currentTarget.style.borderColor = 'var(--color-line)'
+                    e.currentTarget.style.boxShadow = '0 2px 8px rgba(0,0,0,0.04)'
+                  }}
+                  onMouseLeave={(e) => {
+                    e.currentTarget.style.borderColor = 'transparent'
+                    e.currentTarget.style.boxShadow = 'none'
+                  }}
+                >
+                  <div className="space-y-1.5">
+                    <div className="flex items-center gap-2">
+                      <span
+                        className="text-[11px] font-mono"
+                        style={{ color: 'var(--color-muted)' }}
+                      >
+                        {item.id}
+                      </span>
+                      <span
+                        className="text-[11px] px-2 py-0.5 rounded-md font-medium"
+                        style={{
+                          backgroundColor: 'var(--color-apricot)',
+                          color: 'var(--color-coral-deep)',
+                        }}
+                      >
+                        {item.category}
+                      </span>
+                    </div>
+                    <h3
+                      className="text-sm font-semibold"
+                      style={{ color: 'var(--color-ink)' }}
+                    >
+                      {item.title}
+                    </h3>
+                    <div
+                      className="flex items-center gap-4 text-xs"
+                      style={{ color: 'var(--color-muted)' }}
+                    >
+                      <span className="flex items-center gap-1">
+                        <MapPin className="w-3 h-3" style={{ color: 'var(--color-coral)' }} />
+                        {item.location}
+                      </span>
+                      <span aria-hidden="true">·</span>
+                      <span>{item.date}</span>
+                    </div>
                   </div>
-                  <h3 className="text-sm font-semibold text-slate-100">{item.title}</h3>
-                  <div className="flex items-center gap-4 text-xs text-slate-400">
-                    <span className="flex items-center gap-1">
-                      <MapPin className="w-3 h-3 text-red-400" />
-                      {item.location}
-                    </span>
-                    <span>•</span>
-                    <span>{item.date}</span>
-                  </div>
-                </div>
 
-                <div className="flex items-center sm:self-center">
-                  <span className={`text-xs px-3 py-1 rounded-full border font-medium ${item.statusColor}`}>
-                    {item.status}
-                  </span>
-                </div>
-              </div>
-            ))}
+                  <div className="flex items-center gap-2 sm:self-center">
+                    <span
+                      className={`inline-flex items-center gap-1.5 text-xs px-3 py-1 rounded-full border font-medium ${style.bg} ${style.text} ${style.border}`}
+                    >
+                      <span className={`w-1.5 h-1.5 rounded-full ${style.dot}`} />
+                      {item.status}
+                    </span>
+                    <ArrowRight
+                      className="w-4 h-4 opacity-0 group-hover:opacity-100 transition-opacity duration-200"
+                      style={{ color: 'var(--color-muted)' }}
+                    />
+                  </div>
+                </article>
+              )
+            })}
           </div>
-        </div>
-
+        </section>
       </main>
+
+      {/* ── Footer ──────────────────────────────────────────── */}
+      <footer
+        className="mt-4 py-6 text-center text-xs"
+        style={{
+          color: 'var(--color-muted)',
+          borderTop: '1px solid var(--color-line)',
+        }}
+      >
+        Peduli Negeri — Portal Partisipasi Publik Indonesia
+      </footer>
     </div>
   )
 }
