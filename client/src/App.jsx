@@ -1,28 +1,32 @@
-import React, { useState, useEffect } from 'react'
-import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom'
-import LoginPages from './pages/public_pages/LoginPages'
-import HomePages from './pages/public_pages/HomePages'
-import AdminDashboard from './components/admin/adminDashboard'
-import { authService } from './services/authService'
+import React, { useState, useEffect } from "react";
+import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
+import LoginPages from "./pages/public_pages/LoginPages";
+import HomePages from "./pages/public_pages/HomePages";
+import FormLaporan from "./pages/public_pages/FormLaporan";
+import RiwayatLaporan from "./pages/public_pages/RiwayatLaporan";
+import AdminDashboard from "./components/admin/adminDashboard";
+import { authService } from "./services/authService";
 
 export default function App() {
-  const [currentUser, setCurrentUser] = useState(() => authService.getCurrentUser())
+  const [currentUser, setCurrentUser] = useState(() =>
+    authService.getCurrentUser(),
+  );
 
   useEffect(() => {
     // Sinkronisasi user saat render awal
-    const user = authService.getCurrentUser()
-    setCurrentUser(user)
-  }, [])
+    const user = authService.getCurrentUser();
+    setCurrentUser(user);
+  }, []);
 
   return (
     <BrowserRouter>
       <Routes>
         {/* Halaman Login & Registrasi */}
-        <Route 
-          path="/login" 
+        <Route
+          path="/login"
           element={
             currentUser ? (
-              currentUser.role === 'admin' ? (
+              currentUser.role === "admin" ? (
                 <Navigate to="/admin" replace />
               ) : (
                 <Navigate to="/home" replace />
@@ -30,33 +34,59 @@ export default function App() {
             ) : (
               <LoginPages onLoginSuccess={(user) => setCurrentUser(user)} />
             )
-          } 
+          }
         />
 
         {/* Halaman Beranda Pengguna Biasa (User) */}
-        <Route 
-          path="/home" 
+        <Route
+          path="/home"
           element={
             currentUser ? (
-              <HomePages 
-                currentUser={currentUser} 
-                onLogout={() => setCurrentUser(null)} 
+              <HomePages
+                currentUser={currentUser}
+                onLogout={() => setCurrentUser(null)}
               />
             ) : (
               <Navigate to="/login" replace />
             )
-          } 
+          }
+        />
+
+        <Route
+          path="/laporan/baru"
+          element={
+            currentUser && currentUser.role !== "admin" ? (
+              <FormLaporan currentUser={currentUser} />
+            ) : currentUser ? (
+              <Navigate to="/admin" replace />
+            ) : (
+              <Navigate to="/login" replace />
+            )
+          }
+        />
+
+        <Route
+          path="/laporan"
+          element={
+            currentUser && currentUser.role !== "admin" ? (
+              <RiwayatLaporan currentUser={currentUser} />
+            ) : currentUser ? (
+              <Navigate to="/admin" replace />
+            ) : (
+              <Navigate to="/login" replace />
+            )
+          }
         />
 
         {/* Halaman Dashboard Khusus Administrator */}
-        <Route 
-          path="/admin" 
+        <Route
+          path="/admin"
           element={
             currentUser ? (
-              currentUser.role === 'admin' ? (
-                <AdminDashboard 
-                  currentUser={currentUser} 
-                  onLogout={() => setCurrentUser(null)} 
+              currentUser.role === "admin" ? (
+                <AdminDashboard
+                  currentUser={currentUser}
+                  onLogout={() => setCurrentUser(null)}
                 />
               ) : (
                 // Jika user biasa mencoba masuk ke admin, arahkan ke beranda user
@@ -65,15 +95,15 @@ export default function App() {
             ) : (
               <Navigate to="/login" replace />
             )
-          } 
+          }
         />
 
         {/* Root Redirect */}
-        <Route 
-          path="/" 
+        <Route
+          path="/"
           element={
             currentUser ? (
-              currentUser.role === 'admin' ? (
+              currentUser.role === "admin" ? (
                 <Navigate to="/admin" replace />
               ) : (
                 <Navigate to="/home" replace />
@@ -81,12 +111,12 @@ export default function App() {
             ) : (
               <Navigate to="/login" replace />
             )
-          } 
+          }
         />
 
         {/* Catch all fallback */}
         <Route path="*" element={<Navigate to="/login" replace />} />
       </Routes>
     </BrowserRouter>
-  )
+  );
 }
