@@ -1,8 +1,3 @@
--- ==============================================================================
--- SKEMA DATABASE SUPABASE: PEDULI NEGERI (VERSI AMAN & ROBUST)
--- File: database/schema.sql
--- ==============================================================================
-
 -- 1. Buat tabel profiles jika belum ada
 CREATE TABLE IF NOT EXISTS public.profiles (
     id UUID PRIMARY KEY REFERENCES auth.users(id) ON DELETE CASCADE,
@@ -110,8 +105,3 @@ CREATE POLICY "Users can update own profile"
     FOR UPDATE
     USING (auth.uid() = id OR public.is_admin());
 
--- ==============================================================================
--- PANDUAN PENTING:
--- Jalankan seluruh script SQL ini di SQL Editor Dashboard Supabase Anda,
--- lalu klik tombol "Run" untuk memperbarui fungsi dan mengatasi error database.
--- ==============================================================================
