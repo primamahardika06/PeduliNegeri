@@ -119,14 +119,7 @@ export default function LoginPages({ onLoginSuccess }) {
   }
 
   return (
-    <div className="min-h-screen bg-linear-to-br from-slate-900 via-indigo-950 to-slate-900 flex items-center justify-center p-4 sm:p-6 lg:p-8 font-sans text-slate-100">
-      
-      {/* Background Decorative Blobs */}
-      <div className="fixed inset-0 overflow-hidden pointer-events-none">
-        <div className="absolute -top-40 -right-40 w-96 h-96 bg-indigo-500/10 rounded-full blur-3xl"></div>
-        <div className="absolute -bottom-40 -left-40 w-96 h-96 bg-red-500/10 rounded-full blur-3xl"></div>
-      </div>
-
+    <div className="theme-light min-h-screen bg-cream flex items-center justify-center p-4 sm:p-6 lg:p-8 font-sans text-ink">
       <div className="w-full max-w-md relative z-10">
         
         {/* Brand Header */}

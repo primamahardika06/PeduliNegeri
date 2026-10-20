@@ -15,8 +15,71 @@
   --color-surface: #fff6ef;
   --color-line: #ecd6c8;
 
+  --color-slate-950: var(--color-cream);
+  --color-slate-900: var(--color-surface);
+  --color-slate-800: var(--color-cream);
+  --color-slate-700: var(--color-line);
+  --color-slate-600: var(--color-line);
+  --color-slate-500: var(--color-muted);
+  --color-slate-400: var(--color-muted);
+  --color-slate-300: var(--color-ink);
+  --color-slate-200: var(--color-ink);
+  --color-slate-100: var(--color-ink);
+
+  --color-indigo-950: var(--color-periwinkle);
+  --color-indigo-900: var(--color-periwinkle);
+  --color-indigo-800: var(--color-periwinkle);
+  --color-indigo-700: var(--color-periwinkle-deep);
+  --color-indigo-600: var(--color-periwinkle-deep);
+  --color-indigo-500: var(--color-periwinkle);
+  --color-indigo-400: var(--color-periwinkle-deep);
+  --color-indigo-300: var(--color-periwinkle-deep);
+  --color-indigo-200: var(--color-periwinkle-deep);
+  --color-indigo-100: var(--color-periwinkle);
+
+  --color-blue-600: var(--color-periwinkle-deep);
+  --color-blue-500: var(--color-periwinkle);
+  --color-blue-400: var(--color-periwinkle-deep);
+
+  --color-red-950: var(--color-cream);
+  --color-red-900: var(--color-coral-deep);
+  --color-red-800: var(--color-coral-deep);
+  --color-red-700: var(--color-coral-deep);
+  --color-red-600: var(--color-coral-deep);
+  --color-red-500: var(--color-coral);
+  --color-red-400: var(--color-coral-deep);
+  --color-red-300: var(--color-coral);
+  --color-red-200: var(--color-apricot);
+  --color-red-100: var(--color-apricot);
+  --color-red-50: var(--color-cream);
+
+  --color-rose-600: var(--color-coral-deep);
+  --color-rose-500: var(--color-coral);
+  --color-amber-400: var(--color-coral-deep);
+  --color-orange-200: var(--color-apricot);
+
+  --color-emerald-950: var(--color-surface);
+  --color-emerald-900: var(--color-periwinkle);
+  --color-emerald-800: var(--color-periwinkle-deep);
+  --color-emerald-700: var(--color-periwinkle-deep);
+  --color-emerald-600: var(--color-periwinkle-deep);
+  --color-emerald-500: var(--color-periwinkle-deep);
+  --color-emerald-400: var(--color-periwinkle);
+  --color-emerald-300: var(--color-periwinkle);
+  --color-emerald-200: var(--color-periwinkle-deep);
+  --color-emerald-100: var(--color-periwinkle);
+  --color-emerald-50: var(--color-surface);
+
   --font-display: 'Archivo Black', 'Arial Black', sans-serif;
   --font-sans: 'Inter', system-ui, sans-serif;
 
   --ease-out-soft: cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+.theme-light .text-white {
+  color: var(--color-ink);
+}
+
+.theme-light button.text-white {
+  color: #fff;
 }
