@@ -51,6 +51,46 @@ export const authService = {
   },
 
   /**
+   * Kirim email reset password (lupa password)
+   * @param {string} email
+   */
+  async forgotPassword(email) {
+    const response = await fetch(`${API_URL}/auth/forgot-password`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({ email }),
+    })
+
+    const data = await response.json()
+    if (!response.ok) {
+      throw new Error(data.message || 'Gagal mengirim email reset password.')
+    }
+    return data
+  },
+
+  /**
+   * Kirim email reset password (lupa password)
+   * @param {string} email
+   */
+  async forgotPassword(email) {
+    const response = await fetch(`${API_URL}/auth/forgot-password`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({ email }),
+    })
+
+    const data = await response.json()
+    if (!response.ok) {
+      throw new Error(data.message || 'Gagal mengirim email reset password.')
+    }
+    return data
+  },
+
+  /**
    * Logout dan hapus sesi dari localStorage
    */
   logout() {
@@ -84,3 +124,4 @@ export const authService = {
 }
 
 export default authService
+

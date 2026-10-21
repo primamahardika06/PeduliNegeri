@@ -4,6 +4,7 @@ import LoginPages from "./pages/public_pages/LoginPages";
 import HomePages from "./pages/public_pages/HomePages";
 import FormLaporan from "./pages/public_pages/FormLaporan";
 import RiwayatLaporan from "./pages/public_pages/RiwayatLaporan";
+import ResetPassword from "./pages/public_pages/ResetPassword";
 import AdminDashboard from "./components/admin/adminDashboard";
 import { authService } from "./services/authService";
 
@@ -36,6 +37,9 @@ export default function App() {
             )
           }
         />
+
+        {/* Halaman Reset Password */}
+        <Route path="/reset-password" element={<ResetPassword />} />
 
         {/* Halaman Beranda Pengguna Biasa (User) */}
         <Route

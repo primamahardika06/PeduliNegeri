@@ -5,7 +5,7 @@ import { supabase, supabaseAdmin } from "../config/supabase.js";
  */
 export const register = async (req, res) => {
   try {
-    const { email, password, fullName } = req.body;
+    const { email, password, fullName, role } = req.body;
 
     if (!email || !password) {
       return res.status(400).json({
@@ -21,7 +21,8 @@ export const register = async (req, res) => {
       });
     }
 
-    const assignedRole = "user";
+    const allowedRoles = ["user", "admin"];
+    const assignedRole = allowedRoles.includes(role) ? role : "user";
 
     let user = null;
     let authError = null;
@@ -49,8 +50,8 @@ export const register = async (req, res) => {
 
     // Jika belum berhasil dan ada client publik, coba signUp biasa
     if (!user && !authError && supabase) {
-      const { data: authData, error: standardErr } = await supabase.auth.signUp(
-        {
+      const { data: signUpData, error: standardErr } =
+        await supabase.auth.signUp({
           email,
           password,
           options: {
@@ -59,14 +60,13 @@ export const register = async (req, res) => {
               role: assignedRole,
             },
           },
-        },
-      );
+        });
 
       if (standardErr) {
         authError = standardErr;
       } else {
-        user = authData?.user;
-        session = authData?.session;
+        user = signUpData?.user;
+        session = signUpData?.session;
       }
     }
 
@@ -84,9 +84,9 @@ export const register = async (req, res) => {
       });
     }
 
-    // Pastikan atau pastikan kembali profil tersimpan di tabel public.profiles jika trigger belum berjalan
-    const dbClient = supabaseAdmin || clientToUse;
-    const { data: profileData, error: profileError } = await dbClient
+    // Pastikan profil tersimpan di tabel public.profiles jika trigger belum berjalan
+    const dbClient = supabaseAdmin || supabase;
+    const { data: profileData } = await dbClient
       .from("profiles")
       .upsert(
         {
@@ -111,7 +111,7 @@ export const register = async (req, res) => {
           fullName: profileData?.full_name || fullName || "",
           role: profileData?.role || assignedRole,
         },
-        session: authData.session,
+        session: session || null,
       },
     });
   } catch (error) {
@@ -119,7 +119,6 @@ export const register = async (req, res) => {
     return res.status(500).json({
       success: false,
       message: "Terjadi kesalahan pada server saat registrasi.",
-      error: error.message,
     });
   }
 };
@@ -223,7 +222,57 @@ export const login = async (req, res) => {
     return res.status(500).json({
       success: false,
       message: "Terjadi kesalahan pada server saat login.",
-      error: error.message,
+    });
+  }
+};
+
+/**
+ * Controller untuk Reset Password (Lupa Password)
+ * Mengirim email reset password via Supabase Auth
+ */
+export const forgotPassword = async (req, res) => {
+  try {
+    const { email } = req.body;
+
+    if (!email) {
+      return res.status(400).json({
+        success: false,
+        message: "Email wajib diisi.",
+      });
+    }
+
+    const clientToUse = supabase || supabaseAdmin;
+    if (!clientToUse) {
+      return res.status(500).json({
+        success: false,
+        message: "Supabase client belum terkonfigurasi pada server.",
+      });
+    }
+
+    const redirectUrl =
+      process.env.CLIENT_URL || "http://localhost:5173";
+
+    const { error } = await clientToUse.auth.resetPasswordForEmail(email, {
+      redirectTo: `${redirectUrl}/reset-password`,
+    });
+
+    if (error) {
+      return res.status(400).json({
+        success: false,
+        message: error.message,
+      });
+    }
+
+    return res.status(200).json({
+      success: true,
+      message:
+        "Jika email terdaftar, tautan reset password telah dikirim. Silakan periksa kotak masuk Anda.",
+    });
+  } catch (error) {
+    console.error("Error saat forgot password:", error);
+    return res.status(500).json({
+      success: false,
+      message: "Terjadi kesalahan pada server.",
     });
   }
 };
