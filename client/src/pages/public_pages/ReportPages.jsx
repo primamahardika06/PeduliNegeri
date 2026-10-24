@@ -148,7 +148,7 @@ export default function HomePages({ currentUser, onLogout }) {
       >
         <div className="mx-auto max-w-6xl flex items-center justify-between px-5 h-16">
           {/* Brand */}
-          <a href="/home" className="flex items-center gap-2.5 select-none">
+          <a href="/reportPage" className="flex items-center gap-2.5 select-none">
             <span
               className="w-9 h-9 rounded-xl flex items-center justify-center text-white"
               style={{ backgroundColor: "var(--color-coral)" }}

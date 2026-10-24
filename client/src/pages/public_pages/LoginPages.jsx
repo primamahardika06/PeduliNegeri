@@ -66,7 +66,7 @@ export default function LoginPages({ onLoginSuccess }) {
         if (userData.role === 'admin') {
           navigate('/admin')
         } else {
-          navigate('/home')
+          navigate('/reportPage')
         }
       }, 700)
     } catch (err) {

@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from "react";
 import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
 import LoginPages from "./pages/public_pages/LoginPages";
-import HomePages from "./pages/public_pages/HomePages";
+import ReportPages from "./pages/public_pages/ReportPages";
 import FormLaporan from "./pages/public_pages/FormLaporan";
 import RiwayatLaporan from "./pages/public_pages/RiwayatLaporan";
 import ResetPassword from "./pages/public_pages/ResetPassword";
@@ -30,7 +30,7 @@ export default function App() {
               currentUser.role === "admin" ? (
                 <Navigate to="/admin" replace />
               ) : (
-                <Navigate to="/home" replace />
+                <Navigate to="/reportPage" replace />
               )
             ) : (
               <LoginPages onLoginSuccess={(user) => setCurrentUser(user)} />
@@ -43,10 +43,10 @@ export default function App() {
 
         {/* Halaman Beranda Pengguna Biasa (User) */}
         <Route
-          path="/home"
+          path="/reportPage"
           element={
             currentUser ? (
-              <HomePages
+              <ReportPages
                 currentUser={currentUser}
                 onLogout={() => setCurrentUser(null)}
               />
@@ -94,7 +94,7 @@ export default function App() {
                 />
               ) : (
                 // Jika user biasa mencoba masuk ke admin, arahkan ke beranda user
-                <Navigate to="/home" replace />
+                <Navigate to="/reportPage" replace />
               )
             ) : (
               <Navigate to="/login" replace />
@@ -110,7 +110,7 @@ export default function App() {
               currentUser.role === "admin" ? (
                 <Navigate to="/admin" replace />
               ) : (
-                <Navigate to="/home" replace />
+                <Navigate to="/reportPage" replace />
               )
             ) : (
               <Navigate to="/login" replace />
