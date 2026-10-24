@@ -1,5 +1,5 @@
-import React, { useEffect, useState } from "react";
-import { useNavigate } from "react-router-dom";
+import { useEffect, useState } from "react";
+import { useNavigate, Link } from "react-router-dom";
 import {
   HeartHandshake,
   LogOut,
@@ -13,9 +13,19 @@ import {
   Send,
   Menu,
   X,
+  Camera,
+  Eye,
 } from "lucide-react";
 import { authService } from "../../services/authService";
 import { reportService } from "../../services/reportService";
+
+const CATEGORIES = [
+  "Semua",
+  "Infrastruktur",
+  "Fasilitas Umum",
+  "Lingkungan",
+  "Lainnya",
+];
 
 const STATUS_STYLES = {
   "Laporan Diterima": {
@@ -42,6 +52,12 @@ const STATUS_STYLES = {
     border: "border-emerald-300",
     dot: "bg-emerald-500",
   },
+  Selesai: {
+    bg: "bg-emerald-100",
+    text: "text-emerald-800",
+    border: "border-emerald-300",
+    dot: "bg-emerald-500",
+  },
 };
 
 const REPORT_PROGRESS = {
@@ -49,6 +65,7 @@ const REPORT_PROGRESS = {
   "Laporan Diproses": { step: 2, label: "Sedang diproses" },
   "Petugas Dikirim ke Lokasi": { step: 3, label: "Petugas menuju lokasi" },
   "Laporan Selesai": { step: 4, label: "Laporan selesai" },
+  Selesai: { step: 4, label: "Laporan selesai" },
 };
 
 function getStatusStyle(status) {
@@ -69,6 +86,8 @@ export default function HomePages({ currentUser, onLogout }) {
   const [reports, setReports] = useState([]);
   const [isLoadingReports, setIsLoadingReports] = useState(true);
   const [reportError, setReportError] = useState("");
+  const [selectedCategory, setSelectedCategory] = useState("Semua");
+  const [previewPhoto, setPreviewPhoto] = useState(null);
 
   useEffect(() => {
     let isActive = true;
@@ -106,7 +125,13 @@ export default function HomePages({ currentUser, onLogout }) {
   const displayName =
     user?.fullName || user?.email?.split("@")[0] || "Pengguna";
 
-  const recentReports = reports.slice(0, 3);
+  // Filter laporan berdasarkan kategori pada Laporan Terkini
+  const filteredReports =
+    selectedCategory === "Semua"
+      ? reports
+      : reports.filter((r) => r.category === selectedCategory);
+
+  const recentReports = filteredReports.slice(0, 5);
 
   const summaryCards = [
     {
@@ -118,15 +143,21 @@ export default function HomePages({ currentUser, onLogout }) {
     },
     {
       label: "Belum Selesai",
-      value: reports.filter((report) => report.status !== "Laporan Selesai")
-        .length,
+      value: reports.filter(
+        (report) =>
+          report.status !== "Laporan Selesai" && report.status !== "Selesai"
+      ).length,
       icon: Clock,
       accent: "var(--color-periwinkle-deep)",
       accentBg: "var(--color-periwinkle)",
     },
     {
       label: "Terselesaikan",
-      value: reports.filter((report) => report.status === "Selesai").length,
+      // BUG FIX: Gunakan "Laporan Selesai" sesuai workflow database agar counter bertambah saat laporan selesai
+      value: reports.filter(
+        (report) =>
+          report.status === "Laporan Selesai" || report.status === "Selesai"
+      ).length,
       icon: CheckCircle,
       accent: "#2e7d5b",
       accentBg: "#4ade80",
@@ -148,7 +179,7 @@ export default function HomePages({ currentUser, onLogout }) {
       >
         <div className="mx-auto max-w-6xl flex items-center justify-between px-5 h-16">
           {/* Brand */}
-          <a href="/reportPage" className="flex items-center gap-2.5 select-none">
+          <Link to="/reportPage" className="flex items-center gap-2.5 select-none">
             <span
               className="w-9 h-9 rounded-xl flex items-center justify-center text-white"
               style={{ backgroundColor: "var(--color-coral)" }}
@@ -162,7 +193,7 @@ export default function HomePages({ currentUser, onLogout }) {
               Peduli
               <span style={{ color: "var(--color-coral)" }}>Negeri</span>
             </span>
-          </a>
+          </Link>
 
           {/* Desktop user section */}
           <div className="hidden sm:flex items-center gap-3">
@@ -200,7 +231,7 @@ export default function HomePages({ currentUser, onLogout }) {
 
             <button
               onClick={handleLogout}
-              className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-medium transition-colors duration-200"
+              className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-medium transition-colors duration-200 cursor-pointer"
               style={{
                 backgroundColor: "var(--color-cream)",
                 color: "var(--color-muted)",
@@ -271,7 +302,7 @@ export default function HomePages({ currentUser, onLogout }) {
             </div>
             <button
               onClick={handleLogout}
-              className="w-full flex items-center justify-center gap-2 py-2.5 rounded-xl text-sm font-medium"
+              className="w-full flex items-center justify-center gap-2 py-2.5 rounded-xl text-sm font-medium cursor-pointer"
               style={{
                 backgroundColor: "var(--color-cream)",
                 color: "var(--color-coral-deep)",
@@ -286,6 +317,7 @@ export default function HomePages({ currentUser, onLogout }) {
       </nav>
 
       <main className="mx-auto max-w-6xl px-5 py-8 space-y-8">
+        {/* Hero Section */}
         <section
           className="relative overflow-hidden rounded-3xl p-6 sm:p-10"
           style={{
@@ -317,13 +349,14 @@ export default function HomePages({ currentUser, onLogout }) {
               style={{ color: "var(--color-coral-deep)" }}
             >
               Sampaikan aspirasi dan laporkan kendala fasilitas di lingkungan
-              Anda. Pantau proses penyelesaian secara transparan.
+              Anda lengkap dengan bukti foto. Pantau proses penyelesaian secara
+              transparan.
             </p>
 
             <div className="flex flex-wrap gap-3 pt-1">
               <button
                 onClick={() => navigate("/laporan/baru")}
-                className="flex items-center gap-2 px-5 py-2.5 rounded-xl text-sm font-semibold text-white shadow-md transition-transform duration-200 hover:scale-[1.03] active:scale-[0.98]"
+                className="flex items-center gap-2 px-5 py-2.5 rounded-xl text-sm font-semibold text-white shadow-md transition-transform duration-200 hover:scale-[1.03] active:scale-[0.98] cursor-pointer"
                 style={{
                   backgroundColor: "var(--color-coral)",
                   boxShadow: "0 4px 14px rgba(161,74,48,0.25)",
@@ -334,7 +367,7 @@ export default function HomePages({ currentUser, onLogout }) {
               </button>
               <button
                 onClick={() => navigate("/laporan")}
-                className="flex items-center gap-2 px-5 py-2.5 rounded-xl text-sm font-semibold transition-transform duration-200 hover:scale-[1.03] active:scale-[0.98]"
+                className="flex items-center gap-2 px-5 py-2.5 rounded-xl text-sm font-semibold transition-transform duration-200 hover:scale-[1.03] active:scale-[0.98] cursor-pointer"
                 style={{
                   backgroundColor: "rgba(255,255,255,0.6)",
                   color: "var(--color-ink)",
@@ -342,7 +375,7 @@ export default function HomePages({ currentUser, onLogout }) {
                 }}
               >
                 <FileText className="w-4 h-4" />
-                Lihat Laporan Saya
+                Lihat Riwayat Laporan
               </button>
             </div>
           </div>
@@ -352,6 +385,7 @@ export default function HomePages({ currentUser, onLogout }) {
           />
         </section>
 
+        {/* Summary Metric Cards */}
         <section className="grid grid-cols-1 sm:grid-cols-3 gap-4">
           {summaryCards.map((card) => {
             const Icon = card.icon;
@@ -402,7 +436,7 @@ export default function HomePages({ currentUser, onLogout }) {
             border: "1px solid var(--color-line)",
           }}
         >
-          <div className="flex items-center justify-between mb-6">
+          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-6">
             <div>
               <h2
                 className="text-base sm:text-lg font-bold flex items-center gap-2"
@@ -418,12 +452,12 @@ export default function HomePages({ currentUser, onLogout }) {
                 className="text-xs mt-0.5"
                 style={{ color: "var(--color-muted)" }}
               >
-                Perkembangan laporan dan aspirasi publik
+                Perkembangan laporan dan aspirasi publik di sekitar Anda
               </p>
             </div>
             <button
               onClick={() => navigate("/laporan")}
-              className="text-xs font-medium flex items-center gap-1 transition-colors duration-150"
+              className="text-xs font-medium flex items-center gap-1 transition-colors duration-150 cursor-pointer self-start sm:self-auto"
               style={{ color: "var(--color-coral-deep)" }}
               onMouseEnter={(e) =>
                 (e.currentTarget.style.color = "var(--color-coral)")
@@ -432,8 +466,37 @@ export default function HomePages({ currentUser, onLogout }) {
                 (e.currentTarget.style.color = "var(--color-coral-deep)")
               }
             >
-              Lihat Semua <ChevronRight className="w-3.5 h-3.5" />
+              Lihat Riwayat Lengkap <ChevronRight className="w-3.5 h-3.5" />
             </button>
+          </div>
+
+          <div className="flex flex-wrap items-center gap-2 mb-5 pb-2">
+            {CATEGORIES.map((cat) => {
+              const isSelected = selectedCategory === cat;
+              return (
+                <button
+                  key={cat}
+                  type="button"
+                  onClick={() => setSelectedCategory(cat)}
+                  className={`px-3 py-1.5 rounded-xl text-xs font-semibold transition-all border cursor-pointer ${
+                    isSelected
+                      ? "bg-slate-900 text-white border-slate-900 shadow-xs"
+                      : "bg-white text-black border-slate-200 hover:bg-slate-50"
+                  }`}
+                  style={
+                    isSelected
+                      ? {
+                          backgroundColor: "var(--color-coral-deep)",
+                          borderColor: "var(--color-coral-deep)",
+                          color: "#fff",
+                        }
+                      : {}
+                  }
+                >
+                  {cat}
+                </button>
+              );
+            })}
           </div>
 
           {/* Report list */}
@@ -473,7 +536,7 @@ export default function HomePages({ currentUser, onLogout }) {
                     className="mt-2 text-sm font-semibold"
                     style={{ color: "var(--color-ink)" }}
                   >
-                    Belum ada laporan
+                    Belum ada laporan {selectedCategory !== "Semua" ? `pada kategori ${selectedCategory}` : ""}
                   </p>
                   <p
                     className="mt-1 text-xs"
@@ -493,6 +556,7 @@ export default function HomePages({ currentUser, onLogout }) {
                 const date = new Intl.DateTimeFormat("id-ID", {
                   dateStyle: "medium",
                 }).format(new Date(item.created_at));
+
                 return (
                   <article
                     key={item.id}
@@ -511,47 +575,80 @@ export default function HomePages({ currentUser, onLogout }) {
                       e.currentTarget.style.boxShadow = "none";
                     }}
                   >
-                    <div className="space-y-1.5">
-                      <div className="flex items-center gap-2">
-                        <span
-                          className="text-[11px] font-mono"
+                    <div className="flex items-start gap-3 flex-1 min-w-0">
+                      {/* Thumbnail Foto Bukti Jika Ada */}
+                      {item.image_url ? (
+                        <div
+                          onClick={() =>
+                            setPreviewPhoto({
+                              url: item.image_url,
+                              title: item.title,
+                              location: item.location,
+                            })
+                          }
+                          className="relative w-16 h-16 sm:w-20 sm:h-20 shrink-0 rounded-xl overflow-hidden border border-slate-300 bg-white group/thumb cursor-pointer shadow-2xs"
+                          title="Klik untuk melihat foto bukti"
+                        >
+                          <img
+                            src={item.image_url}
+                            alt={`Bukti: ${item.title}`}
+                            className="w-full h-full object-cover transition-transform duration-200 group-hover/thumb:scale-110"
+                            loading="lazy"
+                          />
+                          <div className="absolute inset-0 bg-slate-950/40 opacity-0 group-hover/thumb:opacity-100 transition-opacity flex items-center justify-center text-white">
+                            <Eye className="w-4 h-4" />
+                          </div>
+                        </div>
+                      ) : null}
+
+                      <div className="space-y-1.5 flex-1 min-w-0">
+                        <div className="flex items-center gap-2">
+                          <span
+                            className="text-[11px] font-mono"
+                            style={{ color: "var(--color-muted)" }}
+                          >
+                            {item.id.slice(0, 8).toUpperCase()}
+                          </span>
+                          <span
+                            className="text-[11px] px-2 py-0.5 rounded-md font-medium"
+                            style={{
+                              backgroundColor: "var(--color-apricot)",
+                              color: "var(--color-coral-deep)",
+                            }}
+                          >
+                            {item.category}
+                          </span>
+                          {item.image_url && (
+                            <span className="inline-flex items-center gap-1 text-[10px] text-slate-500">
+                              <Camera className="w-3 h-3 text-coral-deep" />
+                              Foto ada
+                            </span>
+                          )}
+                        </div>
+                        <h3
+                          className="text-sm font-semibold truncate"
+                          style={{ color: "var(--color-ink)" }}
+                        >
+                          {item.title}
+                        </h3>
+                        <div
+                          className="flex items-center gap-4 text-xs"
                           style={{ color: "var(--color-muted)" }}
                         >
-                          {item.id.slice(0, 8).toUpperCase()}
-                        </span>
-                        <span
-                          className="text-[11px] px-2 py-0.5 rounded-md font-medium"
-                          style={{
-                            backgroundColor: "var(--color-apricot)",
-                            color: "var(--color-coral-deep)",
-                          }}
-                        >
-                          {item.category}
-                        </span>
-                      </div>
-                      <h3
-                        className="text-sm font-semibold"
-                        style={{ color: "var(--color-ink)" }}
-                      >
-                        {item.title}
-                      </h3>
-                      <div
-                        className="flex items-center gap-4 text-xs"
-                        style={{ color: "var(--color-muted)" }}
-                      >
-                        <span className="flex items-center gap-1">
-                          <MapPin
-                            className="w-3 h-3"
-                            style={{ color: "var(--color-coral)" }}
-                          />
-                          {item.location}
-                        </span>
-                        <span aria-hidden="true">·</span>
-                        <span>{date}</span>
+                          <span className="flex items-center gap-1 truncate">
+                            <MapPin
+                              className="w-3 h-3 shrink-0"
+                              style={{ color: "var(--color-coral)" }}
+                            />
+                            {item.location}
+                          </span>
+                          <span aria-hidden="true">·</span>
+                          <span className="shrink-0">{date}</span>
+                        </div>
                       </div>
                     </div>
 
-                    <div className="flex items-center gap-2 sm:self-center">
+                    <div className="flex items-center gap-2 sm:self-center shrink-0">
                       <span
                         className={`inline-flex items-center gap-1.5 text-xs px-3 py-1 rounded-full border font-medium ${style.bg} ${style.text} ${style.border}`}
                       >
@@ -583,7 +680,39 @@ export default function HomePages({ currentUser, onLogout }) {
         </section>
       </main>
 
-      {/* ── Footer ──────────────────────────────────────────── */}
+      {previewPhoto && (
+        <div
+          className="fixed inset-0 z-50 flex items-center justify-center bg-slate-950/85 p-4 backdrop-blur-sm"
+          role="dialog"
+          aria-modal="true"
+        >
+          <div className="relative max-w-xl w-full bg-slate-900 rounded-3xl p-5 border border-slate-700 text-white shadow-2xl flex flex-col max-h-[90vh]">
+            <div className="flex items-center justify-between pb-3 border-b border-slate-800">
+              <h3 className="text-sm font-semibold truncate pr-4">
+                Foto Bukti: {previewPhoto.title}
+              </h3>
+              <button
+                type="button"
+                onClick={() => setPreviewPhoto(null)}
+                className="rounded-full p-1.5 text-slate-400 hover:text-white hover:bg-slate-800 transition cursor-pointer"
+              >
+                <X className="w-5 h-5" />
+              </button>
+            </div>
+            <div className="my-4 overflow-hidden rounded-2xl bg-black flex items-center justify-center max-h-[60vh]">
+              <img
+                src={previewPhoto.url}
+                alt={previewPhoto.title}
+                className="max-h-[58vh] w-auto object-contain"
+              />
+            </div>
+            <p className="text-xs text-slate-400">
+              Lokasi: {previewPhoto.location}
+            </p>
+          </div>
+        </div>
+      )}
+
       <footer
         className="mt-4 py-6 text-center text-xs"
         style={{

@@ -279,7 +279,7 @@ export default function LoginPages({ onLoginSuccess }) {
 
           {/* Feedback Messages */}
           {errorMessage && (
-            <div className="mb-4 p-3.5 bg-red-950/60 border border-red-500/50 rounded-2xl flex items-start gap-3 text-red-200 text-xs animate-fadeIn">
+            <div className="mb-4 p-3.5 bg-red-950/60 border border-red-500/50 rounded-2xl flex items-start gap-3 text-black-200 text-xs animate-fadeIn">
               <AlertCircle className="w-4 h-4 text-red-400 shrink-0 mt-0.5" />
               <span>{errorMessage}</span>
             </div>

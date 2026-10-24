@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import {
   ShieldCheck,
@@ -12,6 +12,8 @@ import {
   Shield,
   Database,
   ChevronDown,
+  Camera,
+  X,
 } from "lucide-react";
 import { authService } from "../../services/authService";
 import { reportService } from "../../services/reportService";
@@ -35,6 +37,7 @@ export default function AdminDashboard({ currentUser, onLogout }) {
   const [loadingReports, setLoadingReports] = useState(true);
   const [reportsError, setReportsError] = useState("");
   const [updatingReportId, setUpdatingReportId] = useState(null);
+  const [adminSelectedPhoto, setAdminSelectedPhoto] = useState(null);
 
   const handleLogout = () => {
     authService.logout();
@@ -185,7 +188,7 @@ export default function AdminDashboard({ currentUser, onLogout }) {
 
             <button
               onClick={handleLogout}
-              className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-medium bg-slate-800 hover:bg-red-500/20 text-slate-300 hover:text-red-400 border border-slate-700 hover:border-red-500/30 transition-all duration-200"
+              className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-medium bg-slate-800 hover:bg-red-500/20 text-slate-300 hover:text-red-400 border border-slate-700 hover:border-red-500/30 transition-all duration-200 cursor-pointer"
               title="Keluar dari sesi admin"
             >
               <LogOut className="w-3.5 h-3.5" />
@@ -220,7 +223,7 @@ export default function AdminDashboard({ currentUser, onLogout }) {
                 fetchReports();
               }}
               disabled={loadingUsers || loadingReports}
-              className="flex items-center gap-2 px-4 py-2 rounded-xl bg-indigo-600/30 hover:bg-indigo-600/50 text-indigo-200 border border-indigo-500/40 text-xs font-semibold transition-all"
+              className="flex items-center gap-2 px-4 py-2 rounded-xl bg-indigo-600/30 hover:bg-indigo-600/50 text-indigo-200 border border-indigo-500/40 text-xs font-semibold transition-all cursor-pointer"
             >
               <RefreshCw
                 className={`w-3.5 h-3.5 ${loadingUsers || loadingReports ? "animate-spin" : ""}`}
@@ -352,7 +355,7 @@ export default function AdminDashboard({ currentUser, onLogout }) {
                   className="rounded-2xl border border-slate-800 bg-slate-950/50 p-4 sm:p-5"
                 >
                   <div className="flex flex-col gap-4 lg:flex-row lg:items-start lg:justify-between">
-                    <div className="min-w-0">
+                    <div className="min-w-0 flex-1">
                       <div className="mb-2 flex flex-wrap items-center gap-2 text-xs">
                         <span className="rounded-md bg-indigo-500/10 px-2 py-1 font-semibold text-indigo-300">
                           {report.category}
@@ -373,6 +376,31 @@ export default function AdminDashboard({ currentUser, onLogout }) {
                       <p className="mt-3 text-xs text-slate-400">
                         Lokasi: {report.location}
                       </p>
+
+                      {/* Tampilan Bukti Foto untuk Admin */}
+                      {report.image_url ? (
+                        <div className="mt-3 flex items-center gap-2">
+                          <button
+                            type="button"
+                            onClick={() =>
+                              setAdminSelectedPhoto({
+                                url: report.image_url,
+                                title: report.title,
+                                location: report.location,
+                              })
+                            }
+                            className="inline-flex items-center gap-2 rounded-xl border border-slate-700 bg-slate-900/90 p-1.5 pr-3 text-xs text-indigo-300 hover:text-white hover:border-indigo-500 transition cursor-pointer"
+                          >
+                            <img
+                              src={report.image_url}
+                              alt="Bukti foto"
+                              className="h-10 w-10 rounded-lg object-cover"
+                            />
+                            <Camera className="w-3.5 h-3.5 text-indigo-400" />
+                            <span>Lihat Bukti Foto</span>
+                          </button>
+                        </div>
+                      ) : null}
                     </div>
 
                     <label className="relative block w-full shrink-0 lg:w-72">
@@ -389,7 +417,7 @@ export default function AdminDashboard({ currentUser, onLogout }) {
                             event.target.value,
                           )
                         }
-                        className="min-h-11 w-full appearance-none rounded-xl border border-slate-700 bg-slate-800 px-3 pr-10 text-sm text-white outline-none transition focus:border-indigo-400 focus:ring-2 focus:ring-indigo-500/20 disabled:opacity-60"
+                        className="min-h-11 w-full appearance-none rounded-xl border border-slate-700 bg-slate-800 px-3 pr-10 text-sm text-white outline-none transition focus:border-indigo-400 focus:ring-2 focus:ring-indigo-500/20 disabled:opacity-60 cursor-pointer"
                       >
                         {REPORT_STATUSES.map((status) => (
                           <option key={status} value={status}>
@@ -444,7 +472,7 @@ export default function AdminDashboard({ currentUser, onLogout }) {
               <div className="flex items-center gap-1 bg-slate-800/80 border border-slate-700 p-1 rounded-xl">
                 <button
                   onClick={() => setRoleFilter("all")}
-                  className={`px-3 py-1 text-xs rounded-lg font-medium transition-all ${
+                  className={`px-3 py-1 text-xs rounded-lg font-medium transition-all cursor-pointer ${
                     roleFilter === "all"
                       ? "bg-indigo-600 text-white shadow-xs"
                       : "text-slate-400 hover:text-slate-200"
@@ -454,7 +482,7 @@ export default function AdminDashboard({ currentUser, onLogout }) {
                 </button>
                 <button
                   onClick={() => setRoleFilter("user")}
-                  className={`px-3 py-1 text-xs rounded-lg font-medium transition-all ${
+                  className={`px-3 py-1 text-xs rounded-lg font-medium transition-all cursor-pointer ${
                     roleFilter === "user"
                       ? "bg-red-600 text-white shadow-xs"
                       : "text-slate-400 hover:text-slate-200"
@@ -464,7 +492,7 @@ export default function AdminDashboard({ currentUser, onLogout }) {
                 </button>
                 <button
                   onClick={() => setRoleFilter("admin")}
-                  className={`px-3 py-1 text-xs rounded-lg font-medium transition-all ${
+                  className={`px-3 py-1 text-xs rounded-lg font-medium transition-all cursor-pointer ${
                     roleFilter === "admin"
                       ? "bg-indigo-600 text-white shadow-xs"
                       : "text-slate-400 hover:text-slate-200"
@@ -555,7 +583,7 @@ export default function AdminDashboard({ currentUser, onLogout }) {
                       </td>
 
                       <td className="py-3.5 px-4 text-right">
-                        <button className="text-indigo-400 hover:text-indigo-300 font-medium hover:underline">
+                        <button className="text-indigo-400 hover:text-indigo-300 font-medium hover:underline cursor-pointer">
                           Detail
                         </button>
                       </td>
@@ -573,6 +601,40 @@ export default function AdminDashboard({ currentUser, onLogout }) {
           </div>
         </div>
       </main>
+
+      {/* Modal Preview Bukti Foto untuk Admin */}
+      {adminSelectedPhoto && (
+        <div
+          className="fixed inset-0 z-50 flex items-center justify-center bg-slate-950/85 p-4 backdrop-blur-sm"
+          role="dialog"
+          aria-modal="true"
+        >
+          <div className="relative max-w-2xl w-full bg-slate-900 rounded-3xl p-5 border border-slate-700 text-white shadow-2xl flex flex-col max-h-[90vh]">
+            <div className="flex items-center justify-between pb-3 border-b border-slate-800">
+              <h3 className="text-sm font-semibold truncate pr-4">
+                Bukti Foto: {adminSelectedPhoto.title}
+              </h3>
+              <button
+                type="button"
+                onClick={() => setAdminSelectedPhoto(null)}
+                className="rounded-full p-1.5 text-slate-400 hover:text-white hover:bg-slate-800 transition cursor-pointer"
+              >
+                <X className="w-5 h-5" />
+              </button>
+            </div>
+            <div className="my-4 overflow-hidden rounded-2xl bg-black flex items-center justify-center max-h-[60vh]">
+              <img
+                src={adminSelectedPhoto.url}
+                alt={adminSelectedPhoto.title}
+                className="max-h-[58vh] w-auto object-contain"
+              />
+            </div>
+            <p className="text-xs text-slate-400">
+              Lokasi: {adminSelectedPhoto.location}
+            </p>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

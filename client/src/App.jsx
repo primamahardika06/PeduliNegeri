@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import { useState } from "react";
 import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
 import LoginPages from "./pages/public_pages/LoginPages";
 import ReportPages from "./pages/public_pages/ReportPages";
@@ -12,12 +12,6 @@ export default function App() {
   const [currentUser, setCurrentUser] = useState(() =>
     authService.getCurrentUser(),
   );
-
-  useEffect(() => {
-    // Sinkronisasi user saat render awal
-    const user = authService.getCurrentUser();
-    setCurrentUser(user);
-  }, []);
 
   return (
     <BrowserRouter>
@@ -55,6 +49,9 @@ export default function App() {
             )
           }
         />
+
+        {/* Alias /home diarahkan ke /reportPage */}
+        <Route path="/home" element={<Navigate to="/reportPage" replace />} />
 
         <Route
           path="/laporan/baru"

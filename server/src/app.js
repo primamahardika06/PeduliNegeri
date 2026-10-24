@@ -13,7 +13,9 @@ app.use(
   }),
 );
 
-app.use(express.json());
+// Tingkatkan limit body parser agar dapat menerima unggahan foto bukti laporan
+app.use(express.json({ limit: "10mb" }));
+app.use(express.urlencoded({ extended: true, limit: "10mb" }));
 
 // Health check endpoint
 app.get("/api/health", (req, res) => {
