@@ -2,16 +2,16 @@ const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:5000/api'
 
 export const authService = {
   /**
-   * Mendaftar akun baru
-   * @param {Object} payload { email, password, fullName, role }
+   * Mendaftar akun baru (khusus akun warga/user)
+   * @param {Object} payload { email, password, fullName, phoneNumber }
    */
-  async register({ email, password, fullName, role = 'user' }) {
+  async register({ email, password, fullName, phoneNumber }) {
     const response = await fetch(`${API_URL}/auth/register`, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
       },
-      body: JSON.stringify({ email, password, fullName, role }),
+      body: JSON.stringify({ email, password, fullName, phoneNumber }),
     })
 
     const data = await response.json()
@@ -22,21 +22,26 @@ export const authService = {
   },
 
   /**
-   * Login pengguna (User atau Admin)
-   * @param {Object} payload { email, password, expectedRole }
+   * Login pengguna (bebas memilih masuk menggunakan Email atau Nomor HP)
+   * @param {Object} payload { identifier, email, password }
    */
-  async login({ email, password, expectedRole = 'user' }) {
+  async login({ identifier, email, password }) {
+    const targetIdentifier = (identifier || email || '').trim()
     const response = await fetch(`${API_URL}/auth/login`, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
       },
-      body: JSON.stringify({ email, password, expectedRole }),
+      body: JSON.stringify({
+        identifier: targetIdentifier,
+        email: targetIdentifier,
+        password,
+      }),
     })
 
     const data = await response.json()
     if (!response.ok) {
-      throw new Error(data.message || 'Login gagal. Cek email dan password Anda.')
+      throw new Error(data.message || 'Login gagal. Cek email/nomor HP dan kata sandi Anda.')
     }
 
     // Simpan sesi ke localStorage
@@ -65,27 +70,7 @@ export const authService = {
 
     const data = await response.json()
     if (!response.ok) {
-      throw new Error(data.message || 'Gagal mengirim email reset password.')
-    }
-    return data
-  },
-
-  /**
-   * Kirim email reset password (lupa password)
-   * @param {string} email
-   */
-  async forgotPassword(email) {
-    const response = await fetch(`${API_URL}/auth/forgot-password`, {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify({ email }),
-    })
-
-    const data = await response.json()
-    if (!response.ok) {
-      throw new Error(data.message || 'Gagal mengirim email reset password.')
+      throw new Error(data.message || 'Gagal mengirim email reset kata sandi.')
     }
     return data
   },
@@ -124,4 +109,3 @@ export const authService = {
 }
 
 export default authService
-

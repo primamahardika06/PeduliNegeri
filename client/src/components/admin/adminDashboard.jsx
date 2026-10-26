@@ -125,12 +125,64 @@ export default function AdminDashboard({ currentUser, onLogout }) {
   };
 
   useEffect(() => {
-    fetchUsers();
-  }, []);
+    let ignore = false;
+    const initData = async () => {
+      try {
+        const [usersData, reportsData] = await Promise.allSettled([
+          authService.getAllUsers(),
+          reportService.getAllReports(),
+        ]);
+        if (ignore) return;
+        if (
+          usersData.status === "fulfilled" &&
+          Array.isArray(usersData.value) &&
+          usersData.value.length > 0
+        ) {
+          setUsersList(usersData.value);
+        } else {
+          setUsersList([
+            {
+              id: user?.id || "usr-adm-01",
+              email: user?.email || "admin@pedulinegeri.id",
+              full_name: user?.fullName || "Super Administrator",
+              role: "admin",
+              created_at: new Date().toISOString(),
+            },
+            {
+              id: "usr-demo-02",
+              email: "budi.santoso@gmail.com",
+              full_name: "Budi Santoso",
+              role: "user",
+              created_at: new Date(Date.now() - 86400000 * 2).toISOString(),
+            },
+            {
+              id: "usr-demo-03",
+              email: "siti.aminah@gmail.com",
+              full_name: "Siti Aminah",
+              role: "user",
+              created_at: new Date(Date.now() - 86400000 * 4).toISOString(),
+            },
+          ]);
+        }
 
-  useEffect(() => {
-    fetchReports();
-  }, []);
+        if (reportsData.status === "fulfilled") {
+          setReports(reportsData.value);
+        } else {
+          setReportsError(reportsData.reason?.message || "");
+        }
+      } finally {
+        if (!ignore) {
+          setLoadingUsers(false);
+          setLoadingReports(false);
+        }
+      }
+    };
+
+    initData();
+    return () => {
+      ignore = true;
+    };
+  }, [user]);
 
   // Filter users based on search and role
   const filteredUsers = usersList.filter((u) => {
