@@ -3,6 +3,7 @@ CREATE TABLE IF NOT EXISTS public.profiles (
     id UUID PRIMARY KEY REFERENCES auth.users(id) ON DELETE CASCADE,
     email TEXT NOT NULL,
     full_name TEXT DEFAULT '',
+    phone_number TEXT DEFAULT '',
     role TEXT NOT NULL CHECK (role IN ('user', 'admin')) DEFAULT 'user',
     avatar_url TEXT DEFAULT '',
     created_at TIMESTAMP WITH TIME ZONE DEFAULT now() NOT NULL,
@@ -12,6 +13,7 @@ CREATE TABLE IF NOT EXISTS public.profiles (
 -- 2. Index untuk pencarian cepat
 CREATE INDEX IF NOT EXISTS idx_profiles_role ON public.profiles(role);
 CREATE INDEX IF NOT EXISTS idx_profiles_email ON public.profiles(email);
+CREATE INDEX IF NOT EXISTS idx_profiles_phone_number ON public.profiles(phone_number);
 
 -- 3. Berikan izin akses tabel ke role standar Supabase
 GRANT ALL ON TABLE public.profiles TO postgres, service_role, authenticated, anon;
@@ -39,16 +41,18 @@ LANGUAGE plpgsql
 SECURITY DEFINER
 AS $$
 BEGIN
-    INSERT INTO public.profiles (id, email, full_name, role)
+    INSERT INTO public.profiles (id, email, full_name, phone_number, role)
     VALUES (
         NEW.id,
         COALESCE(NEW.email, ''),
         COALESCE(NEW.raw_user_meta_data->>'full_name', ''),
+        COALESCE(NEW.raw_user_meta_data->>'phone_number', ''),
         COALESCE(NEW.raw_user_meta_data->>'role', 'user')
     )
     ON CONFLICT (id) DO UPDATE SET
         email = EXCLUDED.email,
         full_name = EXCLUDED.full_name,
+        phone_number = EXCLUDED.phone_number,
         role = EXCLUDED.role,
         updated_at = now();
     RETURN NEW;
