@@ -109,7 +109,7 @@ export default function ResetPassword() {
         {/* Card Ilustrasi & Headline */}
         <div className="my-8 lg:my-10 space-y-6">
           <div
-            className="rounded-3xl p-8 sm:p-12 flex flex-col items-center justify-center text-center aspect-[4/3] max-w-md mx-auto w-full shadow-xs"
+            className="rounded-3xl p-8 sm:p-12 flex flex-col items-center justify-center text-center aspect-4/3 max-w-md mx-auto w-full shadow-xs"
             style={{
               backgroundColor: "#FADDBA",
               border: "1px solid rgba(240, 196, 154, 0.6)",

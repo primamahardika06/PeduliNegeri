@@ -220,7 +220,7 @@ export default function LoginPages({ onLoginSuccess }) {
         {/* Card Foto Mockup & Headline */}
         <div className="my-8 lg:my-10 space-y-6">
           <div
-            className="rounded-3xl p-8 sm:p-12 flex flex-col items-center justify-center text-center aspect-[4/3] max-w-md mx-auto w-full shadow-xs transition-transform hover:scale-[1.01]"
+            className="rounded-3xl p-8 sm:p-12 flex flex-col items-center justify-center text-center aspect-4/3 max-w-md mx-auto w-full shadow-xs transition-transform hover:scale-[1.01]"
             style={{
               backgroundColor: "#FADDBA",
               border: "1px solid rgba(240, 196, 154, 0.6)",
