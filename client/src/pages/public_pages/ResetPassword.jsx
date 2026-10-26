@@ -6,11 +6,11 @@ import {
   Eye,
   EyeOff,
   ArrowRight,
-  HeartHandshake,
   AlertCircle,
   CheckCircle2,
   KeyRound
 } from 'lucide-react'
+import brandLogo from '../../assets/PeduliNegeri (4).png';
 
 const supabaseUrl = import.meta.env.VITE_SUPABASE_URL || ''
 const supabaseAnonKey = import.meta.env.VITE_SUPABASE_ANON_KEY || ''
@@ -90,49 +90,42 @@ export default function ResetPassword() {
 
   return (
     <div className="theme-light min-h-screen bg-cream flex items-center justify-center p-4 sm:p-6 lg:p-8 font-sans text-ink">
-      <div className="w-full max-w-md relative z-10">
-
-        {/* Brand Header */}
-        <div className="text-center mb-8">
-          <div className="inline-flex items-center justify-center w-16 h-16 rounded-2xl bg-linear-to-tr from-red-600 via-rose-500 to-indigo-600 shadow-xl shadow-red-500/20 mb-4 border border-white/20">
-            <HeartHandshake className="w-9 h-9 text-white" />
-          </div>
-          <h1 className="text-3xl font-extrabold tracking-tight text-white flex items-center justify-center gap-2">
-            Peduli<span className="text-red-500">Negeri</span>
-          </h1>
+      <div className="relative z-10 w-full max-w-md">
+        <div className="mb-7 flex items-center justify-center gap-2">
+          <img src={brandLogo} alt="Peduli Negeri" className="h-12 w-48 object-contain" />
         </div>
 
         {/* Reset Card */}
-        <div className="bg-slate-800/80 backdrop-blur-xl border border-slate-700/60 rounded-3xl p-6 sm:p-8 shadow-2xl shadow-black/50">
+        <div className="rounded border border-line bg-surface p-5 sm:p-8">
 
           <div className="flex items-center gap-3 mb-6">
-            <div className="w-10 h-10 rounded-xl bg-amber-500/10 border border-amber-500/30 flex items-center justify-center">
-              <KeyRound className="w-5 h-5 text-amber-400" />
+            <div className="flex h-10 w-10 items-center justify-center rounded bg-apricot text-coral-deep">
+              <KeyRound className="h-5 w-5" />
             </div>
             <div>
-              <h2 className="text-lg font-bold text-white">Reset Password</h2>
-              <p className="text-xs text-slate-400">Masukkan password baru Anda</p>
+              <h2 className="text-lg font-bold text-ink">Reset kata sandi</h2>
+              <p className="text-xs text-muted">Masukkan kata sandi baru Anda</p>
             </div>
           </div>
 
           {/* Feedback Messages */}
           {errorMessage && (
-            <div className="mb-4 p-3.5 bg-red-950/60 border border-red-500/50 rounded-2xl flex items-start gap-3 text-red-200 text-xs animate-fadeIn">
-              <AlertCircle className="w-4 h-4 text-red-400 shrink-0 mt-0.5" />
+            <div className="mb-4 flex items-start gap-3 rounded border border-coral/50 bg-cream p-3.5 text-xs text-coral-deep">
+              <AlertCircle className="mt-0.5 h-4 w-4 shrink-0" />
               <span>{errorMessage}</span>
             </div>
           )}
 
           {successMessage && (
-            <div className="mb-4 p-3.5 bg-emerald-950/60 border border-emerald-500/50 rounded-2xl flex items-start gap-3 text-emerald-200 text-xs animate-fadeIn">
-              <CheckCircle2 className="w-4 h-4 text-emerald-400 shrink-0 mt-0.5" />
+            <div className="mb-4 flex items-start gap-3 rounded border border-periwinkle/60 bg-periwinkle/15 p-3.5 text-xs text-periwinkle-deep">
+              <CheckCircle2 className="mt-0.5 h-4 w-4 shrink-0" />
               <span>{successMessage}</span>
             </div>
           )}
 
           {!sessionReady && !errorMessage && (
-            <div className="mb-4 p-3.5 bg-slate-900/60 border border-slate-700/50 rounded-2xl flex items-start gap-3 text-slate-300 text-xs">
-              <div className="w-4 h-4 border-2 border-slate-500/30 border-t-slate-300 rounded-full animate-spin shrink-0 mt-0.5" />
+            <div className="mb-4 flex items-start gap-3 rounded border border-line bg-cream p-3.5 text-xs text-muted">
+              <div className="mt-0.5 h-4 w-4 shrink-0 animate-spin rounded-full border-2 border-line border-t-ink" />
               <span>Memverifikasi tautan reset password...</span>
             </div>
           )}
@@ -140,17 +133,17 @@ export default function ResetPassword() {
           <form onSubmit={handleResetPassword} className="space-y-4">
             <div>
               <label className="block text-xs font-medium text-slate-300 mb-1.5">
-                Password Baru (Min. 6 Karakter)
+                  Kata sandi baru (min. 6 karakter)
               </label>
               <div className="relative">
-                <Lock className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
+                  <Lock className="absolute left-3.5 top-1/2 -translate-y-1/2 h-4 w-4 text-muted" />
                 <input
                   type={showPassword ? 'text' : 'password'}
                   required
                   value={newPassword}
                   onChange={(e) => setNewPassword(e.target.value)}
                   placeholder="••••••••"
-                  className="w-full pl-10 pr-10 py-2.5 bg-slate-900/60 border border-slate-700 rounded-xl text-sm text-white placeholder-slate-500 focus:outline-none focus:border-amber-500 focus:ring-1 focus:ring-amber-500 transition-all"
+                    className="min-h-12 w-full rounded border border-line bg-surface py-2.5 pl-10 pr-10 text-sm text-ink placeholder-muted focus:border-coral-deep focus:outline-none focus:ring-1 focus:ring-coral-deep"
                 />
                 <button
                   type="button"
@@ -164,17 +157,17 @@ export default function ResetPassword() {
 
             <div>
               <label className="block text-xs font-medium text-slate-300 mb-1.5">
-                Konfirmasi Password Baru
+                  Konfirmasi kata sandi baru
               </label>
               <div className="relative">
-                <Lock className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
+                  <Lock className="absolute left-3.5 top-1/2 -translate-y-1/2 h-4 w-4 text-muted" />
                 <input
                   type={showPassword ? 'text' : 'password'}
                   required
                   value={confirmPassword}
                   onChange={(e) => setConfirmPassword(e.target.value)}
                   placeholder="••••••••"
-                  className="w-full pl-10 pr-4 py-2.5 bg-slate-900/60 border border-slate-700 rounded-xl text-sm text-white placeholder-slate-500 focus:outline-none focus:border-amber-500 focus:ring-1 focus:ring-amber-500 transition-all"
+                    className="min-h-12 w-full rounded border border-line bg-surface py-2.5 pl-10 pr-4 text-sm text-ink placeholder-muted focus:border-coral-deep focus:outline-none focus:ring-1 focus:ring-coral-deep"
                 />
               </div>
             </div>
@@ -182,7 +175,7 @@ export default function ResetPassword() {
             <button
               type="submit"
               disabled={loading || !sessionReady}
-              className={`w-full py-3 px-4 rounded-xl text-white font-semibold text-sm flex items-center justify-center gap-2 shadow-lg transition-all duration-200 mt-2 bg-linear-to-r from-amber-600 to-orange-600 hover:from-amber-500 hover:to-orange-500 shadow-amber-600/30 ${
+                className={`mt-2 flex min-h-12 w-full items-center justify-center gap-2 rounded bg-coral px-4 text-sm font-semibold text-ink transition-colors hover:bg-apricot ${
                 loading || !sessionReady ? 'opacity-70 cursor-not-allowed' : ''
               }`}
             >

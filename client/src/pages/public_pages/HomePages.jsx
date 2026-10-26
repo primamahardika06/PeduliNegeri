@@ -1,7 +1,6 @@
 import React, { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import {
-  HeartHandshake,
   LogOut,
   FileText,
   PlusCircle,
@@ -16,6 +15,7 @@ import {
 } from "lucide-react";
 import { authService } from "../../services/authService";
 import { reportService } from "../../services/reportService";
+import dashboardLogo from "../../assets/PeduliNegeri (4).png";
 
 const STATUS_STYLES = {
   "Laporan Diterima": {
@@ -148,21 +148,18 @@ export default function HomePages({ currentUser, onLogout }) {
       >
         <div className="mx-auto max-w-6xl flex items-center justify-between px-5 h-16">
           {/* Brand */}
-          <a href="/home" className="flex items-center gap-2.5 select-none">
-            <span
-              className="w-9 h-9 rounded-xl flex items-center justify-center text-white"
-              style={{ backgroundColor: "var(--color-coral)" }}
-            >
-              <HeartHandshake className="w-4.5 h-4.5" />
-            </span>
-            <span
-              className="text-lg font-display tracking-tight"
-              style={{ color: "var(--color-ink)" }}
-            >
-              Peduli
-              <span style={{ color: "var(--color-coral)" }}>Negeri</span>
-            </span>
-          </a>
+          <button
+            type="button"
+            onClick={() => window.location.reload()}
+            aria-label="Muat ulang halaman Peduli Negeri"
+            className="flex min-h-11 items-center rounded focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-periwinkle-deep"
+          >
+            <img
+              src={dashboardLogo}
+              alt="Peduli Negeri"
+              className="h-12 w-48 object-contain"
+            />
+          </button>
 
           {/* Desktop user section */}
           <div className="hidden sm:flex items-center gap-3">

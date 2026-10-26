@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from "react";
 import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
 import LoginPages from "./pages/public_pages/LoginPages";
+import LandingPage from "./pages/public_pages/LandingPage";
 import HomePages from "./pages/public_pages/HomePages";
 import FormLaporan from "./pages/public_pages/FormLaporan";
 import RiwayatLaporan from "./pages/public_pages/RiwayatLaporan";
@@ -34,6 +35,24 @@ export default function App() {
               )
             ) : (
               <LoginPages onLoginSuccess={(user) => setCurrentUser(user)} />
+            )
+          }
+        />
+
+        <Route
+          path="/register"
+          element={
+            currentUser ? (
+              currentUser.role === "admin" ? (
+                <Navigate to="/admin" replace />
+              ) : (
+                <Navigate to="/home" replace />
+              )
+            ) : (
+              <LoginPages
+                initialMode="register"
+                onLoginSuccess={(user) => setCurrentUser(user)}
+              />
             )
           }
         />
@@ -113,13 +132,13 @@ export default function App() {
                 <Navigate to="/home" replace />
               )
             ) : (
-              <Navigate to="/login" replace />
+              <LandingPage />
             )
           }
         />
 
         {/* Catch all fallback */}
-        <Route path="*" element={<Navigate to="/login" replace />} />
+        <Route path="*" element={<Navigate to="/" replace />} />
       </Routes>
     </BrowserRouter>
   );

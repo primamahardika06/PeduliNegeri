@@ -1,7 +1,8 @@
 import React, { useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
-import { ArrowLeft, HeartHandshake, LoaderCircle, Send } from "lucide-react";
+import { ArrowLeft, LoaderCircle, Send } from "lucide-react";
 import { reportService } from "../../services/reportService";
+import brandLogo from "../../assets/PeduliNegeri (4).png";
 
 const CATEGORIES = ["Infrastruktur", "Fasilitas Umum", "Lingkungan", "Lainnya"];
 
@@ -47,16 +48,11 @@ export default function FormLaporan({ currentUser }) {
           className="flex items-center gap-2.5"
           style={{ color: "var(--color-ink)" }}
         >
-          <span
-            className="flex h-9 w-9 items-center justify-center rounded-xl text-white"
-            style={{ backgroundColor: "var(--color-coral)" }}
-          >
-            <HeartHandshake className="h-5 w-5" />
-          </span>
-          <span className="font-display">
-            Peduli
-            <span style={{ color: "var(--color-coral-deep)" }}>Negeri</span>
-          </span>
+          <img
+            src={brandLogo}
+            alt="Peduli Negeri"
+            className="h-12 w-48 object-contain"
+          />
         </Link>
         <span className="text-sm" style={{ color: "var(--color-muted)" }}>
           {currentUser?.fullName || "Warga"}
