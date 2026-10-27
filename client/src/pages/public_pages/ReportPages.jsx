@@ -259,11 +259,11 @@ export default function ReportPages({ currentUser, onLogout }) {
         <div className="mx-auto max-w-7xl px-4 sm:px-6 h-18 flex items-center justify-between">
           {/* Brand */}
           <div className="flex items-center gap-6">
-            <Link to="/reportPage" className="flex items-center gap-3 select-none group">
+            <Link to="/" className="flex items-center gap-3 select-none group">
               <span className="w-10 h-10 rounded-2xl bg-[var(--color-ink)] flex items-center justify-center text-white shadow-sm transition-transform group-hover:scale-105">
                 <span className="w-4 h-4 rounded-full bg-[var(--color-coral)]" />
               </span>
-              <span className="text-xl font-display tracking-tight text-[var(--color-ink)]">
+              <span className="text-xl font-display tracking-tight text-(--color-ink)">
                 Peduli<span style={{ color: "var(--color-coral)" }}>Negeri</span>
               </span>
             </Link>

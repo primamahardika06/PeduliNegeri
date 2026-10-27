@@ -261,21 +261,21 @@ export default function AdminDashboard({ currentUser, onLogout }) {
   ];
 
   return (
-    <div className="min-h-screen bg-[var(--color-surface)] text-[var(--color-ink)] font-sans">
+    <div className="min-h-screen bg-(--color-surface) text-(--color-ink) font-sans">
       {/* ── Dark Navbar ────────────────────────────────────────── */}
-      <nav className="sticky top-0 z-50 bg-[var(--color-ink)] text-white">
+      <nav className="sticky top-0 z-50 bg-(--color-ink) text-white">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 h-16 flex items-center justify-between">
           {/* Logo + Admin Badge */}
           <div className="flex items-center gap-3">
-            <Link to="/" className="flex items-center gap-2.5 text-white hover:text-[var(--color-coral)] transition-colors">
-              <span className="w-9 h-9 rounded-xl bg-[var(--color-coral)] text-[var(--color-ink)] flex items-center justify-center shadow-lg">
+            <Link to="/" className="flex items-center gap-2.5 text-white hover:text-(--color-coral) transition-colors">
+              <span className="w-9 h-9 rounded-xl bg-(--color-coral) text-(--color-ink) flex items-center justify-center shadow-lg">
                 <ShieldCheck className="w-5 h-5" />
               </span>
               <span className="text-lg font-bold tracking-tight">
-                Peduli<span className="text-[var(--color-coral)]">Negeri</span>
+                Peduli<span className="text-(--color-coral)">Negeri</span>
               </span>
             </Link>
-            <span className="text-[10px] px-2 py-0.5 rounded-full bg-white/10 text-[var(--color-coral)] border border-white/20 font-bold uppercase tracking-wider">
+            <span className="text-[10px] px-2 py-0.5 rounded-full bg-white/10 text-(--color-coral) border border-white/20 font-bold uppercase tracking-wider">
               Admin Panel
             </span>
           </div>
@@ -291,7 +291,7 @@ export default function AdminDashboard({ currentUser, onLogout }) {
                   onClick={() => setActiveTab(tab.id)}
                   className={`flex items-center gap-1.5 px-4 py-1.5 rounded-lg text-xs font-semibold transition-all cursor-pointer ${
                     isActive
-                      ? "bg-[var(--color-coral)] text-[var(--color-ink)] shadow-md"
+                      ? "bg-(--color-coral) text-(--color-ink) shadow-md"
                       : "text-white/60 hover:text-white hover:bg-white/10"
                   }`}
                 >
@@ -313,14 +313,14 @@ export default function AdminDashboard({ currentUser, onLogout }) {
             </Link>
 
             <div className="flex items-center gap-2 bg-white/5 border border-white/10 rounded-xl px-2.5 py-1.5">
-              <span className="w-7 h-7 rounded-lg bg-[var(--color-coral)]/20 text-[var(--color-coral)] flex items-center justify-center font-bold text-xs">
+              <span className="w-7 h-7 rounded-lg bg-(--color-coral)/20 text-(--color-coral) flex items-center justify-center font-bold text-xs">
                 {adminName.charAt(0).toUpperCase()}
               </span>
               <div className="text-left hidden sm:block">
                 <p className="text-xs font-semibold text-white leading-none">
                   {adminName}
                 </p>
-                <span className="text-[10px] text-[var(--color-coral)] font-bold uppercase tracking-wider">
+                <span className="text-[10px] text-(--color-coral) font-bold uppercase tracking-wider">
                   Admin
                 </span>
               </div>
@@ -348,7 +348,7 @@ export default function AdminDashboard({ currentUser, onLogout }) {
                 onClick={() => setActiveTab(tab.id)}
                 className={`flex-1 flex items-center justify-center gap-1.5 py-2 rounded-lg text-xs font-semibold transition-all cursor-pointer ${
                   isActive
-                    ? "bg-[var(--color-coral)] text-[var(--color-ink)]"
+                    ? "bg-(--color-coral) text-(--color-ink)"
                     : "text-white/50 hover:text-white"
                 }`}
               >
