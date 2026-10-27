@@ -5,6 +5,7 @@ import ReportPages from "./pages/public_pages/ReportPages";
 import FormLaporan from "./pages/public_pages/FormLaporan";
 import RiwayatLaporan from "./pages/public_pages/RiwayatLaporan";
 import ResetPassword from "./pages/public_pages/ResetPassword";
+import LandingPage from "./pages/public_pages/LandingPage";
 import AdminDashboard from "./components/admin/adminDashboard";
 import { authService } from "./services/authService";
 
@@ -99,21 +100,8 @@ export default function App() {
           }
         />
 
-        {/* Root Redirect */}
-        <Route
-          path="/"
-          element={
-            currentUser ? (
-              currentUser.role === "admin" ? (
-                <Navigate to="/admin" replace />
-              ) : (
-                <Navigate to="/reportPage" replace />
-              )
-            ) : (
-              <Navigate to="/login" replace />
-            )
-          }
-        />
+        {/* Halaman pertama */}
+        <Route path="/" element={<LandingPage />} />
 
         {/* Catch all fallback */}
         <Route path="*" element={<Navigate to="/login" replace />} />
