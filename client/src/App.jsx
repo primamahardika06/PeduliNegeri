@@ -6,6 +6,7 @@ import FormLaporan from "./pages/public_pages/FormLaporan";
 import RiwayatLaporan from "./pages/public_pages/RiwayatLaporan";
 import ResetPassword from "./pages/public_pages/ResetPassword";
 import LandingPage from "./pages/public_pages/LandingPage";
+import PetaLaporan from "./pages/public_pages/PetaLaporan";
 import AdminDashboard from "./components/admin/adminDashboard";
 import { authService } from "./services/authService";
 
@@ -99,6 +100,9 @@ export default function App() {
             )
           }
         />
+
+        {/* Halaman Peta Interaktif (publik) */}
+        <Route path="/peta" element={<PetaLaporan />} />
 
         {/* Halaman pertama */}
         <Route path="/" element={<LandingPage />} />

@@ -2,6 +2,7 @@ import express from "express";
 import cors from "cors";
 import authRoutes from "./routes/authRoutes.js";
 import reportRoutes from "./routes/reportRoutes.js";
+import testimonialRoutes from "./routes/testimonialRoutes.js";
 
 const app = express();
 
@@ -22,8 +23,9 @@ app.get("/api/health", (req, res) => {
   res.json({ status: "ok", message: "API Peduli Negeri berjalan lancar." });
 });
 
-// Auth routes
+// Routes
 app.use("/api/auth", authRoutes);
 app.use("/api/reports", reportRoutes);
+app.use("/api/testimonials", testimonialRoutes);
 
 export default app;

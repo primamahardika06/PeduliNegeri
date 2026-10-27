@@ -395,3 +395,57 @@ export const getAllProfiles = async (req, res) => {
     return res.status(500).json({ success: false, message: error.message });
   }
 };
+
+
+/**
+ * Controller untuk memperbarui pengaturan privasi leaderboard pengguna
+ */
+export const updateLeaderboardSettings = async (req, res) => {
+  try {
+    const dbClient = supabaseAdmin || supabase;
+    if (!dbClient) {
+      return res
+        .status(500)
+        .json({ success: false, message: "Database client tidak tersedia." });
+    }
+
+    const { leaderboard_visible, leaderboard_display_type, leaderboard_username } =
+      req.body || {};
+
+    const updatePayload = {
+      leaderboard_visible: Boolean(leaderboard_visible),
+      leaderboard_display_type:
+        leaderboard_display_type === "username" ? "username" : "name",
+      leaderboard_username:
+        typeof leaderboard_username === "string"
+          ? leaderboard_username.trim().slice(0, 30)
+          : "",
+    };
+
+    const { data, error } = await dbClient
+      .from("profiles")
+      .update(updatePayload)
+      .eq("id", req.authUser.id)
+      .select("id, email, full_name, role, leaderboard_visible, leaderboard_display_type, leaderboard_username")
+      .maybeSingle();
+
+    if (error) {
+      if (error.message && error.message.includes("updated_at")) {
+        return res.status(400).json({
+          success: false,
+          message:
+            'Kolom updated_at belum ada di tabel profiles Supabase. Silakan jalankan migrasi 008 di SQL Editor Supabase: ALTER TABLE public.profiles ADD COLUMN IF NOT EXISTS updated_at TIMESTAMPTZ DEFAULT now();',
+        });
+      }
+      return res.status(400).json({ success: false, message: error.message });
+    }
+
+    return res.status(200).json({
+      success: true,
+      data,
+      message: "Pengaturan privasi leaderboard berhasil disimpan.",
+    });
+  } catch (error) {
+    return res.status(500).json({ success: false, message: error.message });
+  }
+};

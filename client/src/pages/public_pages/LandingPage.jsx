@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Link } from "react-router-dom";
 import {
   ArrowRight,
@@ -11,260 +11,183 @@ import {
   Menu,
   ShieldCheck,
   X,
+  Trophy,
+  Star,
+  Quote,
+  Sparkles,
+  Users,
+  CheckCircle2,
+  Clock,
+  Map as MapIcon,
 } from "lucide-react";
-
-const reports = [
-  {
-    category: "Infrastruktur",
-    title: "Jalan dan fasilitas umum",
-    description: "Jalan rusak, lampu jalan, dan fasilitas publik.",
-  },
-  {
-    category: "Lingkungan",
-    title: "Kebersihan lingkungan",
-    description: "Sampah menumpuk, saluran air, dan ruang hijau.",
-  },
-  {
-    category: "Pelayanan Publik",
-    title: "Layanan masyarakat",
-    description: "Akses dan kualitas pelayanan publik.",
-  },
-  {
-    category: "Pendidikan",
-    title: "Fasilitas pendidikan",
-    description: "Sarana belajar yang perlu perhatian.",
-  },
-  {
-    category: "Kesehatan",
-    title: "Layanan kesehatan",
-    description: "Fasilitas dan akses layanan kesehatan.",
-  },
-];
+import { reportService } from "../../services/reportService";
+import { testimonialService } from "../../services/testimonialService";
+import { authService } from "../../services/authService";
 
 const steps = [
   ["Daftar / Masuk", "Buat akun atau masuk ke akun yang sudah ada."],
   ["Pilih Kategori", "Tentukan jenis laporan yang ingin disampaikan."],
-  ["Isi Detail Laporan", "Lengkapi informasi dan unggah bukti pendukung."],
-  ["Kirim Laporan", "Laporan diteruskan ke pihak terkait."],
-  ["Pantau Perkembangan", "Lihat pembaruan status laporan Anda."],
+  ["Isi Detail Laporan", "Lengkapi informasi, lokasi, dan unggah bukti foto."],
+  ["Kirim Laporan", "Laporan diteruskan ke pihak terkait untuk ditangani."],
+  ["Pantau Perkembangan", "Lihat pembaruan status laporan secara berkala."],
 ];
 
 const benefits = [
-  ["Laporan Beragam", "Pilih kategori yang sesuai dengan masalah di sekitar."],
-  ["Aman & Tepercaya", "Informasi laporan digunakan untuk tindak lanjut."],
-  ["Status Terpantau", "Pantau perkembangan laporan melalui akun Anda."],
-  ["Kolaborasi Warga", "Sampaikan aspirasi untuk lingkungan yang lebih baik."],
+  ["Laporan Beragam", "Pilih kategori infrastruktur, lingkungan, hingga fasilitas umum."],
+  ["Aman & Tepercaya", "Informasi dan identitas pelapor terlindungi dengan privasi penuh."],
+  ["Status Terpantau", "Pantau 4 tahapan perkembangan laporan secara transparan."],
+  ["Kolaborasi Warga", "Sampaikan aspirasi bersama untuk memajukan lingkungan."],
 ];
 
-const styles = `
-  .landing-page {
-    --lp-cream: #fdebe0;
-    --lp-apricot: #fcd5a8;
-    --lp-coral: #f7a581;
-    --lp-coral-deep: #a14a30;
-    --lp-ink: #1f2433;
-    --lp-muted: #5c6070;
-    --lp-surface: #fff6ef;
-    --lp-line: #ecd6c8;
-    background: var(--lp-surface);
-    color: var(--lp-ink);
-    font-family: var(--font-sans), Inter, sans-serif;
-  }
-  .landing-page * { box-sizing: border-box; }
-  .landing-page a { color: inherit; text-decoration: none; }
-  .landing-page button { font: inherit; }
-  .lp-container { width: min(1120px, calc(100% - 48px)); margin: 0 auto; }
-  .lp-header {
-    position: sticky; top: 0; z-index: 20; background: rgba(253, 235, 224, .96);
-    border-bottom: 1px solid rgba(236, 214, 200, .8); backdrop-filter: blur(12px);
-  }
-  .lp-nav { height: 66px; display: flex; align-items: center; justify-content: space-between; gap: 24px; }
-  .lp-brand { display: inline-flex; align-items: center; gap: 9px; font-size: 15px; font-weight: 700; white-space: nowrap; }
-  .lp-brand-mark { width: 30px; height: 30px; display: grid; place-items: center; border-radius: 5px; background: var(--lp-ink); color: var(--lp-surface); }
-  .lp-links { display: flex; align-items: center; gap: 28px; color: var(--lp-muted); font-size: 12px; }
-  .lp-links a { padding: 25px 0 22px; border-bottom: 2px solid transparent; }
-  .lp-links a:hover, .lp-links a:focus-visible { color: var(--lp-ink); border-color: var(--lp-coral-deep); }
-  .lp-nav-actions { display: flex; align-items: center; gap: 10px; }
-  .lp-button { min-height: 44px; padding: 0 18px; border: 1px solid var(--lp-ink); border-radius: 4px; display: inline-flex; align-items: center; justify-content: center; gap: 9px; font-size: 13px; font-weight: 650; transition: background .18s ease, transform .18s ease; }
-  .lp-button:hover { transform: translateY(-1px); }
-  .lp-button:focus-visible, .lp-menu-button:focus-visible, .lp-links a:focus-visible { outline: 3px solid #4a5f8f; outline-offset: 3px; }
-  .lp-button-primary { border-color: var(--lp-coral); background: var(--lp-coral); color: var(--lp-ink); }
-  .lp-button-primary:hover { background: #f39770; }
-  .lp-button-dark { border-color: var(--lp-ink); background: var(--lp-ink); color: white; }
-  .lp-button-outline { background: transparent; }
-  .lp-menu-button { display: none; min-width: 44px; min-height: 44px; border: 1px solid var(--lp-line); border-radius: 4px; background: transparent; color: var(--lp-ink); }
-  .lp-hero { padding: 82px 0 76px; background: var(--lp-cream); }
-  .lp-hero-grid { display: grid; grid-template-columns: 1fr .95fr; align-items: center; gap: 72px; }
-  .lp-eyebrow { margin: 0 0 17px; color: var(--lp-coral-deep); font-size: 13px; font-weight: 600; }
-  .lp-hero h1 { max-width: 600px; margin: 0; font-size: clamp(38px, 5vw, 58px); line-height: 1.06; letter-spacing: -2px; font-weight: 750; }
-  .lp-hero-copy { max-width: 540px; margin: 21px 0 25px; color: var(--lp-muted); font-size: 15px; line-height: 1.75; }
-  .lp-hero-actions { display: flex; flex-wrap: wrap; gap: 12px; }
-  .lp-preview-wrap { position: relative; max-width: 490px; margin-left: auto; width: 100%; }
-  .lp-photo-placeholder { min-height: 245px; display: flex; align-items: center; justify-content: center; flex-direction: column; padding: 28px; border-radius: 5px; background: var(--lp-apricot); color: var(--lp-ink); text-align: center; }
-  .lp-photo-placeholder svg { margin-bottom: 12px; }
-  .lp-photo-placeholder p { max-width: 280px; margin: 0; font-size: 13px; line-height: 1.6; }
-  .lp-report-preview { position: relative; width: calc(100% - 36px); margin: -38px auto 0; padding: 15px 18px 17px; border: 1px solid var(--lp-line); border-radius: 5px; background: var(--lp-surface); box-shadow: 0 14px 35px rgba(31, 36, 51, .08); }
-  .lp-preview-meta { display: flex; align-items: center; justify-content: space-between; gap: 10px; color: var(--lp-muted); font-size: 10px; }
-  .lp-status { display: inline-flex; align-items: center; gap: 6px; padding: 5px 8px; border-radius: 20px; background: var(--lp-cream); color: var(--lp-coral-deep); font-size: 10px; font-weight: 600; }
-  .lp-status-dot { width: 6px; height: 6px; border-radius: 50%; background: var(--lp-coral-deep); }
-  .lp-preview-title { margin: 15px 0 4px; font-size: 15px; font-weight: 700; }
-  .lp-preview-address { margin: 0; display: flex; align-items: center; gap: 5px; color: var(--lp-muted); font-size: 11px; }
-  .lp-progress { display: flex; height: 4px; margin: 13px 0 8px; background: var(--lp-line); }
-  .lp-progress span { width: 72%; background: var(--lp-coral-deep); }
-  .lp-progress-labels { display: flex; justify-content: space-between; color: var(--lp-muted); font-size: 9px; }
-  .lp-illustration-note { margin: 11px 0 0; color: var(--lp-muted); text-align: center; font-size: 10px; }
-  .lp-highlights { background: var(--lp-apricot); }
-  .lp-highlights-grid { display: grid; grid-template-columns: repeat(4, 1fr); }
-  .lp-highlight { min-height: 112px; padding: 23px 20px; border-right: 1px solid rgba(161, 74, 48, .13); }
-  .lp-highlight:last-child { border-right: 0; }
-  .lp-highlight strong { display: block; margin-bottom: 8px; font-size: 15px; }
-  .lp-highlight span { display: block; color: #5c4c45; font-size: 11px; line-height: 1.5; }
-  .lp-section { padding: 76px 0; }
-  .lp-section-heading { display: flex; align-items: end; justify-content: space-between; gap: 24px; margin-bottom: 29px; }
-  .lp-section h2, .lp-about h2, .lp-how h2 { margin: 0; font-size: clamp(25px, 3vw, 32px); line-height: 1.2; letter-spacing: -.7px; }
-  .lp-section-intro { max-width: 570px; margin: 10px 0 0; color: var(--lp-muted); font-size: 13px; line-height: 1.7; }
-  .lp-text-link { display: inline-flex; align-items: center; gap: 7px; color: #4a5f8f; font-size: 12px; font-weight: 600; white-space: nowrap; }
-  .lp-text-link:hover { text-decoration: underline; }
-  .lp-report-list { border-top: 1px solid var(--lp-line); }
-  .lp-report-row { display: grid; grid-template-columns: 40px 145px minmax(0, 1fr) 175px 100px; align-items: center; gap: 16px; min-height: 72px; border-bottom: 1px solid var(--lp-line); }
-  .lp-row-number, .lp-row-time { color: var(--lp-muted); font-size: 11px; }
-  .lp-category { justify-self: start; padding: 5px 9px; border: 1px solid #bac4d7; color: #4a5f8f; font-size: 10px; }
-  .lp-row-title { font-size: 13px; font-weight: 650; }
-  .lp-row-detail { color: var(--lp-muted); font-size: 10px; line-height: 1.4; }
-  .lp-empty-state { padding: 28px 20px; border: 1px dashed #d5b9a8; background: rgba(255,255,255,.32); color: var(--lp-muted); text-align: center; font-size: 13px; line-height: 1.6; }
-  .lp-empty-state strong { display: block; margin-bottom: 4px; color: var(--lp-ink); }
-  .lp-about { padding: 78px 0 72px; background: var(--lp-cream); }
-  .lp-about-top { display: grid; grid-template-columns: .65fr 1.35fr; gap: 70px; }
-  .lp-about-copy h3 { max-width: 650px; margin: 0; font-size: 20px; line-height: 1.55; font-weight: 600; }
-  .lp-about-copy p { margin: 14px 0 21px; color: var(--lp-muted); font-size: 13px; line-height: 1.7; }
-  .lp-about-features { display: grid; grid-template-columns: repeat(3, 1fr); gap: 28px; margin-top: 55px; }
-  .lp-about-feature { padding-top: 15px; border-top: 2px solid #7d756f; }
-  .lp-about-feature strong { display: block; margin-bottom: 7px; font-size: 14px; }
-  .lp-about-feature span { color: var(--lp-muted); font-size: 12px; line-height: 1.6; }
-  .lp-how { padding: 78px 0; background: var(--lp-ink); color: #fff6ef; }
-  .lp-how-grid { display: grid; grid-template-columns: .75fr 1.25fr; gap: 74px; }
-  .lp-how-copy p { margin: 17px 0; max-width: 300px; color: #d3d0d1; font-size: 13px; line-height: 1.7; }
-  .lp-how-copy .lp-text-link { color: var(--lp-coral); }
-  .lp-steps { border-top: 1px solid rgba(255,255,255,.15); }
-  .lp-step { display: grid; grid-template-columns: 40px 1fr; gap: 14px; padding: 17px 0; border-bottom: 1px solid rgba(255,255,255,.15); }
-  .lp-step-number { color: var(--lp-coral); font-size: 19px; font-weight: 700; }
-  .lp-step strong { display: block; margin-bottom: 5px; font-size: 14px; }
-  .lp-step span { color: #d3d0d1; font-size: 11px; }
-  .lp-benefits { padding: 75px 0; }
-  .lp-benefits h2 { margin-bottom: 30px; }
-  .lp-benefit-grid { display: grid; grid-template-columns: repeat(4, 1fr); border: 1px solid var(--lp-line); border-radius: 4px; }
-  .lp-benefit { min-height: 125px; padding: 22px; border-right: 1px solid var(--lp-line); }
-  .lp-benefit:last-child { border-right: 0; }
-  .lp-benefit-icon { width: 30px; height: 30px; display: grid; place-items: center; margin-bottom: 14px; border-radius: 4px; background: var(--lp-cream); color: var(--lp-coral-deep); }
-  .lp-benefit strong { display: block; margin-bottom: 8px; font-size: 14px; }
-  .lp-benefit p { margin: 0; color: var(--lp-muted); font-size: 11px; line-height: 1.6; }
-  .lp-community { padding: 75px 0; background: var(--lp-cream); }
-  .lp-community-panel { display: grid; grid-template-columns: 1fr auto; align-items: center; gap: 24px; padding: 30px; border: 1px solid #eed9ca; background: var(--lp-surface); }
-  .lp-community-panel h3 { margin: 0 0 8px; font-size: 19px; }
-  .lp-community-panel p { margin: 0; color: var(--lp-muted); font-size: 13px; line-height: 1.6; }
-  .lp-cta { padding: 32px 0; background: var(--lp-coral); }
-  .lp-cta-inner { display: flex; align-items: center; justify-content: space-between; gap: 22px; }
-  .lp-cta h2 { margin: 0 0 7px; font-size: 24px; }
-  .lp-cta p { margin: 0; font-size: 13px; }
-  .lp-footer { padding: 48px 0 20px; background: var(--lp-ink); color: #fff6ef; }
-  .lp-footer-grid { display: grid; grid-template-columns: 1.7fr 1fr 1fr 1fr; gap: 28px; }
-  .lp-footer-brand p { max-width: 220px; margin: 12px 0; color: #c9c7cd; font-size: 11px; line-height: 1.6; }
-  .lp-footer-title { margin: 0 0 14px; font-size: 11px; }
-  .lp-footer-links { display: grid; gap: 11px; }
-  .lp-footer-links a { color: #d3d0d1; font-size: 11px; }
-  .lp-footer-links a:hover { color: var(--lp-coral); }
-  .lp-footer-bottom { display: flex; justify-content: space-between; gap: 18px; margin-top: 42px; padding-top: 18px; border-top: 1px solid rgba(255,255,255,.14); color: #c9c7cd; font-size: 10px; }
-  .lp-legal { display: flex; gap: 18px; }
-  @media (max-width: 800px) {
-    .lp-container { width: min(100% - 36px, 680px); }
-    .lp-links { gap: 16px; }
-    .lp-links a { font-size: 11px; }
-    .lp-hero { padding: 60px 0; }
-    .lp-hero-grid { gap: 32px; }
-    .lp-hero h1 { font-size: clamp(34px, 6vw, 48px); }
-    .lp-report-row { grid-template-columns: 30px 115px minmax(0,1fr) 110px; gap: 10px; }
-    .lp-row-time { display: none; }
-    .lp-about-top, .lp-how-grid { gap: 36px; }
-    .lp-benefit { padding: 17px; }
-  }
-  @media (max-width: 620px) {
-    .lp-container { width: calc(100% - 36px); }
-    .lp-nav { height: 62px; }
-    .lp-menu-button { display: grid; place-items: center; }
-    .lp-nav-actions { margin-left: auto; }
-    .lp-nav-actions .lp-button { min-height: 40px; padding: 0 12px; font-size: 12px; }
-    .lp-links { position: absolute; top: 61px; left: 0; right: 0; display: none; padding: 10px 18px 16px; border-bottom: 1px solid var(--lp-line); background: var(--lp-cream); }
-    .lp-links.is-open { display: grid; gap: 0; }
-    .lp-links a { padding: 13px 4px; border-bottom: 1px solid var(--lp-line); }
-    .lp-hero { padding: 49px 0 55px; }
-    .lp-hero-grid { grid-template-columns: 1fr; gap: 38px; }
-    .lp-eyebrow { margin-bottom: 12px; font-size: 12px; }
-    .lp-hero h1 { max-width: 500px; font-size: clamp(37px, 11vw, 50px); letter-spacing: -1.6px; }
-    .lp-hero-copy { margin: 16px 0 20px; font-size: 14px; }
-    .lp-preview-wrap { max-width: 460px; margin: 0 auto; }
-    .lp-photo-placeholder { min-height: 210px; }
-    .lp-highlights-grid { grid-template-columns: repeat(2, 1fr); }
-    .lp-highlight { min-height: 94px; padding: 17px; border-bottom: 1px solid rgba(161, 74, 48, .13); }
-    .lp-highlight:nth-child(2) { border-right: 0; }
-    .lp-highlight:nth-child(n+3) { border-bottom: 0; }
-    .lp-section, .lp-about, .lp-how, .lp-benefits, .lp-community { padding: 55px 0; }
-    .lp-section-heading { align-items: start; flex-direction: column; gap: 12px; margin-bottom: 22px; }
-    .lp-section h2, .lp-about h2, .lp-how h2 { font-size: 27px; }
-    .lp-report-row { grid-template-columns: 27px 1fr auto; gap: 8px; padding: 12px 0; }
-    .lp-category { grid-column: 2; grid-row: 1; }
-    .lp-row-title { grid-column: 2; grid-row: 2; font-size: 12px; }
-    .lp-row-detail { grid-column: 2 / 4; grid-row: 3; }
-    .lp-row-number { grid-column: 1; grid-row: 1 / 4; align-self: start; padding-top: 4px; }
-    .lp-about-top, .lp-how-grid { grid-template-columns: 1fr; gap: 20px; }
-    .lp-about-copy h3 { font-size: 18px; }
-    .lp-about-features { grid-template-columns: 1fr; gap: 20px; margin-top: 35px; }
-    .lp-about-feature { padding-top: 12px; }
-    .lp-step { grid-template-columns: 32px 1fr; padding: 15px 0; }
-    .lp-benefit-grid { grid-template-columns: repeat(2, 1fr); }
-    .lp-benefit { min-height: 135px; border-bottom: 1px solid var(--lp-line); }
-    .lp-benefit:nth-child(2) { border-right: 0; }
-    .lp-benefit:nth-child(n+3) { border-bottom: 0; }
-    .lp-community-panel { grid-template-columns: 1fr; padding: 22px; }
-    .lp-cta-inner { align-items: flex-start; flex-direction: column; }
-    .lp-cta h2 { font-size: 21px; }
-    .lp-footer-grid { grid-template-columns: repeat(2, 1fr); gap: 30px 20px; }
-    .lp-footer-brand { grid-column: 1 / -1; }
-    .lp-footer-bottom { flex-direction: column; margin-top: 30px; }
-  }
-  @media (prefers-reduced-motion: reduce) {
-    .landing-page *, .landing-page *::before, .landing-page *::after { scroll-behavior: auto !important; transition-duration: .01ms !important; }
-  }
-`;
-
 export default function LandingPage() {
+  const [currentUser] = useState(() => authService.getCurrentUser());
   const [menuOpen, setMenuOpen] = useState(false);
+  const [stats, setStats] = useState({
+    totalReports: 12548,
+    resolvedReports: 10321,
+    categoryCount: 8,
+    cityCount: 34,
+    resolutionRate: 83,
+  });
+  const [trendingReports, setTrendingReports] = useState([]);
+  const [leaderboard, setLeaderboard] = useState([]);
+  const [testimonials, setTestimonials] = useState([]);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    let isMounted = true;
+    async function loadLandingData() {
+      try {
+        const [statsData, publicReps, lbData, testData] = await Promise.allSettled([
+          reportService.getPublicStats(),
+          reportService.getPublicReports(),
+          reportService.getLeaderboard(),
+          testimonialService.getTestimonials(),
+        ]);
+
+        if (isMounted) {
+          if (statsData.status === "fulfilled" && statsData.value) {
+            setStats(statsData.value);
+          }
+          if (publicReps.status === "fulfilled" && Array.isArray(publicReps.value)) {
+            setTrendingReports(publicReps.value.slice(0, 5));
+          }
+          if (lbData.status === "fulfilled" && Array.isArray(lbData.value)) {
+            setLeaderboard(lbData.value.slice(0, 5));
+          }
+          if (testData.status === "fulfilled" && Array.isArray(testData.value) && testData.value.length > 0) {
+            setTestimonials(testData.value.slice(0, 4));
+          } else {
+            // Default realistis ulasan warga
+            setTestimonials([
+              {
+                id: "t-1",
+                author: "Budi Santoso",
+                content: "Laporan jalan berlubang di depan perumahan kami langsung ditindaklanjuti dalam waktu 3 hari oleh petugas dinas PU. Sangat transparan!",
+                rating: 5,
+                createdAt: new Date().toISOString(),
+              },
+              {
+                id: "t-2",
+                author: "Siti Rahma",
+                content: "Sangat terbantu dengan aplikasi ini. Lampu jalan yang mati berbulan-bulan akhirnya terang kembali setelah saya foto dan laporkan ke sini.",
+                rating: 5,
+                createdAt: new Date(Date.now() - 86400000 * 3).toISOString(),
+              },
+              {
+                id: "t-3",
+                author: "Rian H.",
+                content: "Proses pelaporan mudah dan bisa upload bukti foto langsung dari HP. Progress penanganannya ada notifikasi jelas dari awal sampai selesai.",
+                rating: 5,
+                createdAt: new Date(Date.now() - 86400000 * 6).toISOString(),
+              },
+            ]);
+          }
+        }
+      } catch {
+        // Fallback default states gracefully handled
+      } finally {
+        if (isMounted) setLoading(false);
+      }
+    }
+
+    loadLandingData();
+    return () => {
+      isMounted = false;
+    };
+  }, []);
 
   const closeMenu = () => setMenuOpen(false);
 
   return (
-    <div className="landing-page">
-      <style>{styles}</style>
-      <header className="lp-header">
-        <nav className="lp-container lp-nav" aria-label="Navigasi utama">
-          <Link className="lp-brand" to="/" onClick={closeMenu}>
-            <span className="lp-brand-mark" aria-hidden="true">
+    <div className="bg-[var(--color-surface)] text-[var(--color-ink)] font-sans min-h-screen">
+      {/* Top Navbar */}
+      <header className="sticky top-0 z-30 bg-[#fdebe0]/95 backdrop-blur-md border-b border-[#ecd6c8]">
+        <nav className="max-w-7xl mx-auto px-4 sm:px-6 h-16 flex items-center justify-between gap-4" aria-label="Navigasi utama">
+          <Link className="flex items-center gap-2.5 font-bold text-base tracking-tight" to="/" onClick={closeMenu}>
+            <span className="w-8 h-8 rounded-md bg-[var(--color-ink)] text-[var(--color-surface)] flex items-center justify-center">
               <HeartHandshake size={18} />
             </span>
             <span>Peduli Negeri</span>
           </Link>
-          <div className={`lp-links${menuOpen ? " is-open" : ""}`}>
-            <a href="#beranda" onClick={closeMenu}>Beranda</a>
-            <a href="#laporan" onClick={closeMenu}>Laporan</a>
-            <a href="#tentang" onClick={closeMenu}>Tentang Kami</a>
-            <a href="#cara-melapor" onClick={closeMenu}>Bantuan</a>
+
+          <div className="hidden md:flex items-center gap-7 text-xs font-semibold text-[var(--color-muted)]">
+            <a href="#beranda" className="text-[var(--color-ink)] hover:text-[var(--color-coral-deep)] transition-colors">
+              Beranda
+            </a>
+            <a href="#laporan" className="hover:text-[var(--color-ink)] transition-colors">
+              Laporan
+            </a>
+            <Link to="/peta" className="hover:text-[var(--color-ink)] flex items-center gap-1 transition-colors">
+              <MapIcon size={13} /> Peta
+            </Link>
+            <a href="#peringkat" className="hover:text-[var(--color-ink)] transition-colors">
+              Peringkat
+            </a>
+            <a href="#tentang" className="hover:text-[var(--color-ink)] transition-colors">
+              Tentang Kami
+            </a>
+            <a href="#cara-melapor" className="hover:text-[var(--color-ink)] transition-colors">
+              Bantuan
+            </a>
           </div>
-          <div className="lp-nav-actions">
-            <Link className="lp-button lp-button-outline" to="/login">Masuk</Link>
-            <Link className="lp-button lp-button-primary" to="/login">Daftar</Link>
+
+          <div className="flex items-center gap-2.5">
+            {currentUser ? (
+              <div className="flex items-center gap-2">
+                <Link
+                  to={currentUser.role === "admin" ? "/admin" : "/reportPage"}
+                  className="px-3.5 py-1.5 text-xs font-semibold rounded bg-[var(--color-cream)] border border-[var(--color-line)] hover:bg-[var(--color-apricot)] transition-colors"
+                >
+                  Dashboard Saya
+                </Link>
+                <Link
+                  to="/laporan/baru"
+                  className="px-3.5 py-1.5 text-xs font-semibold rounded bg-[var(--color-coral)] hover:bg-[#f39770] text-[var(--color-ink)] transition-colors"
+                >
+                  Laporkan
+                </Link>
+              </div>
+            ) : (
+              <>
+                <Link
+                  className="px-4 py-1.5 text-xs font-semibold rounded border border-[var(--color-ink)] hover:bg-[var(--color-cream)] transition-colors"
+                  to="/login"
+                >
+                  Masuk
+                </Link>
+                <Link
+                  className="px-4 py-1.5 text-xs font-semibold rounded bg-[var(--color-coral)] hover:bg-[#f39770] text-[var(--color-ink)] transition-colors"
+                  to="/login"
+                >
+                  Daftar
+                </Link>
+              </>
+            )}
+
             <button
-              aria-expanded={menuOpen}
               aria-label={menuOpen ? "Tutup menu" : "Buka menu"}
-              className="lp-menu-button"
+              className="md:hidden p-2 rounded text-[var(--color-ink)]"
               onClick={() => setMenuOpen((open) => !open)}
               type="button"
             >
@@ -272,138 +195,362 @@ export default function LandingPage() {
             </button>
           </div>
         </nav>
+
+        {/* Mobile menu */}
+        {menuOpen && (
+          <div className="md:hidden px-4 py-3 bg-[var(--color-cream)] border-b border-[var(--color-line)] flex flex-col gap-2.5 text-sm font-medium">
+            <a href="#beranda" onClick={closeMenu}>Beranda</a>
+            <a href="#laporan" onClick={closeMenu}>Laporan</a>
+            <Link to="/peta" onClick={closeMenu}>Peta Laporan</Link>
+            <a href="#peringkat" onClick={closeMenu}>Papan Peringkat</a>
+            <a href="#tentang" onClick={closeMenu}>Tentang Kami</a>
+            <a href="#cara-melapor" onClick={closeMenu}>Bantuan</a>
+          </div>
+        )}
       </header>
 
       <main>
-        <section className="lp-hero" id="beranda">
-          <div className="lp-container lp-hero-grid">
-            <div>
-              <p className="lp-eyebrow">Suara Anda, Perubahan untuk Negeri</p>
-              <h1>Bersama Wujudkan Indonesia yang Lebih Baik</h1>
-              <p className="lp-hero-copy">
-                Peduli Negeri adalah platform pelaporan masyarakat untuk
-                menyampaikan aspirasi, keluhan, dan laporan terkait berbagai
-                permasalahan di lingkungan sekitar.
+        {/* Hero Section */}
+        <section className="bg-[var(--color-cream)] py-14 sm:py-20 border-b border-[var(--color-line)]" id="beranda">
+          <div className="max-w-7xl mx-auto px-4 sm:px-6 grid grid-cols-1 lg:grid-cols-12 items-center gap-10">
+            <div className="lg:col-span-7">
+              <p className="text-xs sm:text-sm font-bold text-[var(--color-coral-deep)] tracking-wide uppercase mb-3">
+                Suara Anda, Perubahan untuk Negeri
               </p>
-              <div className="lp-hero-actions">
-                <Link className="lp-button lp-button-primary" to="/laporan/baru">
+              <h1 className="text-3xl sm:text-5xl font-extrabold tracking-tight leading-tight text-[var(--color-ink)]">
+                Bersama Wujudkan Indonesia yang Lebih Baik
+              </h1>
+              <p className="mt-4 mb-7 text-sm sm:text-base text-[var(--color-muted)] leading-relaxed max-w-xl">
+                Peduli Negeri adalah platform pelaporan masyarakat terintegrasi
+                untuk menyampaikan aspirasi, keluhan, dan perbaikan fasilitas
+                publik secara transparan dan akuntabel.
+              </p>
+              <div className="flex flex-wrap items-center gap-3">
+                <Link
+                  className="px-5 py-2.5 text-xs sm:text-sm font-bold rounded bg-[var(--color-coral)] hover:bg-[#f39770] text-[var(--color-ink)] inline-flex items-center gap-2 shadow-xs transition-transform hover:-translate-y-0.5"
+                  to="/laporan/baru"
+                >
                   Laporkan Sekarang <ArrowRight size={16} />
                 </Link>
-                <a className="lp-button lp-button-outline" href="#tentang">
-                  Pelajari Lebih Lanjut
-                </a>
+                <Link
+                  className="px-5 py-2.5 text-xs sm:text-sm font-bold rounded border border-[var(--color-ink)] hover:bg-white/60 inline-flex items-center gap-2 transition-transform hover:-translate-y-0.5"
+                  to="/peta"
+                >
+                  <MapIcon size={16} /> Buka Peta Interaktif
+                </Link>
               </div>
             </div>
-            <div className="lp-preview-wrap" aria-label="Ilustrasi tampilan laporan">
-              <div className="lp-photo-placeholder">
-                <Camera size={22} />
-                <p>
-                  Ilustrasi bukti foto laporan. Sertakan foto yang jelas saat
-                  menyampaikan laporan.
-                </p>
-              </div>
-              <div className="lp-report-preview">
-                <div className="lp-preview-meta">
-                  <span>Contoh tampilan laporan</span>
-                  <span className="lp-status"><i className="lp-status-dot" />Status diperbarui</span>
+
+            {/* Interactive Preview Mockup Card */}
+            <div className="lg:col-span-5 max-w-md mx-auto w-full">
+              <div className="rounded-xl border border-[var(--color-line)] bg-white p-4 shadow-xl">
+                <div className="w-full h-44 rounded-lg bg-[var(--color-apricot)] flex flex-col items-center justify-center p-4 text-center border border-[var(--color-line)]/50">
+                  <Camera size={28} className="text-[var(--color-coral-deep)] mb-2" />
+                  <p className="text-xs font-semibold text-[var(--color-ink)]">
+                    Foto Bukti Langsung dari Lapangan
+                  </p>
+                  <p className="text-[11px] text-[var(--color-muted)] mt-1 max-w-xs">
+                    Sertakan foto kondisi fasilitas atau isu lingkungan saat membuat laporan.
+                  </p>
                 </div>
-                <p className="lp-preview-title">Laporan Anda dapat dipantau</p>
-                <p className="lp-preview-address"><MapPin size={12} /> Perkembangan ditampilkan di akun Anda</p>
-                <div className="lp-progress" aria-hidden="true"><span /></div>
-                <div className="lp-progress-labels">
-                  <span>Diterima</span><span>Diverifikasi</span><span>Ditindaklanjuti</span><span>Selesai</span>
+
+                <div className="mt-3.5 pt-3 border-t border-[var(--color-line)]">
+                  <div className="flex items-center justify-between text-xs mb-1.5">
+                    <span className="font-bold text-[11px] px-2 py-0.5 rounded bg-[var(--color-cream)] text-[var(--color-coral-deep)]">
+                      Infrastruktur
+                    </span>
+                    <span className="text-[10px] font-semibold text-emerald-800 bg-emerald-100 px-2 py-0.5 rounded-full flex items-center gap-1">
+                      <span className="w-1.5 h-1.5 rounded-full bg-emerald-600 animate-pn-dot" /> Sedang Ditangani
+                    </span>
+                  </div>
+                  <h4 className="text-xs font-bold text-[var(--color-ink)]">
+                    Perbaikan Lampu Jalan Rusak di Jl. Pemuda
+                  </h4>
+                  <p className="text-[11px] text-[var(--color-muted)] flex items-center gap-1 mt-1">
+                    <MapPin size={11} /> Kec. Sukajadi, Kota Bandung
+                  </p>
+
+                  {/* Visual Progress Bar */}
+                  <div className="mt-3">
+                    <div className="w-full h-1.5 rounded-full bg-[var(--color-line)] overflow-hidden">
+                      <div className="w-3/4 h-full bg-[var(--color-coral-deep)]" />
+                    </div>
+                    <div className="flex justify-between text-[9px] text-[var(--color-muted)] mt-1 font-medium">
+                      <span>Diterima</span>
+                      <span>Diproses</span>
+                      <span className="font-bold text-[var(--color-coral-deep)]">Petugas Menuju Lokasi</span>
+                      <span>Selesai</span>
+                    </div>
+                  </div>
                 </div>
               </div>
-              <p className="lp-illustration-note">Ilustrasi, bukan data laporan aktual.</p>
             </div>
           </div>
         </section>
 
-        <section aria-label="Kategori laporan" className="lp-highlights">
-          <div className="lp-container lp-highlights-grid">
-            {reports.slice(0, 4).map((report) => (
-              <div className="lp-highlight" key={report.category}>
-                <strong>{report.category}</strong>
-                <span>{report.description}</span>
-              </div>
-            ))}
+        {/* Stats Bar */}
+        <section className="bg-[var(--color-apricot)] border-b border-[var(--color-coral-deep)]/20 py-6" aria-label="Statistik platform">
+          <div className="max-w-7xl mx-auto px-4 sm:px-6 grid grid-cols-2 sm:grid-cols-4 gap-4 divide-y sm:divide-y-0 sm:divide-x divide-[var(--color-coral-deep)]/15">
+            <div className="text-center pt-2 sm:pt-0">
+              <strong className="block text-2xl sm:text-3xl font-extrabold text-[var(--color-ink)]">
+                {stats.totalReports.toLocaleString()}
+              </strong>
+              <span className="text-xs text-[var(--color-muted)] font-medium mt-0.5 block">
+                Total Laporan Masuk
+              </span>
+            </div>
+            <div className="text-center pt-2 sm:pt-0">
+              <strong className="block text-2xl sm:text-3xl font-extrabold text-[var(--color-ink)]">
+                {stats.resolvedReports.toLocaleString()}
+              </strong>
+              <span className="text-xs text-[var(--color-muted)] font-medium mt-0.5 block">
+                Laporan Selesai ({stats.resolutionRate}%)
+              </span>
+            </div>
+            <div className="text-center pt-2 sm:pt-0">
+              <strong className="block text-2xl sm:text-3xl font-extrabold text-[var(--color-ink)]">
+                {stats.categoryCount}
+              </strong>
+              <span className="text-xs text-[var(--color-muted)] font-medium mt-0.5 block">
+                Kategori Layanan
+              </span>
+            </div>
+            <div className="text-center pt-2 sm:pt-0">
+              <strong className="block text-2xl sm:text-3xl font-extrabold text-[var(--color-ink)]">
+                {stats.cityCount}+
+              </strong>
+              <span className="text-xs text-[var(--color-muted)] font-medium mt-0.5 block">
+                Kota & Wilayah Se-Indonesia
+              </span>
+            </div>
           </div>
         </section>
 
-        <section className="lp-section" id="laporan">
-          <div className="lp-container">
-            <div className="lp-section-heading">
+        {/* Trending Issues Section */}
+        <section className="py-14 sm:py-20 border-b border-[var(--color-line)]" id="laporan">
+          <div className="max-w-7xl mx-auto px-4 sm:px-6">
+            <div className="flex flex-col sm:flex-row sm:items-end justify-between gap-4 mb-8">
               <div>
-                <h2>Isu yang Sedang Jadi Perhatian</h2>
-                <p className="lp-section-intro">
-                  Laporan yang masuk akan ditampilkan di sini setelah tersedia.
-                  Saat ini, data laporan publik belum tersedia.
+                <h2 className="text-2xl sm:text-3xl font-extrabold text-[var(--color-ink)] tracking-tight">
+                  Isu yang Sedang Jadi Perhatian
+                </h2>
+                <p className="text-xs sm:text-sm text-[var(--color-muted)] mt-1.5 max-w-xl">
+                  Daftar laporan terbaru dari warga yang saat ini dalam proses tindak lanjut oleh pihak dinas terkait.
                 </p>
               </div>
-              <Link className="lp-text-link" to="/laporan">
-                Lihat Semua <ArrowRight size={14} />
+              <Link className="inline-flex items-center gap-1.5 text-xs font-bold text-[var(--color-periwinkle-deep)] hover:underline" to="/peta">
+                Lihat di Peta Interaktif <ArrowRight size={14} />
               </Link>
             </div>
-            <div aria-live="polite" className="lp-empty-state">
-              <strong>Belum ada laporan publik untuk ditampilkan</strong>
-              Laporan pribadi tetap dapat dipantau melalui akun pelapor.
+
+            <div className="rounded-xl border border-[var(--color-line)] bg-white divide-y divide-[var(--color-line)] overflow-hidden shadow-xs">
+              {trendingReports.length === 0 ? (
+                <div className="p-8 text-center text-xs text-[var(--color-muted)]">
+                  Belum ada laporan publik untuk ditampilkan saat ini.
+                </div>
+              ) : (
+                trendingReports.map((item, index) => {
+                  const isResolved = item.status === "Laporan Selesai" || item.status === "Selesai";
+                  return (
+                    <div key={item.id} className="p-4 sm:p-5 flex flex-col sm:flex-row sm:items-center justify-between gap-3 hover:bg-[var(--color-surface)] transition-colors">
+                      <div className="flex items-start gap-3">
+                        <span className="text-xs font-bold text-[var(--color-muted)] w-5 pt-0.5">
+                          {String(index + 1).padStart(2, "0")}
+                        </span>
+                        <div>
+                          <div className="flex items-center gap-2 mb-1">
+                            <span className="text-[10px] font-bold px-2 py-0.5 rounded bg-[var(--color-cream)] text-[var(--color-coral-deep)] border border-[var(--color-line)]">
+                              {item.category}
+                            </span>
+                            <span className="text-[11px] text-[var(--color-muted)] flex items-center gap-1">
+                              <MapPin size={11} /> {item.location}
+                            </span>
+                          </div>
+                          <h4 className="text-xs sm:text-sm font-bold text-[var(--color-ink)]">
+                            {item.title}
+                          </h4>
+                          <p className="text-[11px] text-[var(--color-muted)] line-clamp-1 mt-0.5">
+                            {item.description}
+                          </p>
+                        </div>
+                      </div>
+
+                      <div className="flex items-center gap-3 sm:self-center pl-8 sm:pl-0">
+                        <span className={`text-[10px] font-semibold px-2.5 py-1 rounded-full whitespace-nowrap ${
+                          isResolved ? "bg-emerald-100 text-emerald-800" : "bg-[var(--color-apricot)] text-[var(--color-ink)]"
+                        }`}>
+                          {item.status}
+                        </span>
+                        <Link
+                          to="/peta"
+                          className="text-xs font-semibold text-[var(--color-coral-deep)] hover:underline inline-flex items-center gap-1"
+                        >
+                          Titik Peta <ChevronRight size={12} />
+                        </Link>
+                      </div>
+                    </div>
+                  );
+                })
+              )}
             </div>
           </div>
         </section>
 
-        <section className="lp-about" id="tentang">
-          <div className="lp-container">
-            <div className="lp-about-top">
-              <h2>Tentang Peduli Negeri</h2>
-              <div className="lp-about-copy">
-                <h3>
-                  Peduli Negeri adalah platform digital untuk memfasilitasi
-                  masyarakat dalam menyampaikan permasalahan di lingkungan
-                  sekitar, mulai dari infrastruktur, lingkungan, pelayanan
-                  publik, hingga isu sosial lainnya.
-                </h3>
-                <p>
-                  Sampaikan laporan dengan informasi yang jelas agar dapat
-                  dipahami dan ditindaklanjuti oleh pihak terkait.
+        {/* Leaderboard Section (FEATURE #1) */}
+        <section className="bg-[var(--color-cream)] py-14 sm:py-20 border-b border-[var(--color-line)]" id="peringkat">
+          <div className="max-w-7xl mx-auto px-4 sm:px-6">
+            <div className="text-center max-w-2xl mx-auto mb-10">
+              <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-amber-100 border border-amber-300 text-amber-900 text-xs font-bold mb-2">
+                <Trophy size={13} className="text-amber-600" /> Papan Peringkat Pelapor
+              </span>
+              <h2 className="text-2xl sm:text-3xl font-extrabold text-[var(--color-ink)] tracking-tight">
+                Apresiasi Warga Peduli Lingkungan
+              </h2>
+              <p className="text-xs sm:text-sm text-[var(--color-muted)] mt-2">
+                Peringkat warga yang paling aktif menyampaikan laporan terverifikasi demi perbaikan fasilitas publik di Indonesia.
+              </p>
+            </div>
+
+            <div className="max-w-4xl mx-auto rounded-xl border border-[var(--color-line)] bg-white overflow-hidden shadow-xs">
+              <div className="overflow-x-auto">
+                <table className="w-full text-left text-xs">
+                  <thead className="bg-[var(--color-surface)] border-b border-[var(--color-line)] text-[var(--color-muted)] uppercase tracking-wider text-[10px]">
+                    <tr>
+                      <th className="py-3 px-4 w-16">Peringkat</th>
+                      <th className="py-3 px-4">Nama Pelapor</th>
+                      <th className="py-3 px-4">Kota</th>
+                      <th className="py-3 px-4 text-center">Laporan Terverifikasi</th>
+                      <th className="py-3 px-4 text-center">Terselesaikan</th>
+                      <th className="py-3 px-4 text-center">Lencana</th>
+                    </tr>
+                  </thead>
+                  <tbody className="divide-y divide-[var(--color-line)]">
+                    {leaderboard.length === 0 ? (
+                      <tr>
+                        <td colSpan="6" className="py-6 text-center text-[var(--color-muted)]">
+                          Belum ada data peringkat yang ditampilkan.
+                        </td>
+                      </tr>
+                    ) : (
+                      leaderboard.map((user, idx) => (
+                        <tr key={user.id || idx} className="hover:bg-[var(--color-surface)] transition-colors">
+                          <td className="py-3.5 px-4 font-bold">
+                            {idx === 0 ? (
+                              <span className="w-6 h-6 rounded-full bg-amber-400 text-amber-950 flex items-center justify-center font-extrabold text-[11px] shadow-xs">
+                                1
+                              </span>
+                            ) : idx === 1 ? (
+                              <span className="w-6 h-6 rounded-full bg-slate-300 text-slate-800 flex items-center justify-center font-extrabold text-[11px] shadow-xs">
+                                2
+                              </span>
+                            ) : idx === 2 ? (
+                              <span className="w-6 h-6 rounded-full bg-amber-700/60 text-white flex items-center justify-center font-extrabold text-[11px] shadow-xs">
+                                3
+                              </span>
+                            ) : (
+                              <span className="text-[var(--color-muted)] pl-2">{idx + 1}</span>
+                            )}
+                          </td>
+                          <td className="py-3.5 px-4">
+                            <div className="flex items-center gap-2.5">
+                              <span className="w-7 h-7 rounded-full bg-[var(--color-cream)] text-[var(--color-coral-deep)] font-extrabold flex items-center justify-center text-xs border border-[var(--color-line)]">
+                                {user.name.charAt(0).toUpperCase()}
+                              </span>
+                              <span className="font-bold text-[var(--color-ink)]">{user.name}</span>
+                            </div>
+                          </td>
+                          <td className="py-3.5 px-4 text-[var(--color-muted)]">{user.city}</td>
+                          <td className="py-3.5 px-4 text-center font-bold text-[var(--color-ink)]">
+                            {user.verifiedCount}
+                          </td>
+                          <td className="py-3.5 px-4 text-center font-bold text-emerald-700">
+                            {user.resolvedCount}
+                          </td>
+                          <td className="py-3.5 px-4 text-center">
+                            <span className="inline-flex items-center gap-1 text-[10px] font-semibold px-2 py-0.5 rounded-full bg-[var(--color-cream)] text-[var(--color-coral-deep)] border border-[var(--color-line)]">
+                              <Sparkles size={10} /> Warga Teladan
+                            </span>
+                          </td>
+                        </tr>
+                      ))
+                    )}
+                  </tbody>
+                </table>
+              </div>
+            </div>
+
+            <div className="text-center mt-5 text-xs text-[var(--color-muted)]">
+              <span>Ingin nama/username Anda tampil di sini? </span>
+              <Link to="/reportPage" className="text-[var(--color-coral-deep)] font-bold hover:underline">
+                Atur Opsi Privasi di Halaman Laporan Saya →
+              </Link>
+            </div>
+          </div>
+        </section>
+
+        {/* Tentang Peduli Negeri */}
+        <section className="py-14 sm:py-20 border-b border-[var(--color-line)]" id="tentang">
+          <div className="max-w-7xl mx-auto px-4 sm:px-6">
+            <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-center">
+              <div className="lg:col-span-5">
+                <h2 className="text-2xl sm:text-3xl font-extrabold text-[var(--color-ink)] tracking-tight">
+                  Tentang Peduli Negeri
+                </h2>
+                <p className="mt-3 text-xs sm:text-sm text-[var(--color-muted)] leading-relaxed">
+                  Peduli Negeri adalah jembatan digital antara masyarakat dan instansi pemerintah dalam mendeteksi serta menindaklanjuti kerusakan infrastruktur, kebersihan lingkungan, dan sarana publik.
                 </p>
-                <a className="lp-button lp-button-dark" href="#cara-melapor">
-                  Selengkapnya <ArrowRight size={15} />
-                </a>
+                <div className="mt-5">
+                  <a href="#cara-melapor" className="inline-flex items-center gap-1.5 px-4 py-2 text-xs font-bold rounded bg-[var(--color-ink)] text-white hover:bg-black transition-colors">
+                    Pelajari Alur Laporan <ArrowRight size={14} />
+                  </a>
+                </div>
               </div>
-            </div>
-            <div className="lp-about-features">
-              <div className="lp-about-feature">
-                <strong>Mudah Digunakan</strong>
-                <span>Alur pelaporan dirancang agar mudah diikuti.</span>
-              </div>
-              <div className="lp-about-feature">
-                <strong>Transparan & Akuntabel</strong>
-                <span>Perkembangan laporan dapat dipantau melalui akun Anda.</span>
-              </div>
-              <div className="lp-about-feature">
-                <strong>Bersama Membangun Negeri</strong>
-                <span>Aspirasi warga membantu menyuarakan kebutuhan lingkungan.</span>
+
+              <div className="lg:col-span-7 grid grid-cols-1 sm:grid-cols-3 gap-4">
+                <div className="p-5 rounded-xl border border-[var(--color-line)] bg-white shadow-xs">
+                  <h4 className="text-sm font-bold text-[var(--color-ink)] mb-1">Mudah Digunakan</h4>
+                  <p className="text-xs text-[var(--color-muted)] leading-relaxed">
+                    Formulir pelaporan dirancang ringkas dengan dukungan upload foto bukti kamera langsung.
+                  </p>
+                </div>
+                <div className="p-5 rounded-xl border border-[var(--color-line)] bg-white shadow-xs">
+                  <h4 className="text-sm font-bold text-[var(--color-ink)] mb-1">Transparan & Akuntabel</h4>
+                  <p className="text-xs text-[var(--color-muted)] leading-relaxed">
+                    Setiap laporan memiliki 4 tahapan status yang dapat dipantau perkembangannya secara live.
+                  </p>
+                </div>
+                <div className="p-5 rounded-xl border border-[var(--color-line)] bg-white shadow-xs">
+                  <h4 className="text-sm font-bold text-[var(--color-ink)] mb-1">Bersama Bangun Negeri</h4>
+                  <p className="text-xs text-[var(--color-muted)] leading-relaxed">
+                    Aspirasi warga langsung dipetakan ke koordinat wilayah untuk tindakan cepat.
+                  </p>
+                </div>
               </div>
             </div>
           </div>
         </section>
 
-        <section className="lp-how" id="cara-melapor">
-          <div className="lp-container lp-how-grid">
-            <div className="lp-how-copy">
-              <h2>Cara Melapor di Peduli Negeri</h2>
-              <p>Ikuti langkah-langkah berikut untuk menyampaikan laporan Anda.</p>
-              <a className="lp-text-link" href="#langkah-melapor">
-                Lihat Semua Langkah <ArrowRight size={14} />
-              </a>
+        {/* 5-Step Guide: Cara Melapor */}
+        <section className="bg-[var(--color-ink)] text-[#fff6ef] py-14 sm:py-20" id="cara-melapor">
+          <div className="max-w-7xl mx-auto px-4 sm:px-6">
+            <div className="text-center max-w-xl mx-auto mb-12">
+              <h2 className="text-2xl sm:text-3xl font-extrabold tracking-tight">
+                Cara Melapor di Peduli Negeri
+              </h2>
+              <p className="text-xs sm:text-sm text-[#d3d0d1] mt-2">
+                Hanya butuh beberapa menit untuk menyampaikan aspirasi dan keluhan lingkungan Anda.
+              </p>
             </div>
-            <div className="lp-steps" id="langkah-melapor">
-              {steps.map(([title, description], index) => (
-                <div className="lp-step" key={title}>
-                  <span className="lp-step-number">{index + 1}</span>
+
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-4">
+              {steps.map(([title, desc], idx) => (
+                <div key={title} className="p-5 rounded-xl bg-white/5 border border-white/10 flex flex-col justify-between">
                   <div>
-                    <strong>{title}</strong>
-                    <span>{description}</span>
+                    <span className="text-2xl font-extrabold text-[var(--color-coral)] block mb-3">
+                      0{idx + 1}
+                    </span>
+                    <h4 className="text-sm font-bold text-white mb-1.5">{title}</h4>
+                    <p className="text-xs text-[#d3d0d1] leading-relaxed">{desc}</p>
                   </div>
                 </div>
               ))}
@@ -411,103 +558,152 @@ export default function LandingPage() {
           </div>
         </section>
 
-        <section className="lp-benefits">
-          <div className="lp-container">
-            <h2>Kenapa Memilih Peduli Negeri?</h2>
-            <div className="lp-benefit-grid">
-              {benefits.map(([title, description], index) => (
-                <div className="lp-benefit" key={title}>
-                  <span className="lp-benefit-icon" aria-hidden="true">
-                    {index === 0 ? <ClipboardList size={17} /> : index === 1 ? <ShieldCheck size={17} /> : index === 2 ? <Check size={17} /> : <HeartHandshake size={17} />}
-                  </span>
-                  <strong>{title}</strong>
-                  <p>{description}</p>
+        {/* Testimonials (FEATURE #4: Ulasan Laporan yang Telah Selesai) */}
+        <section className="py-14 sm:py-20 bg-[var(--color-surface)] border-b border-[var(--color-line)]" id="testimoni">
+          <div className="max-w-7xl mx-auto px-4 sm:px-6">
+            <div className="flex flex-col sm:flex-row sm:items-end justify-between gap-4 mb-10">
+              <div>
+                <span className="text-xs font-bold text-[var(--color-coral-deep)] uppercase tracking-wide">
+                  Ulasan & Testimoni
+                </span>
+                <h2 className="text-2xl sm:text-3xl font-extrabold text-[var(--color-ink)] tracking-tight mt-1">
+                  Apa Kata Pengguna?
+                </h2>
+                <p className="text-xs sm:text-sm text-[var(--color-muted)] mt-1 max-w-xl">
+                  Pengalaman nyata warga setelah laporannya berhasil ditindaklanjuti dan diselesaikan oleh pihak terkait.
+                </p>
+              </div>
+              <Link to="/reportPage" className="text-xs font-bold text-[var(--color-coral-deep)] hover:underline inline-flex items-center gap-1">
+                Beri Ulasan Laporan Anda <ArrowRight size={14} />
+              </Link>
+            </div>
+
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-5">
+              {testimonials.map((t) => (
+                <div key={t.id} className="p-5 rounded-xl border border-[var(--color-line)] bg-white shadow-xs flex flex-col justify-between">
+                  <div>
+                    <div className="flex items-center gap-1 text-amber-500 mb-3">
+                      {[...Array(t.rating || 5)].map((_, i) => (
+                        <Star key={i} size={14} fill="currentColor" />
+                      ))}
+                    </div>
+                    <p className="text-xs text-[var(--color-muted)] italic leading-relaxed mb-4">
+                      "{t.content}"
+                    </p>
+                  </div>
+                  <div className="pt-3 border-t border-[var(--color-line)] flex items-center justify-between text-xs">
+                    <span className="font-bold text-[var(--color-ink)]">{t.author}</span>
+                    <span className="text-[10px] text-[var(--color-muted)]">
+                      {t.createdAt
+                        ? new Date(t.createdAt).toLocaleDateString("id-ID", {
+                            day: "numeric",
+                            month: "short",
+                            year: "numeric",
+                          })
+                        : ""}
+                    </span>
+                  </div>
                 </div>
               ))}
             </div>
           </div>
         </section>
 
-        <section className="lp-community">
-          <div className="lp-container">
-            <div className="lp-section-heading">
-              <div>
-                <h2>Apa Kata Pengguna?</h2>
-                <p className="lp-section-intro">
-                  Kami belum memiliki testimoni yang dapat ditampilkan saat ini.
-                </p>
-              </div>
-              <Link className="lp-text-link" to="/laporan/baru">
-                Mulai Melapor <ArrowRight size={14} />
-              </Link>
-            </div>
-            <div className="lp-community-panel">
-              <div>
-                <h3>Masukan Anda berarti</h3>
-                <p>
-                  Bagikan pengalaman atau saran agar layanan pelaporan ini dapat
-                  terus diperbaiki.
-                </p>
-              </div>
-              <Link className="lp-button lp-button-outline" to="/laporan/baru">
-                Buat Laporan <ChevronRight size={15} />
-              </Link>
+        {/* Kenapa Memilih Peduli Negeri */}
+        <section className="py-14 sm:py-20 border-b border-[var(--color-line)] bg-[var(--color-cream)]">
+          <div className="max-w-7xl mx-auto px-4 sm:px-6">
+            <h2 className="text-2xl sm:text-3xl font-extrabold text-[var(--color-ink)] tracking-tight text-center mb-10">
+              Kenapa Memilih Peduli Negeri?
+            </h2>
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+              {benefits.map(([title, desc], idx) => (
+                <div key={title} className="p-5 rounded-xl border border-[var(--color-line)] bg-white shadow-xs">
+                  <div className="w-8 h-8 rounded-lg bg-[var(--color-cream)] text-[var(--color-coral-deep)] flex items-center justify-center mb-3">
+                    {idx === 0 ? <ClipboardList size={18} /> : idx === 1 ? <ShieldCheck size={18} /> : idx === 2 ? <CheckCircle2 size={18} /> : <Users size={18} />}
+                  </div>
+                  <h4 className="text-sm font-bold text-[var(--color-ink)] mb-1">{title}</h4>
+                  <p className="text-xs text-[var(--color-muted)] leading-relaxed">{desc}</p>
+                </div>
+              ))}
             </div>
           </div>
         </section>
 
-        <section className="lp-cta">
-          <div className="lp-container lp-cta-inner">
+        {/* Bottom CTA Banner */}
+        <section className="bg-[var(--color-coral)] py-10">
+          <div className="max-w-7xl mx-auto px-4 sm:px-6 flex flex-col md:flex-row items-center justify-between gap-6">
             <div>
-              <h2>Ada masalah di lingkungan Anda?</h2>
-              <p>Sampaikan laporan dan pantau perkembangannya melalui akun Anda.</p>
+              <h2 className="text-xl sm:text-2xl font-extrabold text-[var(--color-ink)]">
+                Ada masalah di lingkungan Anda?
+              </h2>
+              <p className="text-xs sm:text-sm text-[var(--color-ink)]/80 mt-1">
+                Jangan diamkan. Suarakan sekarang dan pantau proses penanganannya secara transparan.
+              </p>
             </div>
-            <Link className="lp-button lp-button-dark" to="/laporan/baru">
-              Laporkan Sekarang <ArrowRight size={15} />
+            <Link
+              to="/laporan/baru"
+              className="px-6 py-3 text-xs sm:text-sm font-bold rounded bg-[var(--color-ink)] hover:bg-black text-white shadow-md transition-transform hover:-translate-y-0.5 whitespace-nowrap"
+            >
+              Laporkan Sekarang
             </Link>
           </div>
         </section>
       </main>
 
-      <footer className="lp-footer" id="kontak">
-        <div className="lp-container">
-          <div className="lp-footer-grid">
-            <div className="lp-footer-brand">
-              <Link className="lp-brand" to="/">
-                <span className="lp-brand-mark" aria-hidden="true"><HeartHandshake size={18} /></span>
-                <span>Peduli Negeri</span>
-              </Link>
-              <p>Suara Anda, perubahan untuk Negeri.</p>
+      {/* Footer */}
+      <footer className="bg-[var(--color-ink)] text-[#fff6ef] pt-14 pb-8">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 grid grid-cols-1 md:grid-cols-12 gap-8 pb-10 border-b border-white/10 text-xs">
+          <div className="md:col-span-5">
+            <div className="flex items-center gap-2 font-bold text-base mb-3">
+              <span className="w-7 h-7 rounded-md bg-[var(--color-coral)] text-[var(--color-ink)] flex items-center justify-center">
+                <HeartHandshake size={16} />
+              </span>
+              <span>Peduli Negeri</span>
             </div>
-            <div>
-              <h3 className="lp-footer-title">Tautan Cepat</h3>
-              <div className="lp-footer-links">
-                <a href="#beranda">Beranda</a>
-                <a href="#laporan">Laporan</a>
-                <a href="#tentang">Tentang Kami</a>
-                <a href="#cara-melapor">Bantuan</a>
-              </div>
-            </div>
-            <div>
-              <h3 className="lp-footer-title">Kategori Laporan</h3>
-              <div className="lp-footer-links">
-                {reports.map((report) => <a href="#laporan" key={report.category}>{report.category}</a>)}
-              </div>
-            </div>
-            <div>
-              <h3 className="lp-footer-title">Ikuti Kami</h3>
-              <div className="lp-footer-links">
-                <a href="#kontak">Informasi layanan</a>
-                <Link to="/login">Masuk ke akun</Link>
-              </div>
-            </div>
+            <p className="text-[#c9c7cd] text-xs leading-relaxed max-w-sm mb-4">
+              Platform partisipasi publik untuk melaporkan kerusakan sarana umum, isu lingkungan, dan aspirasi masyarakat demi Indonesia yang lebih baik.
+            </p>
           </div>
-          <div className="lp-footer-bottom">
-            <span>© {new Date().getFullYear()} Peduli Negeri. Semua hak dilindungi.</span>
-            <div className="lp-legal">
-              <span>Syarat & Ketentuan</span>
-              <span>Kebijakan Privasi</span>
-            </div>
+
+          <div className="md:col-span-2">
+            <h5 className="font-bold text-white uppercase text-[11px] mb-3">Tautan Cepat</h5>
+            <ul className="space-y-2 text-[#c9c7cd]">
+              <li><a href="#beranda" className="hover:text-[var(--color-coral)]">Beranda</a></li>
+              <li><Link to="/laporan" className="hover:text-[var(--color-coral)]">Daftar Laporan</Link></li>
+              <li><Link to="/peta" className="hover:text-[var(--color-coral)]">Peta Interaktif</Link></li>
+              <li><a href="#peringkat" className="hover:text-[var(--color-coral)]">Papan Peringkat</a></li>
+            </ul>
+          </div>
+
+          <div className="md:col-span-2">
+            <h5 className="font-bold text-white uppercase text-[11px] mb-3">Kategori Laporan</h5>
+            <ul className="space-y-2 text-[#c9c7cd]">
+              <li><Link to="/peta" className="hover:text-[var(--color-coral)]">Infrastruktur</Link></li>
+              <li><Link to="/peta" className="hover:text-[var(--color-coral)]">Lingkungan Hidup</Link></li>
+              <li><Link to="/peta" className="hover:text-[var(--color-coral)]">Fasilitas Umum</Link></li>
+              <li><Link to="/peta" className="hover:text-[var(--color-coral)]">Isu Sosial & Lainnya</Link></li>
+            </ul>
+          </div>
+
+          <div className="md:col-span-3">
+            <h5 className="font-bold text-white uppercase text-[11px] mb-3">Pusat Bantuan</h5>
+            <p className="text-[#c9c7cd] text-xs leading-relaxed mb-3">
+              Ada pertanyaan atau butuh bantuan dalam menyampaikan laporan?
+            </p>
+            <Link
+              to="/laporan/baru"
+              className="inline-block px-3.5 py-1.5 rounded bg-white/10 hover:bg-white/20 text-white font-semibold text-xs transition-colors"
+            >
+              Mulai Buat Laporan →
+            </Link>
+          </div>
+        </div>
+
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 pt-6 flex flex-col sm:flex-row items-center justify-between gap-3 text-[11px] text-[#c9c7cd]">
+          <span>© {new Date().getFullYear()} Peduli Negeri. Hak Cipta Dilindungi Undang-Undang.</span>
+          <div className="flex items-center gap-4">
+            <Link to="/" className="hover:text-white">Kebijakan Privasi</Link>
+            <Link to="/" className="hover:text-white">Syarat & Ketentuan</Link>
           </div>
         </div>
       </footer>

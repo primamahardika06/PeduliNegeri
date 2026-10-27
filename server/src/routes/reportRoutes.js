@@ -4,6 +4,9 @@ import {
   getAllReports,
   getMyReports,
   updateReportStatus,
+  getPublicReports,
+  getPublicStats,
+  getLeaderboard,
 } from "../controllers/reportController.js";
 import { requireUser } from "../middlewares/requireUser.js";
 import { requireAdmin } from "../middlewares/requireAdmin.js";
@@ -11,6 +14,12 @@ import { limitReportSubmissions } from "../middlewares/reportRateLimit.js";
 
 const router = Router();
 
+// Endpoint Publik (Peta, Landing Page, Leaderboard, Stats)
+router.get("/public", getPublicReports);
+router.get("/stats/public", getPublicStats);
+router.get("/leaderboard", getLeaderboard);
+
+// Endpoint Terautentikasi
 router.use(requireUser);
 router.get("/admin", requireAdmin, getAllReports);
 router.patch("/:id/status", requireAdmin, updateReportStatus);

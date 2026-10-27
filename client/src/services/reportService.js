@@ -42,4 +42,16 @@ export const reportService = {
       body: JSON.stringify({ status }),
     });
   },
+
+  async getPublicReports() {
+    return request("/public");
+  },
+
+  async getPublicStats() {
+    return request("/stats/public");
+  },
+
+  async getLeaderboard() {
+    return request("/leaderboard");
+  },
 };
