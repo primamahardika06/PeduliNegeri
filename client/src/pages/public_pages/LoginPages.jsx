@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, Link } from "react-router-dom";
 import {
   Camera,
   ArrowRight,
@@ -10,6 +10,7 @@ import {
 } from "lucide-react";
 import { authService } from "../../services/authService";
 import logoPeduliNegeri from "../../assets/PeduliNegeri (4).png";
+import BrandLogo from "../../components/common/BrandLogo";
 
 export default function LoginPages({ onLoginSuccess }) {
   const navigate = useNavigate();
@@ -208,13 +209,22 @@ export default function LoginPages({ onLoginSuccess }) {
         className="w-full lg:w-[48%] xl:w-[46%] p-6 sm:p-10 lg:p-14 flex flex-col justify-between shrink-0"
         style={{ backgroundColor: "#EB936E" }}
       >
-        {/* Logo PeduliNegeri */}
-        <div className="flex items-center gap-3">
-          <img
-            src={logoPeduliNegeri}
-            alt="Peduli Negeri"
-            className="h-10 sm:h-12 w-auto object-contain drop-shadow-xs"
-          />
+        {/* Logo PeduliNegeri & Tombol Kembali */}
+        <div className="flex items-center justify-between gap-3 w-full">
+          <Link to="/" className="flex items-center gap-3">
+            <img
+              src={logoPeduliNegeri}
+              alt="Peduli Negeri"
+              className="h-9 sm:h-11 w-auto object-contain drop-shadow-xs"
+            />
+          </Link>
+          <Link
+            to="/"
+            className="inline-flex min-h-11 items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-semibold bg-white/30 hover:bg-white/60 text-[#1E2430] border border-[#1E2430]/20 transition shadow-2xs cursor-pointer"
+          >
+            <ArrowLeft className="w-3.5 h-3.5" />
+            <span>Kembali ke Beranda</span>
+          </Link>
         </div>
 
         {/* Card Foto Mockup & Headline */}
@@ -295,8 +305,16 @@ export default function LoginPages({ onLoginSuccess }) {
         style={{ backgroundColor: "#FAF5EE" }}
       >
         {/* Navigasi Switcher di Pojok Kanan Atas */}
-        <div className="flex justify-end text-xs sm:text-sm text-[#5C6070] mb-4">
-          {authMode === "login" && (
+        <div className="flex items-center justify-between text-xs sm:text-sm text-[#5C6070] mb-4 gap-2">
+          <Link
+            to="/"
+            className="lg:hidden inline-flex min-h-11 items-center gap-1.5 font-bold text-[#1E2430] hover:text-[#2D3F65] cursor-pointer"
+          >
+            <ArrowLeft className="w-4 h-4 text-[#EB936E]" />
+            <span>Beranda</span>
+          </Link>
+          <div className="ml-auto">
+            {authMode === "login" && (
             <p>
               Belum punya akun?{" "}
               <button
@@ -332,6 +350,7 @@ export default function LoginPages({ onLoginSuccess }) {
               Kembali ke Masuk
             </button>
           )}
+          </div>
         </div>
 
         {/* Kontainer Form */}

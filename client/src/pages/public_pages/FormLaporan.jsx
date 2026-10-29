@@ -19,6 +19,7 @@ import {
   compressImageFile,
   captureVideoFrame,
 } from "../../utils/imageCompressor";
+import BrandLogo from "../../components/common/BrandLogo";
 
 const CATEGORIES = [
   "Infrastruktur",
@@ -191,21 +192,8 @@ export default function FormLaporan({ currentUser }) {
     >
       {/* ── Header ──────────────────────────────────────────── */}
       <header className="mx-auto flex max-w-3xl items-center justify-between">
-        <Link
-          to="/reportPage"
-          className="flex items-center gap-2.5"
-          style={{ color: "var(--color-ink)" }}
-        >
-          <span
-            className="flex h-9 w-9 items-center justify-center rounded-xl text-white"
-            style={{ backgroundColor: "var(--color-coral)" }}
-          >
-            <HeartHandshake className="h-5 w-5" />
-          </span>
-          <span className="font-display">
-            Peduli
-            <span style={{ color: "var(--color-coral-deep)" }}>Negeri</span>
-          </span>
+        <Link to="/reportPage">
+          <BrandLogo size="md" />
         </Link>
         <span className="text-sm" style={{ color: "var(--color-muted)" }}>
           {currentUser?.fullName || "Warga"}

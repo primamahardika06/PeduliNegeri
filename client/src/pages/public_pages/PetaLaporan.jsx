@@ -17,6 +17,7 @@ import {
 } from "lucide-react";
 import { reportService } from "../../services/reportService";
 import { authService } from "../../services/authService";
+import BrandLogo from "../../components/common/BrandLogo";
 
 const REGIONS = [
   "Semua Wilayah",
@@ -285,11 +286,8 @@ export default function PetaLaporan() {
       {/* Top Navigation */}
       <header className="sticky top-0 z-30 bg-[#fdebe0]/95 backdrop-blur-md border-b border-[#ecd6c8]">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 h-16 flex items-center justify-between gap-4">
-          <Link to="/" className="flex items-center gap-2.5 font-bold text-base">
-            <span className="w-8 h-8 rounded-md bg-[var(--color-ink)] text-[var(--color-surface)] flex items-center justify-center">
-              <HeartHandshake size={18} />
-            </span>
-            <span>Peduli Negeri</span>
+          <Link to="/">
+            <BrandLogo size="md" />
           </Link>
 
           <nav className="hidden md:flex items-center gap-6 text-sm text-[var(--color-muted)] font-medium">

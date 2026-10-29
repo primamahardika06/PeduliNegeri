@@ -97,13 +97,22 @@ export default function ResetPassword() {
         className="w-full lg:w-[48%] xl:w-[46%] p-6 sm:p-10 lg:p-14 flex flex-col justify-between shrink-0"
         style={{ backgroundColor: "#EB936E" }}
       >
-        {/* Logo PeduliNegeri */}
-        <div className="flex items-center gap-3">
-          <img
-            src={logoPeduliNegeri}
-            alt="Peduli Negeri"
-            className="h-10 sm:h-12 w-auto object-contain drop-shadow-xs"
-          />
+        {/* Logo PeduliNegeri & Tombol Kembali */}
+        <div className="flex items-center justify-between gap-3 w-full">
+          <Link to="/" className="flex items-center gap-3">
+            <img
+              src={logoPeduliNegeri}
+              alt="Peduli Negeri"
+              className="h-9 sm:h-11 w-auto object-contain drop-shadow-xs"
+            />
+          </Link>
+          <Link
+            to="/"
+            className="inline-flex min-h-11 items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-semibold bg-white/30 hover:bg-white/60 text-[#1E2430] border border-[#1E2430]/20 transition shadow-2xs cursor-pointer"
+          >
+            <ArrowLeft className="w-3.5 h-3.5" />
+            <span>Kembali ke Beranda</span>
+          </Link>
         </div>
 
         {/* Card Ilustrasi & Headline */}

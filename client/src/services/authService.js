@@ -130,12 +130,76 @@ export const authService = {
   },
 
   /**
+   * Helper internal untuk decode payload token JWT
+   */
+  decodeToken(token) {
+    try {
+      if (!token || typeof token !== "string") return null;
+      const parts = token.split(".");
+      if (parts.length < 2) return null;
+      const base64Url = parts[1];
+      const base64 = base64Url.replace(/-/g, "+").replace(/_/g, "/");
+      const jsonPayload = decodeURIComponent(
+        atob(base64)
+          .split("")
+          .map((c) => "%" + ("00" + c.charCodeAt(0).toString(16)).slice(-2))
+          .join(""),
+      );
+      return JSON.parse(jsonPayload);
+    } catch {
+      return null;
+    }
+  },
+
+  /**
+   * Periksa apakah sesi/token saat ini sudah habis masa berlakunya
+   */
+  isSessionExpired() {
+    const user = this.getCurrentUser();
+    if (!user) return false;
+
+    const token = localStorage.getItem("pn_token");
+    if (!token) return true; // Ada user tapi token tidak ada
+
+    const payload = this.decodeToken(token);
+    if (!payload || !payload.exp) return false;
+
+    // Kadaluarsa jika waktu saat ini sudah melewati payload.exp (dalam detik)
+    return Date.now() >= payload.exp * 1000;
+  },
+
+  /**
+   * Bersihkan sesi yang kadaluarsa dan otomatis redirect ke landing page (/)
+   */
+  handleSessionExpired() {
+    this.logout();
+    window.dispatchEvent(new CustomEvent("pn_session_expired"));
+
+    // Jika bukan di landing page atau halaman login, arahkan ke landing page
+    if (window.location.pathname !== "/" && window.location.pathname !== "/login") {
+      window.location.href = "/";
+    }
+  },
+
+  /**
    * Dapatkan user yang sedang aktif dari penyimpanan lokal
    */
   getCurrentUser() {
     try {
       const stored = localStorage.getItem("pn_user");
-      return stored ? JSON.parse(stored) : null;
+      if (!stored) return null;
+      const user = JSON.parse(stored);
+
+      // Cek otomatis apakah token sudah kadaluarsa saat membaca user
+      const token = localStorage.getItem("pn_token");
+      if (token) {
+        const payload = this.decodeToken(token);
+        if (payload?.exp && Date.now() >= payload.exp * 1000) {
+          this.logout();
+          return null;
+        }
+      }
+      return user;
     } catch {
       return null;
     }

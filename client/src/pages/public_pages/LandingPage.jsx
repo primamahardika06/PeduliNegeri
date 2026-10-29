@@ -23,6 +23,7 @@ import {
 import { reportService } from "../../services/reportService";
 import { testimonialService } from "../../services/testimonialService";
 import { authService } from "../../services/authService";
+import BrandLogo from "../../components/common/BrandLogo";
 
 const steps = [
   ["Daftar / Masuk", "Buat akun atau masuk ke akun yang sudah ada."],
@@ -124,11 +125,8 @@ export default function LandingPage() {
       {/* Top Navbar */}
       <header className="sticky top-0 z-30 bg-[#fdebe0]/95 backdrop-blur-md border-b border-[#ecd6c8]">
         <nav className="max-w-7xl mx-auto px-4 sm:px-6 h-16 flex items-center justify-between gap-4" aria-label="Navigasi utama">
-          <Link className="flex items-center gap-2.5 font-bold text-base tracking-tight" to="/" onClick={closeMenu}>
-            <span className="w-8 h-8 rounded-md bg-[var(--color-ink)] text-[var(--color-surface)] flex items-center justify-center">
-              <HeartHandshake size={18} />
-            </span>
-            <span>Peduli Negeri</span>
+          <Link to="/" onClick={closeMenu}>
+            <BrandLogo size="md" />
           </Link>
 
           <div className="hidden md:flex items-center gap-7 text-xs font-semibold text-[var(--color-muted)]">
@@ -654,11 +652,8 @@ export default function LandingPage() {
       <footer className="bg-[var(--color-ink)] text-[#fff6ef] pt-14 pb-8">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 grid grid-cols-1 md:grid-cols-12 gap-8 pb-10 border-b border-white/10 text-xs">
           <div className="md:col-span-5">
-            <div className="flex items-center gap-2 font-bold text-base mb-3">
-              <span className="w-7 h-7 rounded-md bg-[var(--color-coral)] text-[var(--color-ink)] flex items-center justify-center">
-                <HeartHandshake size={16} />
-              </span>
-              <span>Peduli Negeri</span>
+            <div className="mb-3">
+              <BrandLogo size="md" isDark={true} />
             </div>
             <p className="text-[#c9c7cd] text-xs leading-relaxed max-w-sm mb-4">
               Platform partisipasi publik untuk melaporkan kerusakan sarana umum, isu lingkungan, dan aspirasi masyarakat demi Indonesia yang lebih baik.

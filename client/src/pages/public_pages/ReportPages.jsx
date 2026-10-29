@@ -19,10 +19,12 @@ import {
   Eye,
   Send,
   Sparkles,
+  ArrowLeft,
 } from "lucide-react";
 import { authService } from "../../services/authService";
 import { reportService } from "../../services/reportService";
 import { testimonialService } from "../../services/testimonialService";
+import BrandLogo from "../../components/common/BrandLogo";
 
 const CATEGORIES = [
   "Semua",
@@ -259,13 +261,8 @@ export default function ReportPages({ currentUser, onLogout }) {
         <div className="mx-auto max-w-7xl px-4 sm:px-6 h-18 flex items-center justify-between">
           {/* Brand */}
           <div className="flex items-center gap-6">
-            <Link to="/" className="flex items-center gap-3 select-none group">
-              <span className="w-10 h-10 rounded-2xl bg-[var(--color-ink)] flex items-center justify-center text-white shadow-sm transition-transform group-hover:scale-105">
-                <span className="w-4 h-4 rounded-full bg-[var(--color-coral)]" />
-              </span>
-              <span className="text-xl font-display tracking-tight text-(--color-ink)">
-                Peduli<span style={{ color: "var(--color-coral)" }}>Negeri</span>
-              </span>
+            <Link to="/" className="flex items-center select-none group">
+              <BrandLogo size="md" />
             </Link>
 
             {/* Quick Public Links */}
@@ -322,7 +319,18 @@ export default function ReportPages({ currentUser, onLogout }) {
       </header>
 
       {/* ── Main Split-View Content ─────────────────────────── */}
-      <main className="mx-auto max-w-7xl px-4 sm:px-6 py-6 sm:py-8">
+      <main className="mx-auto max-w-7xl px-4 sm:px-6 py-4 sm:py-8">
+        {/* Tombol Kembali ke Beranda khusus tampilan Mobile */}
+        <div className="md:hidden mb-4">
+          <Link
+            to="/"
+            className="inline-flex min-h-11 items-center gap-2 px-3.5 py-2 rounded-xl text-xs font-semibold bg-white/80 border border-[var(--color-line)] text-[var(--color-ink)] hover:bg-white transition shadow-2xs"
+          >
+            <ArrowLeft className="w-4 h-4 text-[var(--color-coral-deep)]" />
+            <span>Kembali ke Beranda</span>
+          </Link>
+        </div>
+
         <div className="flex flex-col lg:flex-row gap-6 lg:gap-8 items-start">
           
           {/* ══════════════════════════════════════════════════════ */}

@@ -1,6 +1,14 @@
+import { authService } from "./authService";
+
 const API_URL = import.meta.env.VITE_API_URL || "http://localhost:5000/api";
 
 async function request(path, options = {}) {
+  // Cek lokal terlebih dahulu apakah token sudah kadaluarsa
+  if (authService.isSessionExpired()) {
+    authService.handleSessionExpired();
+    throw new Error("Sesi Anda telah berakhir. Mengalihkan ke beranda...");
+  }
+
   const token = localStorage.getItem("pn_token");
   const response = await fetch(`${API_URL}/reports${path}`, {
     ...options,
@@ -10,6 +18,11 @@ async function request(path, options = {}) {
       ...options.headers,
     },
   });
+
+  if (response.status === 401) {
+    authService.handleSessionExpired();
+    throw new Error("Sesi Anda telah berakhir. Mengalihkan ke beranda...");
+  }
 
   const result = await response.json();
   if (!response.ok) {

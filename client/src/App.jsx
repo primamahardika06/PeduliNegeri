@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
 import LoginPages from "./pages/public_pages/LoginPages";
 import ReportPages from "./pages/public_pages/ReportPages";
@@ -14,6 +14,33 @@ export default function App() {
   const [currentUser, setCurrentUser] = useState(() =>
     authService.getCurrentUser(),
   );
+
+  useEffect(() => {
+    // Fungsi untuk cek validitas sesi
+    const checkAuthSession = () => {
+      if (currentUser && authService.isSessionExpired()) {
+        setCurrentUser(null);
+        authService.handleSessionExpired();
+      }
+    };
+
+    // Dengarkan event internal jika token/sesi kadaluarsa
+    const onSessionExpired = () => {
+      setCurrentUser(null);
+    };
+
+    window.addEventListener("pn_session_expired", onSessionExpired);
+    window.addEventListener("focus", checkAuthSession);
+
+    // Cek berkala setiap 30 detik
+    const timer = setInterval(checkAuthSession, 30000);
+
+    return () => {
+      window.removeEventListener("pn_session_expired", onSessionExpired);
+      window.removeEventListener("focus", checkAuthSession);
+      clearInterval(timer);
+    };
+  }, [currentUser]);
 
   return (
     <BrowserRouter>
