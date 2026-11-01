@@ -74,7 +74,21 @@ npm run dev
 ```
 Aplikasi frontend akan aktif di: `http://localhost:5173`
 
+
+### 5. Cara Login (User/Admin)
+Masuk ke halaman login atau daftar akun baru:
+```bash
+# Admin
+Email: admin@gmail.com
+Password: admin123
+# User
+Email: p@gmail.com
+Password: 12345678
+```
+
 ---
+
+
 
 ## 📌 Progress Saat Ini
 
