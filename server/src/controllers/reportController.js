@@ -7,9 +7,9 @@ const REPORT_CATEGORIES = [
   "Lainnya",
 ];
 const REPORT_FIELDS =
-  "id, title, category, description, location, status, image_url, latitude, longitude, province, created_at";
+  "id, title, category, description, location, status, image_url, latitude, longitude, province, status_timeline, created_at";
 const FALLBACK_REPORT_FIELDS =
-  "id, title, category, description, location, status, image_url, created_at";
+  "id, title, category, description, location, status, image_url, latitude, longitude, province, created_at";
 const MINIMAL_REPORT_FIELDS =
   "id, title, category, description, location, status, created_at";
 const REPORT_STATUSES = [
@@ -145,6 +145,7 @@ export async function createReport(req, res) {
   if (!db) return undefined;
 
   try {
+    const now = new Date().toISOString();
     const insertPayload = {
       user_id: req.authUser.id,
       title: title.trim(),
@@ -152,6 +153,9 @@ export async function createReport(req, res) {
       description: description.trim(),
       location: location.trim(),
       status: "Laporan Diterima",
+      status_timeline: [
+        { status: "Laporan Diterima", timestamp: now }
+      ],
     };
 
     if (cleanImageUrl) {
@@ -179,8 +183,9 @@ export async function createReport(req, res) {
       .select(REPORT_FIELDS)
       .single();
 
-    // Fallback jika kolom latitude / image_url belum dimigrasi
+    // Fallback jika kolom status_timeline / latitude / image_url belum dimigrasi
     if (error) {
+      delete insertPayload.status_timeline;
       delete insertPayload.latitude;
       delete insertPayload.longitude;
       delete insertPayload.province;
@@ -270,17 +275,43 @@ export async function updateReportStatus(req, res) {
   if (!db) return undefined;
 
   try {
+    const now = new Date().toISOString();
+
+    // Ambil data laporan lama untuk melacak timeline riwayat perubahan status
+    const { data: existingReport } = await db
+      .from("reports")
+      .select("id, status, created_at, status_timeline")
+      .eq("id", req.params.id)
+      .maybeSingle();
+
+    let timeline = [];
+    if (existingReport && Array.isArray(existingReport.status_timeline)) {
+      timeline = [...existingReport.status_timeline];
+    } else if (existingReport) {
+      timeline = [
+        { status: "Laporan Diterima", timestamp: existingReport.created_at || now },
+      ];
+    }
+
+    const existingIdx = timeline.findIndex((e) => e.status === status);
+    if (existingIdx === -1) {
+      timeline.push({ status, timestamp: now });
+    } else {
+      timeline[existingIdx] = { status, timestamp: now };
+    }
+
     let { data, error } = await db
       .from("reports")
-      .update({ status })
+      .update({ status, status_timeline: timeline, updated_at: now })
       .eq("id", req.params.id)
       .select(`${REPORT_FIELDS}, updated_at`)
       .maybeSingle();
 
     if (error) {
+      // Fallback jika kolom status_timeline belum tersedia di database
       const retry = await db
         .from("reports")
-        .update({ status })
+        .update({ status, updated_at: now })
         .eq("id", req.params.id)
         .select(`${FALLBACK_REPORT_FIELDS}, updated_at`)
         .maybeSingle();

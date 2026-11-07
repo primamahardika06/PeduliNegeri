@@ -15,7 +15,6 @@ import {
   AlertCircle,
   CheckCircle2,
   FileText,
-  User,
   Eye,
   Send,
   Sparkles,
@@ -81,6 +80,50 @@ function formatFullDateTime(value) {
   }
 }
 
+function getStepTimestamp(report, stepObj, currentStep) {
+  if (!report) return null;
+
+  if (Array.isArray(report.status_timeline) && report.status_timeline.length > 0) {
+    const entry = report.status_timeline.find(
+      (e) =>
+        e.status === stepObj.key ||
+        e.status === stepObj.label ||
+        (stepObj.altKey && e.status === stepObj.altKey) ||
+        (stepObj.step === 2 &&
+          (e.status === "Laporan Diproses" ||
+            e.status === "Sedang Diverifikasi" ||
+            e.status === "Diverifikasi")) ||
+        (stepObj.step === 4 &&
+          (e.status === "Laporan Selesai" || e.status === "Selesai")),
+    );
+    if (entry && entry.timestamp) {
+      return entry.timestamp;
+    }
+  }
+
+  // Fallback jika timeline belum tercatat
+  if (stepObj.step === 1) {
+    return report.created_at;
+  }
+
+  if (stepObj.step <= currentStep) {
+    if (stepObj.step === currentStep) {
+      return report.updated_at || report.created_at;
+    }
+    if (report.updated_at && report.created_at) {
+      const cTime = new Date(report.created_at).getTime();
+      const uTime = new Date(report.updated_at).getTime();
+      if (uTime > cTime) {
+        const factor = (stepObj.step - 1) / (currentStep - 1);
+        return new Date(cTime + (uTime - cTime) * factor).toISOString();
+      }
+    }
+    return report.created_at;
+  }
+
+  return null;
+}
+
 export default function ReportPages({ currentUser, onLogout }) {
   const navigate = useNavigate();
   const [user, setUser] = useState(() => currentUser || authService.getCurrentUser());
@@ -100,10 +143,10 @@ export default function ReportPages({ currentUser, onLogout }) {
 
   // Leaderboard privacy settings
   const [leaderboardVisible, setLeaderboardVisible] = useState(
-    Boolean(user?.leaderboard_visible)
+    Boolean(user?.leaderboard_visible),
   );
   const [displayType, setDisplayType] = useState(
-    user?.leaderboard_display_type === "username" ? "username" : "name"
+    user?.leaderboard_display_type === "username" ? "username" : "name",
   );
   const [username, setUsername] = useState(user?.leaderboard_username || "");
   const [savingPrivacy, setSavingPrivacy] = useState(false);
@@ -115,18 +158,6 @@ export default function ReportPages({ currentUser, onLogout }) {
   const [submittingTestimonial, setSubmittingTestimonial] = useState(false);
   const [testimonialSuccess, setTestimonialSuccess] = useState(false);
   const [testimonialError, setTestimonialError] = useState("");
-
-  // Sync user state if prop changes
-  useEffect(() => {
-    if (currentUser) {
-      setUser(currentUser);
-      setLeaderboardVisible(Boolean(currentUser.leaderboard_visible));
-      setDisplayType(
-        currentUser.leaderboard_display_type === "username" ? "username" : "name"
-      );
-      setUsername(currentUser.leaderboard_username || "");
-    }
-  }, [currentUser]);
 
   // Load user's reports
   useEffect(() => {
@@ -578,8 +609,12 @@ export default function ReportPages({ currentUser, onLogout }) {
                         {STEPS.map((s, index) => {
                           const isDone = currentStep > s.step;
                           const isCurrent = currentStep === s.step;
-                          const isFuture = currentStep < s.step;
                           const isLast = index === STEPS.length - 1;
+                          const stepDate = getStepTimestamp(
+                            selectedReport,
+                            s,
+                            currentStep,
+                          );
 
                           return (
                             <div key={s.step} className="relative flex items-start gap-4">
@@ -623,31 +658,54 @@ export default function ReportPages({ currentUser, onLogout }) {
                                 )}
                               </div>
 
-                              {/* Step Label */}
-                              <div className="pt-1 min-w-0">
-                                <p
-                                  className={`text-sm ${
-                                    isCurrent
-                                      ? "font-bold text-[var(--color-ink)]"
-                                      : isDone
-                                      ? "font-semibold text-[var(--color-ink)]"
-                                      : "font-normal text-[var(--color-muted)]"
-                                  }`}
-                                >
-                                  {s.label}
-                                </p>
-                                {isCurrent && (
+                              {/* Step Label & Real-Time Date */}
+                              <div className="pt-1 min-w-0 flex-1">
+                                <div className="flex flex-col flex-wrap items-baseline justify-between gap-2">
                                   <p
-                                    className="text-xs font-semibold mt-0.5"
-                                    style={{
-                                      color:
-                                        s.step === 4
-                                          ? "#059669"
-                                          : "var(--color-coral-deep)",
-                                    }}
+                                    className={`text-sm ${
+                                      isCurrent
+                                        ? "font-bold text-[var(--color-ink)]"
+                                        : isDone
+                                        ? "font-semibold text-[var(--color-ink)]"
+                                        : "font-normal text-[var(--color-muted)]"
+                                    }`}
                                   >
-                                    {s.step === 4 ? "Terselesaikan" : "Sedang berjalan"}
+                                    {s.label}
                                   </p>
+                                  {stepDate && (
+                                    <span className="text-[11px] font-mono text-[var(--color-muted)] flex items-center gap-1 shrink-0">
+                                      <Clock className="w-3 h-3 text-[var(--color-coral-deep)] shrink-0" />
+                                      <span>{formatFullDateTime(stepDate)}</span>
+                                    </span>
+                                  )}
+                                </div>
+                                {isCurrent && (
+                                  <div className="mt-1">
+                                    <span
+                                      className="inline-flex items-center gap-1 text-[10px] font-semibold px-2 py-0.5 rounded-full"
+                                      style={{
+                                        backgroundColor:
+                                          s.step === 4
+                                            ? "#d1fae5"
+                                            : "var(--color-cream)",
+                                        color:
+                                          s.step === 4
+                                            ? "#065f46"
+                                            : "var(--color-coral-deep)",
+                                      }}
+                                    >
+                                      <span
+                                        className={`w-1.5 h-1.5 rounded-full ${
+                                          s.step === 4
+                                            ? "bg-emerald-600"
+                                            : "bg-[var(--color-coral-deep)] animate-pn-dot"
+                                        }`}
+                                      />
+                                      {s.step === 4
+                                        ? "Terselesaikan"
+                                        : "Sedang berjalan"}
+                                    </span>
+                                  </div>
                                 )}
                               </div>
                             </div>

@@ -2,17 +2,18 @@ import { useState, useRef, useEffect } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import {
   ArrowLeft,
-  HeartHandshake,
-  LoaderCircle,
-  Send,
+  ArrowRight,
   Camera,
   Upload,
-  Image as ImageIcon,
-  Trash2,
-  RefreshCw,
+  MapPin,
+  ChevronDown,
+  LoaderCircle,
   X,
-  CheckCircle2,
+  RefreshCw,
   Maximize2,
+  Trash2,
+  CheckCircle2,
+  Image as ImageIcon,
 } from "lucide-react";
 import { reportService } from "../../services/reportService";
 import {
@@ -58,7 +59,7 @@ export default function FormLaporan({ currentUser }) {
     setForm((previous) => ({ ...previous, [name]: value }));
   };
 
-  // Tutup stream kamera saat unmount atau saat modal kamera ditutup
+  // Tutup stream kamera saat unmount
   const stopCameraStream = () => {
     if (streamRef.current) {
       streamRef.current.getTracks().forEach((track) => track.stop());
@@ -95,7 +96,6 @@ export default function FormLaporan({ currentUser }) {
         videoRef.current.srcObject = stream;
       }
     } catch (err) {
-      // Jika kamera gagal, berikan opsi fallback native file capture
       setCameraError(
         err.message ||
           "Kamera tidak dapat diakses. Pastikan izin kamera telah diberikan."
@@ -104,7 +104,6 @@ export default function FormLaporan({ currentUser }) {
   };
 
   const handleOpenLiveCamera = () => {
-    // Jika peramban tidak mendukung getUserMedia, langsung gunakan native camera input
     if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
       if (nativeCameraInputRef.current) {
         nativeCameraInputRef.current.click();
@@ -139,7 +138,6 @@ export default function FormLaporan({ currentUser }) {
     }
   };
 
-  // Proses file yang diunggah dari galeri atau kamera native
   const handleFileChange = async (event) => {
     const file = event.target.files?.[0];
     if (!file) return;
@@ -160,7 +158,6 @@ export default function FormLaporan({ currentUser }) {
       setError(compErr.message || "Gagal memproses gambar.");
     } finally {
       setPhotoLoading(false);
-      // Reset input agar dapat memilih file yang sama bila perlu
       if (event.target) event.target.value = "";
     }
   };
@@ -185,370 +182,549 @@ export default function FormLaporan({ currentUser }) {
     }
   };
 
+  const userInitial = (
+    currentUser?.fullName ||
+    currentUser?.email ||
+    "P"
+  )
+    .trim()
+    .charAt(0)
+    .toUpperCase();
+
+  const userName =
+    currentUser?.fullName?.trim() ||
+    currentUser?.email?.split("@")[0] ||
+    "P";
+
   return (
     <div
-      className="min-h-screen px-4 py-6 sm:px-6"
-      style={{ backgroundColor: "var(--color-surface)" }}
+      className="min-h-screen px-4 py-5 sm:px-8 sm:py-7 font-sans"
+      style={{ backgroundColor: "var(--color-cream, #fdebe0)" }}
     >
-      {/* ── Header ──────────────────────────────────────────── */}
-      <header className="mx-auto flex max-w-3xl items-center justify-between">
-        <Link to="/reportPage">
+      {/* ── Top Bar ──────────────────────────────────────────── */}
+      <header className="mx-auto flex max-w-5xl items-center justify-between pb-6">
+        <Link to="/reportPage" className="inline-flex items-center">
           <BrandLogo size="md" />
         </Link>
-        <span className="text-sm" style={{ color: "var(--color-muted)" }}>
-          {currentUser?.fullName || "Warga"}
-        </span>
+
+        {/* Profil Singkat di Pojok Kanan Atas */}
+        <div className="flex items-center gap-2.5">
+          <div
+            className="flex h-9 w-9 items-center justify-center rounded-md font-bold text-sm shadow-xs"
+            style={{
+              backgroundColor: "var(--color-apricot, #fcd5a8)",
+              color: "var(--color-ink, #1f2433)",
+            }}
+          >
+            {userInitial}
+          </div>
+          <div className="flex flex-col text-left">
+            <span
+              className="text-xs font-bold leading-tight"
+              style={{ color: "var(--color-ink, #1f2433)" }}
+            >
+              {userName}
+            </span>
+            <span
+              className="text-[11px] leading-tight"
+              style={{ color: "var(--color-muted, #5c6070)" }}
+            >
+              Warga
+            </span>
+          </div>
+        </div>
       </header>
 
-      {/* ── Konten Utama ────────────────────────────────────── */}
-      <main className="mx-auto mt-8 max-w-3xl">
+      {/* ── Tombol Kembali ke Beranda ───────────────────────── */}
+      <div className="mx-auto max-w-5xl mb-4">
         <Link
           to="/reportPage"
-          className="mb-5 inline-flex min-h-11 items-center gap-2 text-sm font-medium"
-          style={{ color: "var(--color-coral-deep)" }}
+          className="inline-flex items-center gap-1.5 text-xs font-semibold transition-colors hover:underline"
+          style={{ color: "var(--color-ink, #1f2433)" }}
         >
-          <ArrowLeft className="h-4 w-4" /> Kembali ke Beranda
+          <ArrowLeft className="h-3.5 w-3.5" />
+          <span>Kembali ke Beranda</span>
         </Link>
+      </div>
 
-        <section
-          className="rounded-3xl bg-white p-5 shadow-sm sm:p-8"
-          style={{ border: "1px solid var(--color-line)" }}
+      {/* ── Judul Halaman & Subtitle ───────────────────────── */}
+      <div className="mx-auto max-w-5xl mb-7">
+        <h1
+          className="text-3xl sm:text-4xl font-extrabold tracking-tight"
+          style={{ color: "var(--color-ink, #1f2433)" }}
         >
-          <div className="mb-7">
-            <p
-              className="text-xs font-semibold uppercase tracking-wider"
-              style={{ color: "var(--color-coral-deep)" }}
-            >
-              Sampaikan kondisi di sekitar Anda
-            </p>
-            <h1
-              className="mt-2 text-2xl font-bold"
-              style={{ color: "var(--color-ink)" }}
-            >
-              Buat Laporan Baru
-            </h1>
-            <p
-              className="mt-2 text-sm leading-relaxed"
-              style={{ color: "var(--color-muted)" }}
-            >
-              Jelaskan masalah, lampirkan bukti foto, dan sebutkan lokasinya
-              dengan jelas agar laporan dapat segera ditindaklanjuti.
-            </p>
-          </div>
+          Buat Laporan Baru
+        </h1>
+        <p
+          className="mt-2 text-xs sm:text-sm leading-relaxed max-w-2xl"
+          style={{ color: "var(--color-muted, #5c6070)" }}
+        >
+          Jelaskan masalah, lampirkan bukti foto, dan sebutkan lokasinya dengan
+          jelas agar laporan dapat segera ditindaklanjuti.
+        </p>
+      </div>
 
-          {error && (
-            <div
-              role="alert"
-              className="mb-5 rounded-xl border border-red-300 bg-red-50 p-3.5 text-sm text-red-800"
-            >
-              {error}
-            </div>
-          )}
+      {/* ── Konten Grid (Form di Kiri, Info di Kanan) ───────── */}
+      <main className="mx-auto max-w-5xl">
+        <div className="grid grid-cols-1 lg:grid-cols-12 gap-7 items-start">
+          {/* ── Sisi Kiri: Form Card Putih ───────────────────── */}
+          <section
+            className="lg:col-span-8 rounded-lg sm:rounded-xl bg-white p-5 sm:p-7 shadow-xs"
+            style={{ border: "1px solid var(--color-line, #ecd6c8)" }}
+          >
+            {error && (
+              <div
+                role="alert"
+                className="mb-5 rounded-md border border-red-300 bg-red-50 p-3 text-xs text-red-800"
+              >
+                {error}
+              </div>
+            )}
 
-          <form onSubmit={handleSubmit} className="space-y-6">
-            {/* Input Judul */}
-            <div>
-              <label
-                htmlFor="title"
-                className="mb-1.5 block text-sm font-semibold"
-                style={{ color: "var(--color-ink)" }}
-              >
-                Judul laporan <span className="text-red-500">*</span>
-              </label>
-              <input
-                id="title"
-                name="title"
-                required
-                minLength={5}
-                maxLength={160}
-                value={form.title}
-                onChange={updateField}
-                placeholder="Contoh: Lampu jalan padam di persimpangan jalan"
-                className="min-h-12 w-full rounded-xl border px-4 text-sm outline-none focus:ring-2 focus:ring-orange-200"
-                style={{
-                  borderColor: "var(--color-line)",
-                  color: "var(--color-ink)",
-                }}
-              />
-            </div>
-
-            {/* Input Kategori */}
-            <div>
-              <label
-                htmlFor="category"
-                className="mb-1.5 block text-sm font-semibold"
-                style={{ color: "var(--color-ink)" }}
-              >
-                Kategori <span className="text-red-500">*</span>
-              </label>
-              <select
-                id="category"
-                name="category"
-                required
-                value={form.category}
-                onChange={updateField}
-                className="min-h-12 w-full rounded-xl border bg-white px-4 text-sm outline-none focus:ring-2 focus:ring-orange-200"
-                style={{
-                  borderColor: "var(--color-line)",
-                  color: "var(--color-ink)",
-                }}
-              >
-                <option value="" disabled>
-                  Pilih kategori laporan
-                </option>
-                {CATEGORIES.map((category) => (
-                  <option key={category} value={category}>
-                    {category}
-                  </option>
-                ))}
-              </select>
-            </div>
-
-            {/* Input Lokasi */}
-            <div>
-              <label
-                htmlFor="location"
-                className="mb-1.5 block text-sm font-semibold"
-                style={{ color: "var(--color-ink)" }}
-              >
-                Lokasi kejadian / fasilitas{" "}
-                <span className="text-red-500">*</span>
-              </label>
-              <input
-                id="location"
-                name="location"
-                required
-                minLength={3}
-                maxLength={250}
-                value={form.location}
-                onChange={updateField}
-                placeholder="Nama jalan, RT/RW, kelurahan, atau patokan jelas"
-                className="min-h-12 w-full rounded-xl border px-4 text-sm outline-none focus:ring-2 focus:ring-orange-200"
-                style={{
-                  borderColor: "var(--color-line)",
-                  color: "var(--color-ink)",
-                }}
-              />
-            </div>
-
-            {/* Input Deskripsi */}
-            <div>
-              <label
-                htmlFor="description"
-                className="mb-1.5 block text-sm font-semibold"
-                style={{ color: "var(--color-ink)" }}
-              >
-                Ceritakan masalahnya <span className="text-red-500">*</span>
-              </label>
-              <textarea
-                id="description"
-                name="description"
-                required
-                minLength={10}
-                maxLength={3000}
-                rows={4}
-                value={form.description}
-                onChange={updateField}
-                placeholder="Jelaskan kondisi yang Anda temukan, durasi kejadian, dan dampaknya bagi warga sekitar."
-                className="w-full resize-y rounded-xl border px-4 py-3 text-sm outline-none focus:ring-2 focus:ring-orange-200"
-                style={{
-                  borderColor: "var(--color-line)",
-                  color: "var(--color-ink)",
-                }}
-              />
-              <p
-                className="mt-1 text-right text-xs"
-                style={{ color: "var(--color-muted)" }}
-              >
-                {form.description.length}/3000
-              </p>
-            </div>
-
-            {/* ── BAGIAN FOTO BUKTI (UNGGAH & KAMERA LANGSUNG) ──────────── */}
-            <div
-              className="rounded-2xl p-4 sm:p-5"
-              style={{
-                backgroundColor: "var(--color-cream)",
-                border: "1px dashed var(--color-line)",
-              }}
-            >
-              <div className="flex flex-wrap items-center justify-between gap-2 mb-3">
-                <div>
+            <form onSubmit={handleSubmit} className="space-y-4 sm:space-y-5">
+              {/* Field 1: Judul Laporan */}
+              <div>
+                <label
+                  htmlFor="title"
+                  className="mb-1.5 block text-xs sm:text-sm font-semibold"
+                  style={{ color: "var(--color-ink, #1f2433)" }}
+                >
+                  Judul laporan{" "}
                   <span
-                    className="block text-sm font-semibold"
-                    style={{ color: "var(--color-ink)" }}
+                    className="font-normal"
+                    style={{ color: "var(--color-muted, #5c6070)" }}
                   >
-                    Foto Bukti Kondisi / Isu
+                    (wajib)
                   </span>
-                  <span
-                    className="text-xs"
-                    style={{ color: "var(--color-muted)" }}
-                  >
-                    Ambil foto langsung atau unggah gambar untuk memperkuat
-                    laporan Anda.
-                  </span>
-                </div>
-                {photoPreview && (
-                  <span className="inline-flex items-center gap-1 text-xs font-medium text-emerald-700 bg-emerald-100 px-2.5 py-1 rounded-full">
-                    <CheckCircle2 className="w-3.5 h-3.5" />
-                    Foto Siap Dikirim
-                  </span>
-                )}
+                </label>
+                <input
+                  id="title"
+                  name="title"
+                  required
+                  minLength={5}
+                  maxLength={160}
+                  value={form.title}
+                  onChange={updateField}
+                  placeholder="Contoh: Lampu jalan padam di persimpangan"
+                  className="w-full rounded-md border px-3.5 py-2.5 text-xs sm:text-sm outline-none transition focus:border-gray-600 focus:ring-1 focus:ring-gray-600"
+                  style={{
+                    borderColor: "var(--color-line, #d1d5db)",
+                    color: "var(--color-ink, #1f2433)",
+                  }}
+                />
               </div>
 
-              {/* Input berkas tersembunyi */}
-              <input
-                type="file"
-                ref={fileInputRef}
-                accept="image/*"
-                onChange={handleFileChange}
-                className="hidden"
-              />
-              <input
-                type="file"
-                ref={nativeCameraInputRef}
-                accept="image/*"
-                capture="environment"
-                onChange={handleFileChange}
-                className="hidden"
-              />
-
-              {photoLoading && (
-                <div className="py-8 flex flex-col items-center justify-center gap-2 text-sm text-slate-600">
-                  <LoaderCircle className="w-6 h-6 animate-spin text-coral-deep" />
-                  <span>Memproses dan mengompres foto...</span>
-                </div>
-              )}
-
-              {/* Jika belum ada foto yang dipilih */}
-              {!photoLoading && !photoPreview && (
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 pt-1">
-                  {/* Tombol Ambil Foto Langsung */}
-                  <button
-                    type="button"
-                    onClick={handleOpenLiveCamera}
-                    className="flex items-center justify-center gap-2.5 min-h-12 px-4 rounded-xl text-sm font-semibold transition-all duration-200 border bg-white hover:bg-slate-50 cursor-pointer"
+              {/* Field 2: Kategori */}
+              <div>
+                <label
+                  htmlFor="category"
+                  className="mb-1.5 block text-xs sm:text-sm font-semibold"
+                  style={{ color: "var(--color-ink, #1f2433)" }}
+                >
+                  Kategori{" "}
+                  <span
+                    className="font-normal"
+                    style={{ color: "var(--color-muted, #5c6070)" }}
+                  >
+                    (wajib)
+                  </span>
+                </label>
+                <div className="relative">
+                  <select
+                    id="category"
+                    name="category"
+                    required
+                    value={form.category}
+                    onChange={updateField}
+                    className="w-full appearance-none rounded-md border bg-white px-3.5 py-2.5 text-xs sm:text-sm outline-none transition focus:border-gray-600 focus:ring-1 focus:ring-gray-600 cursor-pointer"
                     style={{
-                      borderColor: "var(--color-coral)",
-                      color: "var(--color-coral-deep)",
+                      borderColor: "var(--color-line, #d1d5db)",
+                      color: form.category
+                        ? "var(--color-ink, #1f2433)"
+                        : "#9ca3af",
                     }}
                   >
-                    <Camera className="w-4 h-4" />
-                    <span>Ambil Foto Langsung</span>
-                  </button>
-
-                  {/* Tombol Unggah dari Galeri / Berkas */}
-                  <button
-                    type="button"
-                    onClick={() => fileInputRef.current?.click()}
-                    className="flex items-center justify-center gap-2.5 min-h-12 px-4 rounded-xl text-sm font-semibold transition-all duration-200 border bg-white hover:bg-slate-50 cursor-pointer"
-                    style={{
-                      borderColor: "var(--color-line)",
-                      color: "var(--color-ink)",
-                    }}
-                  >
-                    <Upload className="w-4 h-4" />
-                    <span>Pilih dari Galeri</span>
-                  </button>
-                </div>
-              )}
-
-              {/* Preview Foto Jika Sudah Ada */}
-              {!photoLoading && photoPreview && (
-                <div className="mt-2 space-y-3">
-                  <div className="relative group rounded-xl overflow-hidden border border-slate-200 bg-white max-w-sm">
-                    <img
-                      src={photoPreview}
-                      alt="Pratinjau foto bukti"
-                      className="w-full h-52 object-cover"
-                    />
-                    <div className="absolute inset-0 bg-slate-950/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center gap-2">
-                      <button
-                        type="button"
-                        onClick={() => setIsEnlargedOpen(true)}
-                        className="px-3 py-1.5 rounded-lg bg-white/90 text-slate-800 text-xs font-medium flex items-center gap-1.5 shadow-sm"
+                    <option value="" disabled>
+                      Pilih kategori laporan
+                    </option>
+                    {CATEGORIES.map((category) => (
+                      <option
+                        key={category}
+                        value={category}
+                        className="text-[#1f2433]"
                       >
-                        <Maximize2 className="w-3.5 h-3.5" />
-                        Perbesar
-                      </button>
-                    </div>
-                  </div>
+                        {category}
+                      </option>
+                    ))}
+                  </select>
+                  <ChevronDown
+                    className="pointer-events-none absolute right-3 top-1/2 -translate-y-1/2 h-4 w-4"
+                    style={{ color: "var(--color-muted, #5c6070)" }}
+                  />
+                </div>
+              </div>
 
-                  <div className="flex flex-wrap items-center gap-2">
-                    <button
-                      type="button"
-                      onClick={() => setIsEnlargedOpen(true)}
-                      className="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium rounded-lg border bg-white text-slate-700 hover:bg-slate-50"
-                      style={{ borderColor: "var(--color-line)" }}
+              {/* Field 3: Lokasi */}
+              <div>
+                <label
+                  htmlFor="location"
+                  className="mb-1.5 block text-xs sm:text-sm font-semibold"
+                  style={{ color: "var(--color-ink, #1f2433)" }}
+                >
+                  Lokasi kejadian atau fasilitas{" "}
+                  <span
+                    className="font-normal"
+                    style={{ color: "var(--color-muted, #5c6070)" }}
+                  >
+                    (wajib)
+                  </span>
+                </label>
+                <div className="relative">
+                  <MapPin
+                    className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4"
+                    style={{ color: "var(--color-muted, #5c6070)" }}
+                  />
+                  <input
+                    id="location"
+                    name="location"
+                    required
+                    minLength={3}
+                    maxLength={250}
+                    value={form.location}
+                    onChange={updateField}
+                    placeholder="Nama jalan, RT/RW, kelurahan, atau patokan jelas"
+                    className="w-full rounded-md border pl-9 pr-3.5 py-2.5 text-xs sm:text-sm outline-none transition focus:border-gray-600 focus:ring-1 focus:ring-gray-600"
+                    style={{
+                      borderColor: "var(--color-line, #d1d5db)",
+                      color: "var(--color-ink, #1f2433)",
+                    }}
+                  />
+                </div>
+              </div>
+
+              {/* Field 4: Ceritakan Masalahnya */}
+              <div>
+                <div className="mb-1.5 flex items-center justify-between">
+                  <label
+                    htmlFor="description"
+                    className="block text-xs sm:text-sm font-semibold"
+                    style={{ color: "var(--color-ink, #1f2433)" }}
+                  >
+                    Ceritakan masalahnya{" "}
+                    <span
+                      className="font-normal"
+                      style={{ color: "var(--color-muted, #5c6070)" }}
                     >
-                      <ImageIcon className="w-3.5 h-3.5" />
-                      Lihat Foto Penuh
-                    </button>
+                      (wajib)
+                    </span>
+                  </label>
+                  <span
+                    className="text-xs"
+                    style={{ color: "var(--color-muted, #5c6070)" }}
+                  >
+                    {form.description.length}/3000
+                  </span>
+                </div>
+                <textarea
+                  id="description"
+                  name="description"
+                  required
+                  minLength={10}
+                  maxLength={3000}
+                  rows={5}
+                  value={form.description}
+                  onChange={updateField}
+                  placeholder="Jelaskan kondisi yang Anda temukan, sudah berapa lama terjadi, dan dampaknya bagi warga sekitar."
+                  className="w-full resize-y rounded-md border px-3.5 py-2.5 text-xs sm:text-sm outline-none transition focus:border-gray-600 focus:ring-1 focus:ring-gray-600 leading-relaxed"
+                  style={{
+                    borderColor: "var(--color-line, #d1d5db)",
+                    color: "var(--color-ink, #1f2433)",
+                  }}
+                />
+              </div>
+
+              {/* Field 5: Foto Bukti */}
+              <div>
+                <label
+                  className="block text-xs sm:text-sm font-semibold"
+                  style={{ color: "var(--color-ink, #1f2433)" }}
+                >
+                  Foto bukti{" "}
+                  <span
+                    className="font-normal"
+                    style={{ color: "var(--color-muted, #5c6070)" }}
+                  >
+                    (disarankan)
+                  </span>
+                </label>
+                <p
+                  className="mt-1 text-xs"
+                  style={{ color: "var(--color-muted, #5c6070)" }}
+                >
+                  Foto yang jelas mempercepat verifikasi. Format JPG atau PNG,
+                  maksimal 5 MB.
+                </p>
+
+                {/* Input berkas tersembunyi */}
+                <input
+                  type="file"
+                  ref={fileInputRef}
+                  accept="image/*"
+                  onChange={handleFileChange}
+                  className="hidden"
+                />
+                <input
+                  type="file"
+                  ref={nativeCameraInputRef}
+                  accept="image/*"
+                  capture="environment"
+                  onChange={handleFileChange}
+                  className="hidden"
+                />
+
+                {photoLoading && (
+                  <div className="mt-3 flex items-center justify-center gap-2 rounded-md border border-dashed border-gray-300 py-6 text-xs text-slate-600">
+                    <LoaderCircle className="h-5 w-5 animate-spin text-coral-deep" />
+                    <span>Memproses dan mengompres foto...</span>
+                  </div>
+                )}
+
+                {/* Tombol Ambil Foto & Pilih dari Galeri */}
+                {!photoLoading && !photoPreview && (
+                  <div className="mt-3 grid grid-cols-1 sm:grid-cols-2 gap-3">
                     <button
                       type="button"
                       onClick={handleOpenLiveCamera}
-                      className="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium rounded-lg border bg-white text-slate-700 hover:bg-slate-50"
-                      style={{ borderColor: "var(--color-line)" }}
+                      className="flex items-center justify-center gap-2 rounded-md border border-[#1f2433] bg-white py-2.5 px-4 text-xs sm:text-sm font-semibold transition hover:bg-gray-50 cursor-pointer"
+                      style={{ color: "var(--color-ink, #1f2433)" }}
                     >
-                      <Camera className="w-3.5 h-3.5" />
-                      Foto Ulang
+                      <Camera className="h-4 w-4" />
+                      <span>Ambil Foto Langsung</span>
                     </button>
                     <button
                       type="button"
                       onClick={() => fileInputRef.current?.click()}
-                      className="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium rounded-lg border bg-white text-slate-700 hover:bg-slate-50"
-                      style={{ borderColor: "var(--color-line)" }}
+                      className="flex items-center justify-center gap-2 rounded-md border border-[#1f2433] bg-white py-2.5 px-4 text-xs sm:text-sm font-semibold transition hover:bg-gray-50 cursor-pointer"
+                      style={{ color: "var(--color-ink, #1f2433)" }}
                     >
-                      <Upload className="w-3.5 h-3.5" />
-                      Ganti Foto
-                    </button>
-                    <button
-                      type="button"
-                      onClick={handleRemovePhoto}
-                      className="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium rounded-lg border border-red-200 bg-red-50 text-red-700 hover:bg-red-100"
-                    >
-                      <Trash2 className="w-3.5 h-3.5" />
-                      Hapus Foto
+                      <Upload className="h-4 w-4" />
+                      <span>Pilih dari Galeri</span>
                     </button>
                   </div>
+                )}
+
+                {/* Pratinjau Foto jika sudah terpilih */}
+                {!photoLoading && photoPreview && (
+                  <div className="mt-3 space-y-2 rounded-md border border-gray-200 bg-gray-50 p-3">
+                    <div className="flex items-center justify-between pb-2 border-b border-gray-200">
+                      <span className="inline-flex items-center gap-1.5 text-xs font-semibold text-emerald-700">
+                        <CheckCircle2 className="h-4 w-4" />
+                        Foto Bukti Terlampir
+                      </span>
+                      <button
+                        type="button"
+                        onClick={handleRemovePhoto}
+                        className="inline-flex items-center gap-1 text-xs font-medium text-red-600 hover:underline"
+                      >
+                        <Trash2 className="h-3.5 w-3.5" /> Hapus
+                      </button>
+                    </div>
+
+                    <div className="relative group max-w-xs overflow-hidden rounded-md border border-gray-300 bg-black">
+                      <img
+                        src={photoPreview}
+                        alt="Pratinjau bukti"
+                        className="h-40 w-full object-cover"
+                      />
+                      <button
+                        type="button"
+                        onClick={() => setIsEnlargedOpen(true)}
+                        className="absolute inset-0 flex items-center justify-center bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity text-white text-xs font-semibold gap-1.5"
+                      >
+                        <Maximize2 className="h-4 w-4" /> Perbesar
+                      </button>
+                    </div>
+
+                    <div className="flex flex-wrap gap-2 pt-1 text-xs">
+                      <button
+                        type="button"
+                        onClick={() => setIsEnlargedOpen(true)}
+                        className="inline-flex items-center gap-1 rounded border border-gray-300 bg-white px-2.5 py-1 text-gray-700 hover:bg-gray-50"
+                      >
+                        <ImageIcon className="h-3.5 w-3.5" /> Lihat Penuh
+                      </button>
+                      <button
+                        type="button"
+                        onClick={handleOpenLiveCamera}
+                        className="inline-flex items-center gap-1 rounded border border-gray-300 bg-white px-2.5 py-1 text-gray-700 hover:bg-gray-50"
+                      >
+                        <Camera className="h-3.5 w-3.5" /> Foto Ulang
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => fileInputRef.current?.click()}
+                        className="inline-flex items-center gap-1 rounded border border-gray-300 bg-white px-2.5 py-1 text-gray-700 hover:bg-gray-50"
+                      >
+                        <Upload className="h-3.5 w-3.5" /> Ganti
+                      </button>
+                    </div>
+                  </div>
+                )}
+              </div>
+
+              {/* Garis Pembatas */}
+              <div
+                className="border-t pt-2"
+                style={{ borderColor: "var(--color-line, #ecd6c8)" }}
+              />
+
+              {/* Teks Pernyataan */}
+              <p
+                className="text-xs"
+                style={{ color: "var(--color-muted, #5c6070)" }}
+              >
+                Dengan mengirim, Anda menyatakan isi laporan sesuai dengan kondisi
+                sebenarnya.
+              </p>
+
+              {/* Tombol Aksi Batal & Kirim Laporan */}
+              <div className="flex items-center gap-3 pt-1">
+                <button
+                  type="button"
+                  onClick={() => navigate("/reportPage")}
+                  className="rounded-md border border-[#1f2433] bg-white px-5 py-2 text-xs sm:text-sm font-semibold transition hover:bg-gray-50 cursor-pointer"
+                  style={{ color: "var(--color-ink, #1f2433)" }}
+                >
+                  Batal
+                </button>
+                <button
+                  type="submit"
+                  disabled={isSubmitting || photoLoading}
+                  className="inline-flex items-center gap-2 rounded-md px-5 py-2 text-xs sm:text-sm font-bold shadow-xs transition hover:brightness-95 disabled:opacity-60 disabled:cursor-not-allowed cursor-pointer"
+                  style={{
+                    backgroundColor: "var(--color-coral, #f7a581)",
+                    color: "var(--color-ink, #1f2433)",
+                  }}
+                >
+                  {isSubmitting ? (
+                    <>
+                      <LoaderCircle className="h-4 w-4 animate-spin" />
+                      <span>Menyimpan...</span>
+                    </>
+                  ) : (
+                    <>
+                      <span>Kirim Laporan</span>
+                      <ArrowRight className="h-4 w-4" />
+                    </>
+                  )}
+                </button>
+              </div>
+            </form>
+          </section>
+
+          {/* ── Sisi Kanan: Card Informasi & Alur Penanganan ─── */}
+          <aside className="lg:col-span-4 space-y-6">
+            {/* Box 1: Setelah laporan dikirim */}
+            <div
+              className="rounded-lg sm:rounded-xl p-5 sm:p-6 shadow-xs"
+              style={{
+                backgroundColor: "var(--color-apricot, #fcd5a8)",
+              }}
+            >
+              <h3
+                className="font-bold text-sm mb-4"
+                style={{ color: "var(--color-ink, #1f2433)" }}
+              >
+                Setelah laporan dikirim
+              </h3>
+              <div className="space-y-3.5">
+                <div className="flex items-center gap-3">
+                  <span
+                    className="flex h-5 w-5 shrink-0 items-center justify-center rounded text-[11px] font-bold text-white"
+                    style={{ backgroundColor: "var(--color-ink, #1f2433)" }}
+                  >
+                    1
+                  </span>
+                  <span
+                    className="text-xs font-semibold"
+                    style={{ color: "var(--color-ink, #1f2433)" }}
+                  >
+                    Laporan Diterima
+                  </span>
                 </div>
-              )}
+                <div className="flex items-center gap-3">
+                  <span
+                    className="flex h-5 w-5 shrink-0 items-center justify-center rounded text-[11px] font-bold text-white"
+                    style={{ backgroundColor: "var(--color-ink, #1f2433)" }}
+                  >
+                    2
+                  </span>
+                  <span
+                    className="text-xs font-semibold"
+                    style={{ color: "var(--color-ink, #1f2433)" }}
+                  >
+                    Sedang Diverifikasi
+                  </span>
+                </div>
+                <div className="flex items-center gap-3">
+                  <span
+                    className="flex h-5 w-5 shrink-0 items-center justify-center rounded text-[11px] font-bold text-white"
+                    style={{ backgroundColor: "var(--color-ink, #1f2433)" }}
+                  >
+                    3
+                  </span>
+                  <span
+                    className="text-xs font-semibold"
+                    style={{ color: "var(--color-ink, #1f2433)" }}
+                  >
+                    Petugas Dikirim ke Lokasi
+                  </span>
+                </div>
+                <div className="flex items-center gap-3">
+                  <span
+                    className="flex h-5 w-5 shrink-0 items-center justify-center rounded text-[11px] font-bold text-white"
+                    style={{ backgroundColor: "var(--color-ink, #1f2433)" }}
+                  >
+                    4
+                  </span>
+                  <span
+                    className="text-xs font-semibold"
+                    style={{ color: "var(--color-ink, #1f2433)" }}
+                  >
+                    Laporan Selesai
+                  </span>
+                </div>
+              </div>
             </div>
 
-            {/* Tombol Aksi Form */}
-            <div
-              className="flex flex-col-reverse gap-3 border-t pt-5 sm:flex-row sm:justify-end"
-              style={{ borderColor: "var(--color-line)" }}
-            >
-              <Link
-                to="/reportPage"
-                className="inline-flex min-h-11 items-center justify-center rounded-xl px-5 text-sm font-semibold"
-                style={{
-                  color: "var(--color-ink)",
-                  backgroundColor: "var(--color-cream)",
-                }}
+            {/* Box 2: Agar cepat ditangani */}
+            <div className="px-1">
+              <h4
+                className="font-bold text-xs sm:text-sm mb-3"
+                style={{ color: "var(--color-ink, #1f2433)" }}
               >
-                Batal
-              </Link>
-              <button
-                type="submit"
-                disabled={isSubmitting || photoLoading}
-                className="inline-flex min-h-11 items-center justify-center gap-2 rounded-xl px-5 text-sm font-semibold text-white disabled:cursor-not-allowed disabled:opacity-60 cursor-pointer"
-                style={{ backgroundColor: "var(--color-coral-deep)" }}
+                Agar cepat ditangani
+              </h4>
+              <ul
+                className="space-y-2 text-xs leading-relaxed"
+                style={{ color: "var(--color-muted, #5c6070)" }}
               >
-                {isSubmitting ? (
-                  <LoaderCircle
-                    className="h-4 w-4 animate-spin"
-                    aria-hidden="true"
-                  />
-                ) : (
-                  <Send className="h-4 w-4" />
-                )}
-                {isSubmitting ? "Menyimpan laporan..." : "Kirim Laporan"}
-              </button>
+                <li className="flex items-start gap-2">
+                  <span className="font-bold">•</span>
+                  <span>Sebutkan patokan lokasi yang mudah dikenali.</span>
+                </li>
+                <li className="flex items-start gap-2">
+                  <span className="font-bold">•</span>
+                  <span>Foto kondisi dari jarak dekat dan jauh.</span>
+                </li>
+                <li className="flex items-start gap-2">
+                  <span className="font-bold">•</span>
+                  <span>Ceritakan sejak kapan masalah terjadi.</span>
+                </li>
+              </ul>
             </div>
-          </form>
-        </section>
+          </aside>
+        </div>
       </main>
 
       {/* ── MODAL KAMERA LANGSUNG ────────────────────────────── */}
@@ -559,11 +735,11 @@ export default function FormLaporan({ currentUser }) {
           aria-modal="true"
           aria-label="Kamera Langsung"
         >
-          <div className="relative w-full max-w-lg rounded-3xl bg-slate-900 p-5 shadow-2xl border border-slate-700 text-white">
+          <div className="relative w-full max-w-lg rounded-2xl bg-slate-900 p-5 shadow-2xl border border-slate-700 text-white">
             <div className="flex items-center justify-between pb-3 border-b border-slate-800">
               <div className="flex items-center gap-2">
                 <Camera className="w-5 h-5 text-coral" />
-                <h2 className="text-base font-semibold">
+                <h2 className="text-sm font-semibold">
                   Ambil Foto Bukti Langsung
                 </h2>
               </div>
@@ -577,7 +753,7 @@ export default function FormLaporan({ currentUser }) {
             </div>
 
             {cameraError ? (
-              <div className="my-6 p-4 rounded-xl bg-red-950/50 border border-red-500/40 text-red-200 text-sm space-y-3">
+              <div className="my-6 p-4 rounded-xl bg-red-950/50 border border-red-500/40 text-red-200 text-xs space-y-3">
                 <p>{cameraError}</p>
                 <div className="pt-2 flex flex-wrap gap-2">
                   <button
@@ -588,14 +764,14 @@ export default function FormLaporan({ currentUser }) {
                         nativeCameraInputRef.current.click();
                       }
                     }}
-                    className="px-3 py-1.5 rounded-lg bg-red-700 text-white text-xs font-semibold"
+                    className="px-3 py-1.5 rounded bg-red-700 text-white text-xs font-semibold"
                   >
                     Gunakan Kamera Bawaan HP
                   </button>
                   <button
                     type="button"
                     onClick={() => startCamera(facingMode)}
-                    className="px-3 py-1.5 rounded-lg bg-slate-800 text-slate-200 text-xs font-semibold"
+                    className="px-3 py-1.5 rounded bg-slate-800 text-slate-200 text-xs font-semibold"
                   >
                     Coba Lagi
                   </button>
@@ -603,7 +779,7 @@ export default function FormLaporan({ currentUser }) {
               </div>
             ) : (
               <div className="mt-4 space-y-4">
-                <div className="relative rounded-2xl overflow-hidden bg-black aspect-4/3 flex items-center justify-center border border-slate-800">
+                <div className="relative rounded-xl overflow-hidden bg-black aspect-4/3 flex items-center justify-center border border-slate-800">
                   <video
                     ref={videoRef}
                     autoPlay
@@ -611,14 +787,14 @@ export default function FormLaporan({ currentUser }) {
                     muted
                     className="w-full h-full object-cover"
                   />
-                  <div className="pointer-events-none absolute inset-6 border border-white/30 rounded-xl" />
+                  <div className="pointer-events-none absolute inset-6 border border-white/30 rounded-lg" />
                 </div>
 
                 <div className="flex items-center justify-between px-2 pt-1">
                   <button
                     type="button"
                     onClick={handleToggleFacingMode}
-                    className="inline-flex items-center gap-1.5 px-3 py-2 rounded-xl bg-slate-800 text-slate-300 text-xs font-medium hover:bg-slate-700"
+                    className="inline-flex items-center gap-1.5 px-3 py-2 rounded-lg bg-slate-800 text-slate-300 text-xs font-medium hover:bg-slate-700"
                     title="Ganti kamera depan / belakang"
                   >
                     <RefreshCw className="w-4 h-4" />
@@ -628,10 +804,10 @@ export default function FormLaporan({ currentUser }) {
                   <button
                     type="button"
                     onClick={handleSnapPhoto}
-                    className="inline-flex items-center justify-center gap-2 h-13 px-6 rounded-2xl font-bold text-white shadow-lg transition-transform active:scale-95 cursor-pointer"
-                    style={{ backgroundColor: "var(--color-coral)" }}
+                    className="inline-flex items-center justify-center gap-2 h-11 px-5 rounded-xl font-bold text-white shadow-lg transition-transform active:scale-95 cursor-pointer"
+                    style={{ backgroundColor: "var(--color-coral, #f7a581)" }}
                   >
-                    <Camera className="w-5 h-5" />
+                    <Camera className="w-4 h-4" />
                     <span>Ambil Foto</span>
                   </button>
 
@@ -660,42 +836,15 @@ export default function FormLaporan({ currentUser }) {
             <button
               type="button"
               onClick={() => setIsEnlargedOpen(false)}
-              className="absolute -top-12 right-0 p-2 text-white/80 hover:text-white"
+              className="absolute -top-10 right-0 p-2 text-white/80 hover:text-white"
             >
               <X className="w-6 h-6" />
             </button>
             <img
               src={photoPreview}
               alt="Foto bukti resolusi penuh"
-              className="rounded-2xl max-h-[80vh] w-auto object-contain border border-white/20 shadow-2xl"
+              className="rounded-xl max-h-[80vh] w-auto object-contain border border-white/20 shadow-2xl"
             />
-          </div>
-        </div>
-      )}
-
-      {/* ── Loading Overlay Saat Mengirim ────────────────────── */}
-      {isSubmitting && (
-        <div
-          className="fixed inset-0 z-50 flex items-center justify-center bg-slate-950/40 px-4 backdrop-blur-sm"
-          role="status"
-          aria-live="polite"
-          aria-label="Mengirim laporan"
-        >
-          <div className="flex w-full max-w-xs flex-col items-center rounded-2xl bg-white p-7 text-center shadow-xl">
-            <LoaderCircle
-              className="h-10 w-10 animate-spin"
-              style={{ color: "var(--color-coral-deep)" }}
-              aria-hidden="true"
-            />
-            <p
-              className="mt-4 font-semibold"
-              style={{ color: "var(--color-ink)" }}
-            >
-              Mengirim laporan
-            </p>
-            <p className="mt-1 text-sm" style={{ color: "var(--color-muted)" }}>
-              Menyimpan data dan foto bukti ke database...
-            </p>
           </div>
         </div>
       )}

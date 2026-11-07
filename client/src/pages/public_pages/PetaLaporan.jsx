@@ -2,17 +2,12 @@ import { useState, useEffect, useRef } from "react";
 import { Link } from "react-router-dom";
 import L from "leaflet";
 import {
-  HeartHandshake,
   MapPin,
-  Calendar,
   Layers,
   Search,
-  Filter,
   PlusCircle,
-  ArrowRight,
   Menu,
   X,
-  ExternalLink,
   Info,
 } from "lucide-react";
 import { reportService } from "../../services/reportService";
@@ -289,36 +284,6 @@ export default function PetaLaporan() {
           <Link to="/">
             <BrandLogo size="md" />
           </Link>
-
-          <nav className="hidden md:flex items-center gap-6 text-sm text-[var(--color-muted)] font-medium">
-            <Link to="/" className="hover:text-[var(--color-ink)] transition-colors">
-              Beranda
-            </Link>
-            <Link
-              to="/laporan"
-              className="hover:text-[var(--color-ink)] transition-colors"
-            >
-              Laporan
-            </Link>
-            <Link
-              to="/peta"
-              className="text-[var(--color-coral-deep)] font-semibold border-b-2 border-[var(--color-coral-deep)] pb-0.5"
-            >
-              Peta
-            </Link>
-            <a
-              href="/#tentang"
-              className="hover:text-[var(--color-ink)] transition-colors"
-            >
-              Tentang Kami
-            </a>
-            <a
-              href="/#cara-melapor"
-              className="hover:text-[var(--color-ink)] transition-colors"
-            >
-              Bantuan
-            </a>
-          </nav>
 
           <div className="flex items-center gap-2.5">
             {currentUser ? (

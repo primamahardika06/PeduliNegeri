@@ -9,17 +9,12 @@ import {
   Search,
   RefreshCw,
   CheckCircle2,
-  Shield,
-  Database,
   ChevronDown,
   ChevronRight,
   Camera,
   X,
   LayoutDashboard,
   ClipboardList,
-  ArrowRight,
-  Eye,
-  Clock,
   MapPin,
   Home,
   Download,
@@ -73,6 +68,8 @@ export default function AdminDashboard({ currentUser, onLogout }) {
   // UI State
   const [updatingReportId, setUpdatingReportId] = useState(null);
   const [adminSelectedPhoto, setAdminSelectedPhoto] = useState(null);
+  const [draggedReportId, setDraggedReportId] = useState(null);
+  const [dragOverColumn, setDragOverColumn] = useState(null);
 
   const handleLogout = () => {
     authService.logout();
@@ -419,7 +416,6 @@ export default function AdminDashboard({ currentUser, onLogout }) {
       </nav>
 
       <main className="max-w-7xl mx-auto px-4 sm:px-6 py-6 space-y-6">
-        {/* ── Statistics Bar (always visible) ──────────────── */}
         <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
           <div className="p-4 rounded-2xl bg-white border border-[var(--color-line)] shadow-xs">
             <p className="text-[11px] text-[var(--color-muted)] font-medium">Total Laporan</p>
@@ -439,7 +435,6 @@ export default function AdminDashboard({ currentUser, onLogout }) {
           </div>
         </div>
 
-        {/* Sync Button */}
         <div className="flex items-center justify-between">
           <h2 className="text-lg sm:text-xl font-extrabold text-[var(--color-ink)] tracking-tight">
             {activeTab === "ringkasan" && "Papan Kanban Laporan"}
@@ -575,10 +570,43 @@ export default function AdminDashboard({ currentUser, onLogout }) {
                   const colReports = reports.filter(
                     (r) => r.status === col.status,
                   );
+                  const isDropTarget = dragOverColumn === col.status;
+
                   return (
                     <div
                       key={col.status}
-                      className="rounded-2xl border border-[var(--color-line)] bg-white overflow-hidden shadow-xs"
+                      onDragOver={(e) => {
+                        e.preventDefault();
+                        e.dataTransfer.dropEffect = "move";
+                        if (dragOverColumn !== col.status) {
+                          setDragOverColumn(col.status);
+                        }
+                      }}
+                      onDragLeave={(e) => {
+                        if (!e.currentTarget.contains(e.relatedTarget)) {
+                          setDragOverColumn(null);
+                        }
+                      }}
+                      onDrop={(e) => {
+                        e.preventDefault();
+                        const droppedId =
+                          e.dataTransfer.getData("text/plain") || draggedReportId;
+                        setDragOverColumn(null);
+                        setDraggedReportId(null);
+                        if (droppedId) {
+                          const targetReport = reports.find(
+                            (r) => r.id === droppedId,
+                          );
+                          if (targetReport && targetReport.status !== col.status) {
+                            handleReportStatusChange(droppedId, col.status);
+                          }
+                        }
+                      }}
+                      className={`rounded-2xl border transition-all overflow-hidden shadow-xs flex flex-col ${
+                        isDropTarget
+                          ? "border-2 border-[var(--color-coral-deep)] ring-2 ring-[var(--color-coral)]/30 bg-[#FFF5EE]"
+                          : "border-[var(--color-line)] bg-white"
+                      }`}
                     >
                       {/* Column Header */}
                       <div className="px-4 py-3 bg-[var(--color-cream)] border-b border-[var(--color-line)] flex items-center justify-between">
@@ -593,24 +621,47 @@ export default function AdminDashboard({ currentUser, onLogout }) {
                         </span>
                       </div>
 
-                      {/* Column Cards */}
-                      <div className="p-2 space-y-2 max-h-[500px] overflow-y-auto">
+                      {/* Column Cards (Droppable Area) */}
+                      <div className="p-2 space-y-2 flex-1 min-h-[140px] max-h-[500px] overflow-y-auto">
                         {colReports.length === 0 ? (
-                          <div className="p-4 text-center text-[11px] text-[var(--color-muted)]">
-                            Tidak ada laporan
+                          <div
+                            className={`p-5 text-center text-[11px] rounded-xl border border-dashed transition-colors ${
+                              isDropTarget
+                                ? "border-[var(--color-coral-deep)] text-[var(--color-coral-deep)] bg-white/60 font-semibold"
+                                : "border-slate-200 text-[var(--color-muted)]"
+                            }`}
+                          >
+                            {isDropTarget
+                              ? "Lepaskan untuk memindahkan ke sini"
+                              : "Tarik laporan ke sini"}
                           </div>
                         ) : (
                           colReports.map((report) => {
                             const statusIdx = REPORT_STATUSES.indexOf(report.status);
                             const canMoveRight = statusIdx < REPORT_STATUSES.length - 1;
                             const canMoveLeft = statusIdx > 0;
+                            const isBeingDragged = draggedReportId === report.id;
 
                             return (
                               <div
                                 key={report.id}
-                                className="p-3 rounded-xl border border-[var(--color-line)] bg-[var(--color-surface)] hover:border-[var(--color-coral)]/40 transition-colors"
+                                draggable={updatingReportId !== report.id}
+                                onDragStart={(e) => {
+                                  e.dataTransfer.setData("text/plain", report.id);
+                                  e.dataTransfer.effectAllowed = "move";
+                                  setDraggedReportId(report.id);
+                                }}
+                                onDragEnd={() => {
+                                  setDraggedReportId(null);
+                                  setDragOverColumn(null);
+                                }}
+                                className={`p-3 rounded-xl border transition-all select-none cursor-grab active:cursor-grabbing ${
+                                  isBeingDragged
+                                    ? "opacity-35 scale-95 border-dashed border-[var(--color-coral)] bg-white shadow-md"
+                                    : "border-[var(--color-line)] bg-[var(--color-surface)] hover:border-[var(--color-coral)]/60 hover:shadow-xs"
+                                }`}
                               >
-                                <div className="flex items-center gap-2 mb-1.5">
+                                <div className="flex items-center justify-between gap-2 mb-1.5">
                                   <span className="text-[10px] font-bold px-2 py-0.5 rounded bg-[var(--color-cream)] text-[var(--color-coral-deep)] border border-[var(--color-line)]">
                                     {report.category}
                                   </span>
@@ -645,28 +696,32 @@ export default function AdminDashboard({ currentUser, onLogout }) {
                                   </button>
                                 )}
 
-                                {/* Kanban move controls */}
+                                {/* Kanban move controls (Klik cepat atau Drag) */}
                                 <div className="flex items-center gap-1.5 pt-2 border-t border-[var(--color-line)]">
                                   {canMoveLeft && (
                                     <button
+                                      type="button"
                                       onClick={() => moveReportStatus(report.id, -1)}
                                       disabled={updatingReportId === report.id}
                                       className="flex-1 py-1 rounded text-[10px] font-semibold bg-[var(--color-cream)] hover:bg-[var(--color-apricot)] text-[var(--color-ink)] border border-[var(--color-line)] transition-colors cursor-pointer disabled:opacity-50"
+                                      title="Pindahkan status mundur"
                                     >
                                       ← Mundur
                                     </button>
                                   )}
                                   {canMoveRight && (
                                     <button
+                                      type="button"
                                       onClick={() => moveReportStatus(report.id, 1)}
                                       disabled={updatingReportId === report.id}
                                       className="flex-1 py-1 rounded text-[10px] font-semibold bg-[var(--color-coral)] hover:bg-[#f39770] text-[var(--color-ink)] transition-colors cursor-pointer disabled:opacity-50"
+                                      title="Pindahkan status maju"
                                     >
                                       Majukan →
                                     </button>
                                   )}
                                   {updatingReportId === report.id && (
-                                    <RefreshCw className="w-3 h-3 animate-spin text-[var(--color-coral-deep)]" />
+                                    <RefreshCw className="w-3 h-3 animate-spin text-[var(--color-coral-deep)] shrink-0" />
                                   )}
                                 </div>
                               </div>

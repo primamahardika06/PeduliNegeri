@@ -10,7 +10,7 @@ import {
   LogOut,
   Plus,
   Eye,
-  CheckCircle2,
+  Clock,
 } from "lucide-react";
 import { reportService } from "../../services/reportService";
 import { authService } from "../../services/authService";
@@ -60,6 +60,43 @@ function formatDate(value) {
   } catch {
     return String(value);
   }
+}
+
+function getStepTimestamp(report, stepObj, currentStep) {
+  if (!report) return null;
+
+  if (Array.isArray(report.status_timeline) && report.status_timeline.length > 0) {
+    const entry = report.status_timeline.find(
+      (e) =>
+        e.status === stepObj.label ||
+        (stepObj.step === 2 && (e.status === "Laporan Diproses" || e.status === "Sedang Diverifikasi" || e.status === "Diverifikasi")) ||
+        (stepObj.step === 4 && (e.status === "Laporan Selesai" || e.status === "Selesai")),
+    );
+    if (entry && entry.timestamp) {
+      return entry.timestamp;
+    }
+  }
+
+  if (stepObj.step === 1) {
+    return report.created_at;
+  }
+
+  if (stepObj.step <= currentStep) {
+    if (stepObj.step === currentStep) {
+      return report.updated_at || report.created_at;
+    }
+    if (report.updated_at && report.created_at) {
+      const cTime = new Date(report.created_at).getTime();
+      const uTime = new Date(report.updated_at).getTime();
+      if (uTime > cTime) {
+        const factor = (stepObj.step - 1) / (currentStep - 1);
+        return new Date(cTime + (uTime - cTime) * factor).toISOString();
+      }
+    }
+    return report.created_at;
+  }
+
+  return null;
 }
 
 // Data contoh representatif sesuai Gambar 1 jika akun belum memiliki riwayat laporan
@@ -132,7 +169,6 @@ export default function RiwayatLaporan({ currentUser }) {
 
   const [reports, setReports] = useState([]);
   const [isLoading, setIsLoading] = useState(true);
-  const [error, setError] = useState("");
 
   // Toolbar state: viewMode ('kategori' | 'terbaru') & activeCategory ('Semua' | category)
   const [viewMode, setViewMode] = useState("kategori");
@@ -164,14 +200,12 @@ export default function RiwayatLaporan({ currentUser }) {
             setReports(DEMO_REPORTS);
             setExpandedReportId("BA20DC64-sample");
           }
-          setError("");
         }
-      } catch (loadError) {
+      } catch {
         if (isActive) {
           // Jika error atau server offline, gunakan demo reports agar tampilan tetap dapat dilihat
           setReports(DEMO_REPORTS);
           setExpandedReportId("BA20DC64-sample");
-          setError("");
         }
       } finally {
         if (isActive) setIsLoading(false);
@@ -584,7 +618,7 @@ export default function RiwayatLaporan({ currentUser }) {
               <div className="flex flex-wrap items-center gap-x-3 gap-y-1 text-xs text-slate-500 pt-1">
                 <span className="flex items-center gap-1 font-medium">
                   <MapPin className="w-3.5 h-3.5 text-[#984732] shrink-0" />
-                  <span className="truncate max-w-[160px] sm:max-w-xs">{report.location}</span>
+                  <span className="truncate max-w-160px sm:max-w-xs">{report.location}</span>
                 </span>
                 <span>•</span>
                 <span>{formatDate(report.created_at)}</span>
@@ -662,7 +696,7 @@ export default function RiwayatLaporan({ currentUser }) {
               <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 sm:gap-2">
                 {STEPS.map((step) => {
                   const isPastOrCurrent = progress.step >= step.step;
-                  const isCurrent = progress.step === step.step;
+                  const stepDate = getStepTimestamp(report, step, progress.step);
 
                   return (
                     <div key={step.step} className="space-y-1.5">
@@ -686,9 +720,16 @@ export default function RiwayatLaporan({ currentUser }) {
                         >
                           {step.label}
                         </p>
-                        <p className="text-[11px] text-slate-500">
-                          {isPastOrCurrent ? "Selesai" : "Menunggu"}
-                        </p>
+                        {stepDate ? (
+                          <p className="text-[10px] font-mono text-slate-500 flex items-center gap-1 mt-0.5">
+                            <Clock className="w-2.5 h-2.5 text-[#984732] shrink-0" />
+                            <span>{formatDate(stepDate)}</span>
+                          </p>
+                        ) : (
+                          <p className="text-[11px] text-slate-400 italic mt-0.5">
+                            Menunggu
+                          </p>
+                        )}
                       </div>
                     </div>
                   );

@@ -127,6 +127,7 @@ CREATE TABLE IF NOT EXISTS public.reports (
     latitude DOUBLE PRECISION DEFAULT NULL,
     longitude DOUBLE PRECISION DEFAULT NULL,
     province TEXT DEFAULT '',
+    status_timeline JSONB DEFAULT '[]'::jsonb,
     status TEXT NOT NULL DEFAULT 'Laporan Diterima'
         CHECK (status IN (
             'Laporan Diterima',

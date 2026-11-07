@@ -3,21 +3,17 @@ import { Link } from "react-router-dom";
 import {
   ArrowRight,
   Camera,
-  Check,
   ChevronRight,
   ClipboardList,
-  HeartHandshake,
   MapPin,
   Menu,
   ShieldCheck,
   X,
   Trophy,
   Star,
-  Quote,
   Sparkles,
   Users,
   CheckCircle2,
-  Clock,
   Map as MapIcon,
 } from "lucide-react";
 import { reportService } from "../../services/reportService";
@@ -53,7 +49,17 @@ export default function LandingPage() {
   const [trendingReports, setTrendingReports] = useState([]);
   const [leaderboard, setLeaderboard] = useState([]);
   const [testimonials, setTestimonials] = useState([]);
-  const [loading, setLoading] = useState(true);
+  const [heroSlides, setHeroSlides] = useState([]);
+  const [currentSlideIndex, setCurrentSlideIndex] = useState(0);
+
+  // Auto-switch hero slide every 5 seconds
+  useEffect(() => {
+    if (heroSlides.length <= 1) return;
+    const interval = setInterval(() => {
+      setCurrentSlideIndex((prev) => (prev + 1) % heroSlides.length);
+    }, 5000);
+    return () => clearInterval(interval);
+  }, [heroSlides.length]);
 
   useEffect(() => {
     let isMounted = true;
@@ -104,11 +110,50 @@ export default function LandingPage() {
               },
             ]);
           }
+
+          // ── Ambil Foto Laporan User untuk Slider (Maksimal 5 Laporan Terbaru) ──
+          let slides = [];
+          if (currentUser) {
+            try {
+              const myReports = await reportService.getMyReports();
+              if (Array.isArray(myReports) && myReports.length > 0) {
+                // Utamakan laporan milik akun user yang memiliki foto bukti
+                const withPhotos = myReports.filter((r) => Boolean(r.image_url || r.imageUrl));
+                const chosen = withPhotos.length > 0 ? withPhotos.slice(0, 5) : myReports.slice(0, 5);
+                slides = chosen.map((r) => ({
+                  id: r.id,
+                  title: r.title,
+                  category: r.category,
+                  location: r.location,
+                  status: r.status,
+                  imageUrl: r.image_url || r.imageUrl || null,
+                }));
+              }
+            } catch {
+              // Jika belum login atau gagal, fallback ke laporan publik
+            }
+          }
+
+          // Jika user belum memiliki laporan, ambil 5 laporan publik terbaru yang memiliki foto
+          if (slides.length === 0 && publicReps.status === "fulfilled" && Array.isArray(publicReps.value)) {
+            const publicWithPhotos = publicReps.value.filter((r) => Boolean(r.imageUrl || r.image_url));
+            const chosen = publicWithPhotos.length > 0 ? publicWithPhotos.slice(0, 5) : publicReps.value.slice(0, 5);
+            slides = chosen.map((r) => ({
+              id: r.id,
+              title: r.title,
+              category: r.category,
+              location: r.location,
+              status: r.status,
+              imageUrl: r.imageUrl || r.image_url || null,
+            }));
+          }
+
+          if (slides.length > 0) {
+            setHeroSlides(slides);
+          }
         }
       } catch {
         // Fallback default states gracefully handled
-      } finally {
-        if (isMounted) setLoading(false);
       }
     }
 
@@ -116,9 +161,51 @@ export default function LandingPage() {
     return () => {
       isMounted = false;
     };
-  }, []);
+  }, [currentUser]);
 
   const closeMenu = () => setMenuOpen(false);
+
+  const DEFAULT_HERO_SLIDE = {
+    id: "default-slide",
+    title: "Perbaikan Lampu Jalan Rusak di Jl. Pemuda",
+    category: "Infrastruktur",
+    location: "Kec. Sukajadi, Kota Bandung",
+    status: "Petugas Dikirim ke Lokasi",
+    imageUrl: null,
+  };
+
+  const activeSlide =
+    heroSlides.length > 0 ? heroSlides[currentSlideIndex] : DEFAULT_HERO_SLIDE;
+
+  const isSlideResolved =
+    activeSlide.status === "Laporan Selesai" || activeSlide.status === "Selesai";
+  const slideStepNum = isSlideResolved
+    ? 4
+    : activeSlide.status === "Petugas Dikirim ke Lokasi"
+    ? 3
+    : activeSlide.status === "Laporan Diproses" ||
+      activeSlide.status === "Sedang Diverifikasi"
+    ? 2
+    : 1;
+
+  const slideProgressPercent =
+    slideStepNum === 4
+      ? 100
+      : slideStepNum === 3
+      ? 75
+      : slideStepNum === 2
+      ? 50
+      : 25;
+
+  const slideStatusLabel =
+    activeSlide.status === "Laporan Selesai" || activeSlide.status === "Selesai"
+      ? "Laporan Selesai"
+      : activeSlide.status === "Petugas Dikirim ke Lokasi"
+      ? "Sedang Ditangani"
+      : activeSlide.status === "Laporan Diproses" ||
+        activeSlide.status === "Sedang Diverifikasi"
+      ? "Sedang Diverifikasi"
+      : "Laporan Diterima";
 
   return (
     <div className="bg-[var(--color-surface)] text-[var(--color-ink)] font-sans min-h-screen">
@@ -137,7 +224,7 @@ export default function LandingPage() {
               Laporan
             </a>
             <Link to="/peta" className="hover:text-[var(--color-ink)] flex items-center gap-1 transition-colors">
-              <MapIcon size={13} /> Peta
+              Peta
             </Link>
             <a href="#peringkat" className="hover:text-[var(--color-ink)] transition-colors">
               Peringkat
@@ -239,45 +326,123 @@ export default function LandingPage() {
               </div>
             </div>
 
-            {/* Interactive Preview Mockup Card */}
+            {/* Interactive Preview Mockup Card / Photo Slider */}
             <div className="lg:col-span-5 max-w-md mx-auto w-full">
-              <div className="rounded-xl border border-[var(--color-line)] bg-white p-4 shadow-xl">
-                <div className="w-full h-44 rounded-lg bg-[var(--color-apricot)] flex flex-col items-center justify-center p-4 text-center border border-[var(--color-line)]/50">
-                  <Camera size={28} className="text-[var(--color-coral-deep)] mb-2" />
-                  <p className="text-xs font-semibold text-[var(--color-ink)]">
-                    Foto Bukti Langsung dari Lapangan
-                  </p>
-                  <p className="text-[11px] text-[var(--color-muted)] mt-1 max-w-xs">
-                    Sertakan foto kondisi fasilitas atau isu lingkungan saat membuat laporan.
-                  </p>
-                </div>
+              <div className="rounded-xl border border-[var(--color-line)] bg-white p-4 shadow-xl transition-all">
+                {/* Photo Display / Slider (Ganti tiap 5 detik) */}
+                {activeSlide.imageUrl ? (
+                  <div className="relative w-full h-48 sm:h-52 rounded-lg overflow-hidden bg-black/10 border border-[var(--color-line)]/50 group">
+                    <img
+                      src={activeSlide.imageUrl}
+                      alt={activeSlide.title}
+                      className="w-full h-full object-cover transition-transform duration-700 hover:scale-105"
+                    />
+                    <div className="absolute top-2.5 right-2.5 px-2 py-0.5 rounded-md bg-black/60 backdrop-blur-xs text-white text-[10px] font-semibold flex items-center gap-1 shadow-xs">
+                      <Camera size={11} />
+                      <span>Foto Laporan</span>
+                    </div>
 
+                    {/* Slider Indicator Dots */}
+                    {heroSlides.length > 1 && (
+                      <div className="absolute bottom-2.5 left-1/2 -translate-x-1/2 flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-black/50 backdrop-blur-xs">
+                        {heroSlides.map((_, idx) => (
+                          <button
+                            key={idx}
+                            type="button"
+                            onClick={() => setCurrentSlideIndex(idx)}
+                            className={`h-1.5 rounded-full transition-all cursor-pointer ${
+                              idx === currentSlideIndex
+                                ? "w-4 bg-[var(--color-coral)]"
+                                : "w-1.5 bg-white/60 hover:bg-white"
+                            }`}
+                            aria-label={`Lihat laporan ${idx + 1}`}
+                          />
+                        ))}
+                      </div>
+                    )}
+                  </div>
+                ) : (
+                  <div className="relative w-full h-48 sm:h-52 rounded-lg bg-[var(--color-apricot)] flex flex-col items-center justify-center p-4 text-center border border-[var(--color-line)]/50">
+                    <Camera size={28} className="text-[var(--color-coral-deep)] mb-2" />
+                    <p className="text-xs font-semibold text-[var(--color-ink)]">
+                      Foto Bukti Langsung dari Lapangan
+                    </p>
+                    <p className="text-[11px] text-[var(--color-muted)] mt-1 max-w-xs">
+                      Sertakan foto kondisi fasilitas atau isu lingkungan saat membuat laporan.
+                    </p>
+
+                    {heroSlides.length > 1 && (
+                      <div className="absolute bottom-2.5 left-1/2 -translate-x-1/2 flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-black/15 backdrop-blur-xs">
+                        {heroSlides.map((_, idx) => (
+                          <button
+                            key={idx}
+                            type="button"
+                            onClick={() => setCurrentSlideIndex(idx)}
+                            className={`h-1.5 rounded-full transition-all cursor-pointer ${
+                              idx === currentSlideIndex
+                                ? "w-4 bg-[var(--color-coral-deep)]"
+                                : "w-1.5 bg-[var(--color-ink)]/30 hover:bg-[var(--color-ink)]/60"
+                            }`}
+                            aria-label={`Lihat laporan ${idx + 1}`}
+                          />
+                        ))}
+                      </div>
+                    )}
+                  </div>
+                )}
+
+                {/* Info Rincian Laporan Dinamis */}
                 <div className="mt-3.5 pt-3 border-t border-[var(--color-line)]">
                   <div className="flex items-center justify-between text-xs mb-1.5">
-                    <span className="font-bold text-[11px] px-2 py-0.5 rounded bg-[var(--color-cream)] text-[var(--color-coral-deep)]">
-                      Infrastruktur
+                    <span className="font-bold text-[11px] px-2 py-0.5 rounded bg-[var(--color-cream)] text-[var(--color-coral-deep)] border border-[var(--color-line)]">
+                      {activeSlide.category || "Infrastruktur"}
                     </span>
-                    <span className="text-[10px] font-semibold text-emerald-800 bg-emerald-100 px-2 py-0.5 rounded-full flex items-center gap-1">
-                      <span className="w-1.5 h-1.5 rounded-full bg-emerald-600 animate-pn-dot" /> Sedang Ditangani
+                    <span
+                      className={`text-[10px] font-semibold px-2 py-0.5 rounded-full flex items-center gap-1 ${
+                        isSlideResolved
+                          ? "bg-emerald-100 text-emerald-800"
+                          : "bg-emerald-100 text-emerald-800"
+                      }`}
+                    >
+                      <span
+                        className={`w-1.5 h-1.5 rounded-full ${
+                          isSlideResolved
+                            ? "bg-emerald-600"
+                            : "bg-emerald-600 animate-pn-dot"
+                        }`}
+                      />
+                      {slideStatusLabel}
                     </span>
                   </div>
-                  <h4 className="text-xs font-bold text-[var(--color-ink)]">
-                    Perbaikan Lampu Jalan Rusak di Jl. Pemuda
+                  <h4 className="text-xs sm:text-sm font-bold text-[var(--color-ink)] line-clamp-1">
+                    {activeSlide.title}
                   </h4>
-                  <p className="text-[11px] text-[var(--color-muted)] flex items-center gap-1 mt-1">
-                    <MapPin size={11} /> Kec. Sukajadi, Kota Bandung
+                  <p className="text-[11px] text-[var(--color-muted)] flex items-center gap-1 mt-1 truncate">
+                    <MapPin size={11} className="shrink-0 text-[var(--color-coral-deep)]" />
+                    <span>{activeSlide.location}</span>
                   </p>
 
-                  {/* Visual Progress Bar */}
+                  {/* Visual Progress Bar Dinamis */}
                   <div className="mt-3">
                     <div className="w-full h-1.5 rounded-full bg-[var(--color-line)] overflow-hidden">
-                      <div className="w-3/4 h-full bg-[var(--color-coral-deep)]" />
+                      <div
+                        className="h-full bg-[var(--color-coral-deep)] transition-all duration-500"
+                        style={{ width: `${slideProgressPercent}%` }}
+                      />
                     </div>
                     <div className="flex justify-between text-[9px] text-[var(--color-muted)] mt-1 font-medium">
-                      <span>Diterima</span>
-                      <span>Diproses</span>
-                      <span className="font-bold text-[var(--color-coral-deep)]">Petugas Menuju Lokasi</span>
-                      <span>Selesai</span>
+                      <span className={slideStepNum >= 1 ? "font-bold text-[var(--color-coral-deep)]" : ""}>
+                        Diterima
+                      </span>
+                      <span className={slideStepNum >= 2 ? "font-bold text-[var(--color-coral-deep)]" : ""}>
+                        Diproses
+                      </span>
+                      <span className={slideStepNum >= 3 ? "font-bold text-[var(--color-coral-deep)]" : ""}>
+                        Petugas Menuju Lokasi
+                      </span>
+                      <span className={slideStepNum >= 4 ? "font-bold text-emerald-700" : ""}>
+                        Selesai
+                      </span>
                     </div>
                   </div>
                 </div>

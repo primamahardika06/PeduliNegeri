@@ -10,7 +10,7 @@ import {
 } from "lucide-react";
 import { authService } from "../../services/authService";
 import logoPeduliNegeri from "../../assets/PeduliNegeri (4).png";
-import BrandLogo from "../../components/common/BrandLogo";
+
 
 export default function LoginPages({ onLoginSuccess }) {
   const navigate = useNavigate();
