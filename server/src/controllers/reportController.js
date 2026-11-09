@@ -2,7 +2,12 @@ import { supabaseAdmin, supabase } from "../config/supabase.js";
 import {
   sendReportCreatedNotification,
   sendReportStatusNotification,
+  sendSupportThresholdNotification,
 } from "../services/emailService.js";
+
+// ⚙️ KONFIGURASI: Ubah angka ini untuk mengatur ambang batas notifikasi dukungan admin
+// Default: 5 dukungan (sesuai instruksi testing)
+export const SUPPORT_NOTIFICATION_THRESHOLD = 5;
 
 const REPORT_CATEGORIES = [
   "Infrastruktur",
@@ -11,11 +16,11 @@ const REPORT_CATEGORIES = [
   "Lainnya",
 ];
 const REPORT_FIELDS =
-  "id, title, category, description, location, status, image_url, latitude, longitude, province, status_timeline, created_at";
+  "id, user_id, title, category, description, location, status, image_url, latitude, longitude, province, status_timeline, supports_count, created_at, updated_at";
 const FALLBACK_REPORT_FIELDS =
-  "id, title, category, description, location, status, image_url, latitude, longitude, province, created_at";
+  "id, user_id, title, category, description, location, status, image_url, latitude, longitude, province, supports_count, created_at, updated_at";
 const MINIMAL_REPORT_FIELDS =
-  "id, title, category, description, location, status, created_at";
+  "id, user_id, title, category, description, location, status, created_at";
 const REPORT_STATUSES = [
   "Laporan Diterima",
   "Laporan Diproses",
@@ -744,3 +749,430 @@ export async function getLeaderboard(req, res) {
     });
   }
 }
+
+/**
+ * Helper menghitung jarak haversine sederhana (dalam km)
+ */
+function calculateDistanceKm(lat1, lon1, lat2, lon2) {
+  const R = 6371;
+  const dLat = ((lat2 - lat1) * Math.PI) / 180;
+  const dLon = ((lon2 - lon1) * Math.PI) / 180;
+  const a =
+    Math.sin(dLat / 2) * Math.sin(dLat / 2) +
+    Math.cos((lat1 * Math.PI) / 180) *
+      Math.cos((lat2 * Math.PI) / 180) *
+      Math.sin(dLon / 2) *
+      Math.sin(dLon / 2);
+  const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
+  return R * c;
+}
+
+function getDistanceText(km) {
+  if (km < 1) {
+    const meters = Math.max(50, Math.round(km * 1000));
+    return `${meters} m dari lokasi Anda`;
+  }
+  const formatted = km.toFixed(1).replace(".", ",");
+  return `${formatted} km dari lokasi Anda`;
+}
+
+function getStatusStep(status) {
+  switch (status) {
+    case "Laporan Diterima":
+      return 1;
+    case "Laporan Diproses":
+      return 2;
+    case "Petugas Dikirim ke Lokasi":
+      return 3;
+    case "Laporan Selesai":
+    case "Selesai":
+      return 4;
+    default:
+      return 1;
+  }
+}
+
+function formatReportCode(id = "") {
+  const clean = id.replace(/-/g, "").toUpperCase();
+  return `#${clean.slice(0, 8)}`;
+}
+
+/**
+ * 1. Temukan Laporan Serupa (Duplicate Check)
+ */
+export async function findSimilarReports(req, res) {
+  const db = getDatabaseClient(res);
+  if (!db) return undefined;
+
+  const { title = "", category = "", location = "", description = "" } =
+    req.body || {};
+
+  try {
+    const currentUserId = req.authUser.id;
+
+    // Ambil daftar laporan terbaru yang belum selesai (atau semua laporan aktif)
+    const { data: allCandidates, error: candError } = await db
+      .from("reports")
+      .select(REPORT_FIELDS)
+      .order("created_at", { ascending: false })
+      .limit(100);
+
+    if (candError) {
+      return res.status(500).json({
+        success: false,
+        message: "Gagal memeriksa laporan serupa.",
+      });
+    }
+
+    // Ambil daftar laporan yang sudah pernah didukung oleh user ini
+    let supportedReportIds = new Set();
+    const { data: userSupports } = await db
+      .from("report_supports")
+      .select("report_id")
+      .eq("user_id", currentUserId);
+
+    if (Array.isArray(userSupports)) {
+      userSupports.forEach((s) => supportedReportIds.add(s.report_id));
+    }
+
+    // Stop words umum Bahasa Indonesia
+    const stopWords = new Set([
+      "yang", "dan", "di", "ke", "dari", "ini", "itu", "untuk", "pada", "adalah",
+      "dengan", "saya", "kami", "bisa", "ada", "tidak", "jl", "jalan", "no", "nomor",
+      "rt", "rw", "kelurahan", "kecamatan", "kota", "kabupaten", "provinsi", "daerah",
+      "laporan", "mohon", "tolong", "bantuan", "segera", "sudah", "depan", "dekat"
+    ]);
+
+    const cleanTokens = (str) =>
+      (str || "")
+        .toLowerCase()
+        .replace(/[^a-zA-Z0-9\s]/g, " ")
+        .split(/\s+/)
+        .filter((word) => word.length >= 3 && !stopWords.has(word));
+
+    const inputTitleTokens = cleanTokens(title);
+    const inputDescTokens = cleanTokens(description);
+    const inputLocationTokens = cleanTokens(location);
+    const inputAllKeywords = Array.from(new Set([...inputTitleTokens, ...inputDescTokens]));
+
+    // Selesaikan koordinat input user
+    const inputCoord = resolveCoordinates(location, currentUserId);
+
+    const scoredReports = (allCandidates || []).map((cand) => {
+      let score = 0;
+      const matchedWords = [];
+
+      // 1. Kategori sama
+      const isSameCategory = cand.category === category;
+      if (isSameCategory) {
+        score += 30;
+      }
+
+      // 2. Token pencocokan judul
+      const candTitleTokens = cleanTokens(cand.title);
+      inputTitleTokens.forEach((token) => {
+        if (candTitleTokens.includes(token)) {
+          score += 20;
+          if (!matchedWords.includes(token)) matchedWords.push(token);
+        }
+      });
+
+      // 3. Token pencocokan isi deskripsi
+      const candDescTokens = cleanTokens(cand.description);
+      inputDescTokens.forEach((token) => {
+        if (candDescTokens.includes(token)) {
+          score += 10;
+          if (!matchedWords.includes(token)) matchedWords.push(token);
+        }
+      });
+
+      // 4. Token pencocokan lokasi (wilayah, kelurahan, jalan)
+      const candLocationTokens = cleanTokens(cand.location);
+      let locationMatchedCount = 0;
+      inputLocationTokens.forEach((token) => {
+        if (candLocationTokens.includes(token)) {
+          locationMatchedCount += 1;
+          score += 25;
+        }
+      });
+
+      // 5. Jarak geografis (haversine)
+      const candLat = cand.latitude || resolveCoordinates(cand.location, cand.id).lat;
+      const candLng = cand.longitude || resolveCoordinates(cand.location, cand.id).lng;
+      let distanceKm = 1.2; // default
+      if (typeof candLat === "number" && typeof candLng === "number") {
+        distanceKm = calculateDistanceKm(inputCoord.lat, inputCoord.lng, candLat, candLng);
+      }
+
+      if (distanceKm <= 1.0) {
+        score += 35;
+      } else if (distanceKm <= 3.0) {
+        score += 20;
+      } else if (distanceKm <= 5.0) {
+        score += 10;
+      }
+
+      const isOwnReport = cand.user_id === currentUserId;
+      const isSupported = supportedReportIds.has(cand.id);
+
+      // Tentukan label kedekatan
+      const similarityLevel = score >= 60 ? "Sangat mirip" : "Mirip";
+      const distanceText = getDistanceText(distanceKm);
+      const step = getStatusStep(cand.status);
+
+      return {
+        ...cand,
+        code: formatReportCode(cand.id),
+        similarityScore: score,
+        similarityLevel,
+        isSameCategory,
+        categoryMatchText: isSameCategory ? "Kategori sama" : "Kategori berbeda",
+        distanceKm,
+        distanceText,
+        matchedKeywords: matchedWords.slice(0, 4),
+        statusStep: step,
+        isOwnReport,
+        isSupported,
+        supports_count: cand.supports_count || 0,
+      };
+    });
+
+    // Saring hanya laporan yang memiliki relevansi (score >= 25 atau memiliki kecocokan kata kunci/lokasi)
+    let similarResults = scoredReports.filter(
+      (r) => r.similarityScore >= 35 || (r.isSameCategory && r.distanceKm <= 2.5)
+    );
+
+    // Sort default: paling mirip (similarityScore DESC)
+    similarResults.sort((a, b) => b.similarityScore - a.similarityScore);
+
+    return res.status(200).json({
+      success: true,
+      data: similarResults,
+      count: similarResults.length,
+    });
+  } catch (err) {
+    return res.status(500).json({
+      success: false,
+      message: err.message || "Gagal memeriksa laporan serupa.",
+    });
+  }
+}
+
+/**
+ * 2. Toggle Dukungan Warga pada Laporan
+ */
+export async function toggleSupport(req, res) {
+  const db = getDatabaseClient(res);
+  if (!db) return undefined;
+
+  const { id } = req.params;
+  const userId = req.authUser.id;
+
+  try {
+    // 1. Cek laporan target
+    const { data: targetReport, error: repErr } = await db
+      .from("reports")
+      .select("id, user_id, title, category, location, status, supports_count")
+      .eq("id", id)
+      .maybeSingle();
+
+    if (repErr || !targetReport) {
+      return res.status(404).json({
+        success: false,
+        message: "Laporan tidak ditemukan.",
+      });
+    }
+
+    // 2. User tidak dapat mendukung laporannya sendiri
+    if (targetReport.user_id === userId) {
+      return res.status(400).json({
+        success: false,
+        message: "Anda tidak dapat memberikan dukungan pada laporan milik sendiri.",
+      });
+    }
+
+    // 3. Cek apakah sudah pernah didukung oleh akun ini
+    const { data: existingSupport } = await db
+      .from("report_supports")
+      .select("id")
+      .eq("report_id", id)
+      .eq("user_id", userId)
+      .maybeSingle();
+
+    let newCount = targetReport.supports_count || 0;
+    let isSupported = false;
+
+    if (existingSupport) {
+      // Batalkan dukungan
+      await db
+        .from("report_supports")
+        .delete()
+        .eq("id", existingSupport.id);
+
+      newCount = Math.max(0, newCount - 1);
+      isSupported = false;
+    } else {
+      // Tambah dukungan
+      await db
+        .from("report_supports")
+        .insert({ report_id: id, user_id: userId });
+
+      newCount = newCount + 1;
+      isSupported = true;
+    }
+
+    // Update jumlah dukungan di tabel reports
+    await db
+      .from("reports")
+      .update({ supports_count: newCount, updated_at: new Date().toISOString() })
+      .eq("id", id);
+
+    // 4. Periksa apakah mencapai ambang batas dukungan (e.g. 5) untuk notifikasi admin
+    if (isSupported && newCount >= SUPPORT_NOTIFICATION_THRESHOLD) {
+      (async () => {
+        try {
+          const { data: adminProfiles } = await db
+            .from("profiles")
+            .select("email, full_name")
+            .eq("role", "admin");
+
+          if (adminProfiles && adminProfiles.length > 0) {
+            for (const adm of adminProfiles) {
+              if (adm.email) {
+                await sendSupportThresholdNotification({
+                  adminEmail: adm.email,
+                  adminName: adm.full_name || "Administrator",
+                  report: targetReport,
+                  supportCount: newCount,
+                });
+              }
+            }
+          }
+        } catch (notifErr) {
+          console.error("Gagal mengirim email notifikasi threshold admin:", notifErr);
+        }
+      })();
+    }
+
+    return res.status(200).json({
+      success: true,
+      data: {
+        reportId: id,
+        isSupported,
+        supportsCount: newCount,
+      },
+    });
+  } catch (err) {
+    return res.status(500).json({
+      success: false,
+      message: err.message || "Gagal memproses dukungan laporan.",
+    });
+  }
+}
+
+/**
+ * 3. Daftar Pendukung Laporan
+ */
+export async function getReportSupporters(req, res) {
+  const db = getDatabaseClient(res);
+  if (!db) return undefined;
+
+  const { id } = req.params;
+  try {
+    const { data: supports, error } = await db
+      .from("report_supports")
+      .select("id, user_id, created_at")
+      .eq("report_id", id)
+      .order("created_at", { ascending: false });
+
+    if (error) {
+      return res.status(500).json({
+        success: false,
+        message: "Gagal memuat pendukung laporan.",
+      });
+    }
+
+    const userIds = (supports || []).map((s) => s.user_id);
+    let profilesMap = {};
+    if (userIds.length > 0) {
+      const { data: profiles } = await db
+        .from("profiles")
+        .select("id, full_name, email, role")
+        .in("id", userIds);
+      (profiles || []).forEach((p) => {
+        profilesMap[p.id] = p;
+      });
+    }
+
+    const supporters = (supports || []).map((s) => {
+      const p = profilesMap[s.user_id] || {};
+      return {
+        id: s.id,
+        userId: s.user_id,
+        name: p.full_name || p.email || "Warga",
+        email: p.email,
+        supportedAt: s.created_at,
+      };
+    });
+
+    return res.status(200).json({ success: true, data: supporters });
+  } catch (err) {
+    return res.status(500).json({
+      success: false,
+      message: err.message || "Gagal memuat daftar pendukung.",
+    });
+  }
+}
+
+/**
+ * 4. Notifikasi Admin untuk Laporan yang Mencapai Ambang Batas Dukungan
+ */
+export async function getAdminNotifications(req, res) {
+  const db = getDatabaseClient(res);
+  if (!db) return undefined;
+
+  try {
+    // Cari laporan dengan dukungan >= ambang batas (atau dengan dukungan > 0)
+    const { data: reports, error } = await db
+      .from("reports")
+      .select("id, title, category, location, status, supports_count, created_at, updated_at")
+      .gte("supports_count", 1)
+      .order("supports_count", { ascending: false })
+      .limit(30);
+
+    if (error) {
+      return res.status(200).json({ success: true, data: [] });
+    }
+
+    const notifications = (reports || []).map((rep) => {
+      const isThresholdMet = (rep.supports_count || 0) >= SUPPORT_NOTIFICATION_THRESHOLD;
+      return {
+        id: `notif-${rep.id}`,
+        reportId: rep.id,
+        title: isThresholdMet
+          ? `Laporan Mencapai ${rep.supports_count} Dukungan Warga!`
+          : `Laporan Didukung oleh ${rep.supports_count} Warga`,
+        reportTitle: rep.title,
+        message: `Laporan "${rep.title}" di ${rep.location} telah menerima ${rep.supports_count} dukungan warga.`,
+        supportsCount: rep.supports_count || 0,
+        isThresholdMet,
+        location: rep.location,
+        category: rep.category,
+        status: rep.status,
+        createdAt: rep.updated_at || rep.created_at,
+      };
+    });
+
+    return res.status(200).json({
+      success: true,
+      data: notifications,
+      threshold: SUPPORT_NOTIFICATION_THRESHOLD,
+    });
+  } catch (err) {
+    return res.status(500).json({
+      success: false,
+      message: err.message || "Gagal memuat notifikasi admin.",
+    });
+  }
+}
+

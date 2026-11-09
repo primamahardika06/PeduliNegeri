@@ -7,6 +7,10 @@ import {
   getPublicReports,
   getPublicStats,
   getLeaderboard,
+  findSimilarReports,
+  toggleSupport,
+  getReportSupporters,
+  getAdminNotifications,
 } from "../controllers/reportController.js";
 import { requireUser } from "../middlewares/requireUser.js";
 import { requireAdmin } from "../middlewares/requireAdmin.js";
@@ -21,8 +25,12 @@ router.get("/leaderboard", getLeaderboard);
 
 // Endpoint Terautentikasi
 router.use(requireUser);
+router.get("/admin/notifications", requireAdmin, getAdminNotifications);
 router.get("/admin", requireAdmin, getAllReports);
 router.patch("/:id/status", requireAdmin, updateReportStatus);
+router.get("/:id/supporters", getReportSupporters);
+router.post("/:id/support", toggleSupport);
+router.post("/find-similar", findSimilarReports);
 router.get("/", getMyReports);
 router.post("/", limitReportSubmissions, createReport);
 

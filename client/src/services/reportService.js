@@ -67,4 +67,25 @@ export const reportService = {
   async getLeaderboard() {
     return request("/leaderboard");
   },
+
+  async findSimilarReports(report) {
+    return request("/find-similar", {
+      method: "POST",
+      body: JSON.stringify(report),
+    });
+  },
+
+  async toggleSupport(reportId) {
+    return request(`/${encodeURIComponent(reportId)}/support`, {
+      method: "POST",
+    });
+  },
+
+  async getReportSupporters(reportId) {
+    return request(`/${encodeURIComponent(reportId)}/supporters`);
+  },
+
+  async getAdminNotifications() {
+    return request("/admin/notifications");
+  },
 };

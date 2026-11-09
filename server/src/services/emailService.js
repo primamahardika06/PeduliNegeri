@@ -381,3 +381,87 @@ export async function sendReportStatusNotification({
   return sendEmail({ to: userEmail, subject, html, text });
 }
 
+/**
+ * Kirim Notifikasi ke Admin: Laporan Mencapai Ambang Batas Dukungan Warga (e.g. 5 dukungan)
+ */
+export async function sendSupportThresholdNotification({
+  adminEmail,
+  adminName,
+  report,
+  supportCount,
+}) {
+  if (!adminEmail) return;
+
+  const subject = `[Peduli Negeri - Perhatian Admin] Laporan Populer: "${report.title}" Telah Didukung ${supportCount} Warga!`;
+  const preheader = `Laporan #${(report.id || "").slice(0, 8)} telah mendapat perhatian tinggi dengan ${supportCount} dukungan warga.`;
+
+  const bodyContent = `
+    <h2 style="font-size: 18px; font-weight: 800; margin: 0 0 12px 0; color: #1E2430;">
+      Laporan Mencapai ${supportCount} Dukungan Warga ⚠️
+    </h2>
+    <p style="font-size: 13px; line-height: 1.6; color: #5C6070; margin: 0 0 20px 0;">
+      Halo <strong>${adminName || "Administrator"}</strong>, ada laporan yang mendapatkan banyak dukungan warga di sekitarnya dan membutuhkan prioritas perhatian tindak lanjut.
+    </p>
+
+    <div style="background-color: #FEF3C7; border: 1px solid #FCD34D; border-radius: 14px; padding: 18px; margin-bottom: 20px;">
+      <div style="font-size: 11px; text-transform: uppercase; letter-spacing: 0.5px; font-weight: 700; color: #92400E; margin-bottom: 4px;">
+        Jumlah Dukungan Terkini
+      </div>
+      <div style="font-size: 20px; font-weight: 800; color: #92400E; margin-bottom: 6px;">
+        👥 ${supportCount} Warga Mendukung
+      </div>
+      <div style="font-size: 12px; line-height: 1.5; color: #78350F;">
+        Banyak warga merasakan kendala yang serupa di wilayah ini. Segera tinjau laporan untuk dijadwalkan ke tahap penanganan.
+      </div>
+    </div>
+
+    <!-- Ringkasan Laporan -->
+    <table width="100%" cellpadding="0" cellspacing="0" border="0" style="background-color: #FAF5EE; border-radius: 14px; padding: 18px; border: 1px solid #EBE4D8; margin-bottom: 20px;">
+      <tr>
+        <td style="font-size: 11px; color: #5C6070; text-transform: uppercase; font-weight: 700; letter-spacing: 0.5px;">
+          Nomor Laporan
+        </td>
+        <td align="right" style="font-size: 12px; font-weight: bold; color: #1E2430;">
+          #${(report.id || "").slice(0, 8)}
+        </td>
+      </tr>
+      <tr>
+        <td colspan="2" style="padding-top: 6px;">
+          <div style="font-size: 14px; font-weight: 700; color: #1E2430;">
+            ${report.title}
+          </div>
+          <div style="font-size: 12px; color: #5C6070; margin-top: 4px;">
+            📍 ${report.location}
+          </div>
+          <div style="font-size: 12px; color: #5C6070; margin-top: 4px;">
+            🏷️ Kategori: ${report.category}
+          </div>
+          <div style="font-size: 12px; color: #5C6070; margin-top: 4px;">
+            📌 Status Saat Ini: <strong>${report.status}</strong>
+          </div>
+        </td>
+      </tr>
+    </table>
+
+    <p style="font-size: 12px; line-height: 1.5; color: #5C6070; margin: 0;">
+      Anda dapat langsung membuka dashboard admin untuk memperbarui status atau menugaskan petugas teknis ke lokasi.
+    </p>
+  `;
+
+  const html = wrapEmailTemplate({
+    title: subject,
+    preheader,
+    bodyContent,
+  });
+
+  const text = `Halo ${adminName || "Administrator"},\n\n` +
+    `Laporan "${report.title}" telah mencapai ${supportCount} dukungan warga!\n` +
+    `Lokasi: ${report.location}\n` +
+    `Kategori: ${report.category}\n` +
+    `Status Saat Ini: ${report.status}\n\n` +
+    `Tinjau di Admin Dashboard: ${CLIENT_URL}/admin\n\n` +
+    `Salam,\nSistem Peduli Negeri`;
+
+  return sendEmail({ to: adminEmail, subject, html, text });
+}
+

@@ -1,5 +1,5 @@
 import { useState, useRef, useEffect } from "react";
-import { Link, useNavigate } from "react-router-dom";
+import { Link, useNavigate, useLocation } from "react-router-dom";
 import {
   ArrowLeft,
   ArrowRight,
@@ -31,18 +31,28 @@ const CATEGORIES = [
 
 export default function FormLaporan({ currentUser }) {
   const navigate = useNavigate();
-  const [form, setForm] = useState({
-    title: "",
-    category: "",
-    description: "",
-    location: "",
-    image_url: "",
+  const locationState = useLocation();
+
+  const [form, setForm] = useState(() => {
+    if (locationState.state?.pendingReport) {
+      return locationState.state.pendingReport;
+    }
+    return {
+      title: "",
+      category: "",
+      description: "",
+      location: "",
+      image_url: "",
+    };
   });
   const [error, setError] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [isCheckingDuplicates, setIsCheckingDuplicates] = useState(false);
 
   // State untuk pengelolaan foto bukti
-  const [photoPreview, setPhotoPreview] = useState("");
+  const [photoPreview, setPhotoPreview] = useState(
+    () => locationState.state?.pendingReport?.image_url || "",
+  );
   const [photoLoading, setPhotoLoading] = useState(false);
   const [isCameraOpen, setIsCameraOpen] = useState(false);
   const [cameraError, setCameraError] = useState("");
@@ -171,14 +181,34 @@ export default function FormLaporan({ currentUser }) {
     event.preventDefault();
     setError("");
     setIsSubmitting(true);
+    setIsCheckingDuplicates(true);
 
     try {
+      // 1. Periksa laporan serupa di sekitar lokasi
+      const similarReports = await reportService.findSimilarReports(form);
+
+      // Beri jeda sejenak (minimal 1 detik) agar user melihat animasi popup loading pemeriksaan
+      await new Promise((resolve) => setTimeout(resolve, 1000));
+
+      if (Array.isArray(similarReports) && similarReports.length > 0) {
+        // Arahkan ke halaman Cek Laporan Serupa
+        navigate("/laporan/cek-serupa", {
+          state: {
+            pendingReport: form,
+            similarReports,
+          },
+        });
+        return;
+      }
+
+      // Jika tidak ada laporan serupa sama sekali, langsung kirim laporan baru
       await reportService.createReport(form);
       navigate("/laporan", { state: { reportCreated: true } });
     } catch (submissionError) {
       setError(submissionError.message);
     } finally {
       setIsSubmitting(false);
+      setIsCheckingDuplicates(false);
     }
   };
 
@@ -821,6 +851,33 @@ export default function FormLaporan({ currentUser }) {
                 </div>
               </div>
             )}
+          </div>
+        </div>
+      )}
+
+      {/* ── MODAL LOADING PENGECEKAN LAPORAN SERUPA ───────── */}
+      {isCheckingDuplicates && (
+        <div
+          className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-xs p-4"
+          role="dialog"
+          aria-modal="true"
+        >
+          <div className="w-full max-w-sm rounded-2xl bg-white p-6 shadow-2xl border border-[var(--color-line)] text-center animate-in fade-in zoom-in-95 duration-200">
+            <div className="mx-auto mb-4 flex h-14 w-14 items-center justify-center rounded-2xl bg-[var(--color-cream)] text-[var(--color-coral-deep)] border border-[var(--color-line)] shadow-xs">
+              <RefreshCw className="h-7 w-7 animate-spin" />
+            </div>
+            <h3 className="text-base font-extrabold text-[var(--color-ink)] tracking-tight">
+              Mengecek Laporan Serupa...
+            </h3>
+            <p className="mt-2 text-xs text-[var(--color-muted)] leading-relaxed">
+              Sistem sedang memeriksa apakah permasalahan serupa di wilayah Anda sudah pernah dilaporkan oleh warga lainnya.
+            </p>
+            <div className="mt-5 pt-4 border-t border-[var(--color-line)] flex items-center justify-center gap-2">
+              <span className="inline-block h-2 w-2 rounded-full bg-[var(--color-coral)] animate-ping" />
+              <span className="text-[11px] font-semibold text-[var(--color-coral-deep)]">
+                Mencari kecocokan lokasi & kategori...
+              </span>
+            </div>
           </div>
         </div>
       )}

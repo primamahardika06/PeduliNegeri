@@ -8,6 +8,7 @@ import ResetPassword from "./pages/public_pages/ResetPassword";
 import LandingPage from "./pages/public_pages/LandingPage";
 import PetaLaporan from "./pages/public_pages/PetaLaporan";
 import ReportStatistik from "./components/report/reportStatistik";
+import DuplicatAlert from "./components/report/duplicatAlert";
 import AdminDashboard from "./components/admin/adminDashboard";
 import { authService } from "./services/authService";
 
@@ -88,6 +89,19 @@ export default function App() {
           element={
             currentUser && currentUser.role !== "admin" ? (
               <FormLaporan currentUser={currentUser} />
+            ) : currentUser ? (
+              <Navigate to="/admin" replace />
+            ) : (
+              <Navigate to="/login" replace />
+            )
+          }
+        />
+
+        <Route
+          path="/laporan/cek-serupa"
+          element={
+            currentUser && currentUser.role !== "admin" ? (
+              <DuplicatAlert currentUser={currentUser} />
             ) : currentUser ? (
               <Navigate to="/admin" replace />
             ) : (

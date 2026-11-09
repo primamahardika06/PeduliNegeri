@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useMemo } from "react";
 import { useNavigate, Link } from "react-router-dom";
 import {
   ShieldCheck,
@@ -18,6 +18,10 @@ import {
   MapPin,
   Home,
   Download,
+  Bell,
+  Settings,
+  ThumbsUp,
+  Check,
 } from "lucide-react";
 import { authService } from "../../services/authService";
 import { reportService } from "../../services/reportService";
@@ -64,12 +68,30 @@ export default function AdminDashboard({ currentUser, onLogout }) {
   const [roleFilter, setRoleFilter] = useState("all");
   const [reportCategoryFilter, setReportCategoryFilter] = useState("Semua");
   const [reportSearchTerm, setReportSearchTerm] = useState("");
+  const [supportFilter, setSupportFilter] = useState("semua"); // "semua" | "didukung" | "biasa"
+  const [selectedWilayah, setSelectedWilayah] = useState("Semua"); // "Semua" | nama wilayah spesifik
 
   // UI State
   const [updatingReportId, setUpdatingReportId] = useState(null);
   const [adminSelectedPhoto, setAdminSelectedPhoto] = useState(null);
   const [draggedReportId, setDraggedReportId] = useState(null);
   const [dragOverColumn, setDragOverColumn] = useState(null);
+
+  // Notifikasi & Dukungan State (Screenshot 5)
+  const [notifications, setNotifications] = useState([]);
+  const [isNotificationsOpen, setIsNotificationsOpen] = useState(false);
+  const [readNotifIds, setReadNotifIds] = useState(() => {
+    try {
+      return JSON.parse(localStorage.getItem("pn_admin_read_notifs") || "[]");
+    } catch {
+      return [];
+    }
+  });
+
+  // Modal Pendukung Laporan
+  const [activeSupportersReport, setActiveSupportersReport] = useState(null);
+  const [supportersList, setSupportersList] = useState([]);
+  const [loadingSupporters, setLoadingSupporters] = useState(false);
 
   const handleLogout = async () => {
     await authService.logout();
@@ -150,13 +172,55 @@ export default function AdminDashboard({ currentUser, onLogout }) {
     handleReportStatusChange(reportId, REPORT_STATUSES[targetIdx]);
   };
 
+  const fetchNotifications = async () => {
+    try {
+      const notifs = await reportService.getAdminNotifications();
+      if (Array.isArray(notifs)) {
+        setNotifications(notifs);
+      }
+    } catch {
+      // Abaikan jika gagal memuat notifikasi
+    }
+  };
+
+  const handleMarkAllNotifsRead = () => {
+    const allIds = notifications.map((n) => n.id);
+    setReadNotifIds(allIds);
+    localStorage.setItem("pn_admin_read_notifs", JSON.stringify(allIds));
+  };
+
+  const handleOpenSupporters = async (report) => {
+    setActiveSupportersReport(report);
+    setLoadingSupporters(true);
+    try {
+      const supporters = await reportService.getReportSupporters(report.id);
+      setSupportersList(supporters || []);
+    } catch {
+      setSupportersList([]);
+    } finally {
+      setLoadingSupporters(false);
+    }
+  };
+
+  const getRelativeTime = (dateStr) => {
+    if (!dateStr) return "Baru saja";
+    const diffMs = Date.now() - new Date(dateStr).getTime();
+    const diffMins = Math.max(1, Math.floor(diffMs / 60000));
+    if (diffMins < 60) return `${diffMins} menit lalu`;
+    const diffHours = Math.floor(diffMins / 60);
+    if (diffHours < 24) return `${diffHours} jam lalu`;
+    const diffDays = Math.floor(diffHours / 24);
+    return `${diffDays} hari lalu`;
+  };
+
   useEffect(() => {
     let ignore = false;
     const initData = async () => {
       try {
-        const [usersData, reportsData] = await Promise.allSettled([
+        const [usersData, reportsData, notifsData] = await Promise.allSettled([
           authService.getAllUsers(),
           reportService.getAllReports(),
+          reportService.getAdminNotifications(),
         ]);
         if (ignore) return;
         if (
@@ -181,6 +245,13 @@ export default function AdminDashboard({ currentUser, onLogout }) {
           setReports(reportsData.value);
         } else {
           setReportsError(reportsData.reason?.message || "");
+        }
+
+        if (
+          notifsData.status === "fulfilled" &&
+          Array.isArray(notifsData.value)
+        ) {
+          setNotifications(notifsData.value);
         }
       } finally {
         if (!ignore) {
@@ -277,18 +348,91 @@ export default function AdminDashboard({ currentUser, onLogout }) {
     return matchesSearch && u.role === roleFilter;
   });
 
+  // Analisis Wilayah: Kelompokkan laporan & hitung dukungan terbanyak per wilayah
+  const wilayahStats = useMemo(() => {
+    const map = {};
+
+    reports.forEach((rep) => {
+      const loc = (rep.location || "").trim();
+      if (!loc) return;
+
+      // Ekstrak nama wilayah (kelurahan, kecamatan, atau kota)
+      const parts = loc.split(",").map((p) => p.trim()).filter(Boolean);
+      let wilayahName = "";
+
+      if (parts.length >= 2) {
+        const clean0 = parts[0]
+          .replace(/^(jl\.|jalan|gg\.|gang|desa|kelurahan|kecamatan)\s+/i, "")
+          .trim();
+        wilayahName = clean0 || parts[1];
+      } else if (parts.length === 1) {
+        wilayahName = parts[0]
+          .replace(/^(jl\.|jalan|gg\.|gang|desa|kelurahan|kecamatan)\s+/i, "")
+          .trim();
+      }
+
+      if (!wilayahName) wilayahName = "Lainnya";
+
+      if (!map[wilayahName]) {
+        map[wilayahName] = {
+          name: wilayahName,
+          reportCount: 0,
+          totalSupports: 0,
+          topReport: null,
+        };
+      }
+
+      map[wilayahName].reportCount += 1;
+      const count = rep.supports_count || 0;
+      map[wilayahName].totalSupports += count;
+
+      if (
+        !map[wilayahName].topReport ||
+        count > (map[wilayahName].topReport.supports_count || 0)
+      ) {
+        map[wilayahName].topReport = rep;
+      }
+    });
+
+    // Urutkan wilayah dengan akumulasi dukungan terbanyak di paling atas
+    return Object.values(map).sort((a, b) => {
+      if (b.totalSupports !== a.totalSupports) {
+        return b.totalSupports - a.totalSupports;
+      }
+      return b.reportCount - a.reportCount;
+    });
+  }, [reports]);
+
   // Filtered reports for table tab
-  const filteredReports = reports.filter((r) => {
-    const matchCat =
-      reportCategoryFilter === "Semua" ||
-      r.category === reportCategoryFilter;
-    const matchSearch =
-      !reportSearchTerm.trim() ||
-      r.title.toLowerCase().includes(reportSearchTerm.toLowerCase()) ||
-      r.location.toLowerCase().includes(reportSearchTerm.toLowerCase()) ||
-      r.id.toLowerCase().includes(reportSearchTerm.toLowerCase());
-    return matchCat && matchSearch;
-  });
+  const filteredReports = reports
+    .filter((r) => {
+      const matchCat =
+        reportCategoryFilter === "Semua" ||
+        r.category === reportCategoryFilter;
+      const matchSearch =
+        !reportSearchTerm.trim() ||
+        r.title.toLowerCase().includes(reportSearchTerm.toLowerCase()) ||
+        r.location.toLowerCase().includes(reportSearchTerm.toLowerCase()) ||
+        r.id.toLowerCase().includes(reportSearchTerm.toLowerCase());
+      const matchSupport =
+        supportFilter === "semua" ||
+        (supportFilter === "didukung" && (r.supports_count || 0) > 0) ||
+        (supportFilter === "biasa" && (!r.supports_count || r.supports_count === 0));
+      const matchWilayah =
+        selectedWilayah === "Semua" ||
+        (r.location || "").toLowerCase().includes(selectedWilayah.toLowerCase());
+      return matchCat && matchSearch && matchSupport && matchWilayah;
+    })
+    .sort((a, b) => {
+      if (supportFilter === "didukung" || selectedWilayah !== "Semua") {
+        return (b.supports_count || 0) - (a.supports_count || 0);
+      }
+      return 0;
+    });
+
+  const unreadNotifsCount = notifications.filter(
+    (n) => !readNotifIds.includes(n.id),
+  ).length;
 
   // CSV export
   const handleExportCSV = () => {
@@ -357,8 +501,139 @@ export default function AdminDashboard({ currentUser, onLogout }) {
             })}
           </div>
 
-          {/* Right side: admin info + links */}
+          {/* Right side: admin info + links + Notifikasi */}
           <div className="flex items-center gap-2.5">
+            {/* ── TOMBOL NOTIFIKASI BELL DENGAN PANEL DROPDOWN (SCREENSHOT 5) ── */}
+            <div className="relative">
+              <button
+                type="button"
+                onClick={() => setIsNotificationsOpen((prev) => !prev)}
+                className="relative p-2 rounded-xl bg-white/5 hover:bg-white/10 text-white/80 hover:text-white border border-white/10 transition-all cursor-pointer"
+                title="Notifikasi Laporan & Dukungan"
+              >
+                <Bell className="w-4 h-4" />
+                {unreadNotifsCount > 0 && (
+                  <span className="absolute -top-1 -right-1 flex h-4 min-w-[16px] px-1 items-center justify-center rounded-full bg-red-500 text-[10px] font-extrabold text-white animate-pulse">
+                    {unreadNotifsCount}
+                  </span>
+                )}
+              </button>
+
+              {/* Panel Dropdown Notifikasi */}
+              {isNotificationsOpen && (
+                <div
+                  className="absolute right-0 mt-2 w-80 sm:w-96 rounded-2xl bg-white text-(--color-ink) shadow-2xl border border-[var(--color-line)] z-50 overflow-hidden animate-in fade-in zoom-in-95 duration-150"
+                  onClick={(e) => e.stopPropagation()}
+                >
+                  {/* Header Notifikasi (Sesuai Screenshot 5) */}
+                  <div className="p-3.5 px-4 bg-white border-b border-[var(--color-line)] flex items-center justify-between">
+                    <div className="flex items-center gap-2">
+                      <h4 className="text-sm font-extrabold text-(--color-ink)">
+                        Notifikasi
+                      </h4>
+                      {unreadNotifsCount > 0 && (
+                        <span className="text-[10px] font-bold px-1.5 py-0.2 rounded-full bg-red-100 text-red-600">
+                          {unreadNotifsCount} baru
+                        </span>
+                      )}
+                    </div>
+                    <div className="flex items-center gap-2">
+                      {unreadNotifsCount > 0 && (
+                        <button
+                          type="button"
+                          onClick={handleMarkAllNotifsRead}
+                          className="text-[11px] font-semibold text-blue-700 bg-blue-50 hover:bg-blue-100 px-2.5 py-1 rounded-md border border-blue-200 transition-colors cursor-pointer"
+                        >
+                          Tandai dibaca
+                        </button>
+                      )}
+                      <button
+                        type="button"
+                        onClick={() => setIsNotificationsOpen(false)}
+                        className="text-slate-400 hover:text-slate-600 p-1 rounded-md"
+                        title="Tutup"
+                      >
+                        <X className="w-4 h-4" />
+                      </button>
+                    </div>
+                  </div>
+
+                  {/* List Item Notifikasi */}
+                  <div className="max-h-80 overflow-y-auto divide-y divide-[var(--color-line)]">
+                    {notifications.length === 0 ? (
+                      <div className="p-6 text-center text-xs text-(--color-muted)">
+                        <Bell className="w-6 h-6 mx-auto mb-2 opacity-30 text-(--color-muted)" />
+                        Belum ada notifikasi dukungan warga.
+                      </div>
+                    ) : (
+                      notifications.map((item) => {
+                        const isRead = readNotifIds.includes(item.id);
+                        return (
+                          <div
+                            key={item.id}
+                            className={`p-3.5 hover:bg-slate-50 transition-colors ${
+                              !isRead ? "bg-[#FFF9F5]" : ""
+                            }`}
+                          >
+                            <div className="flex items-start justify-between gap-2">
+                              <h5 className="text-xs font-bold text-(--color-ink) leading-snug">
+                                {item.title}
+                              </h5>
+                              {item.isThresholdMet && (
+                                <span className="text-[9px] font-bold px-1.5 py-0.5 rounded bg-amber-100 text-amber-800 border border-amber-300 shrink-0">
+                                  Prioritas
+                                </span>
+                              )}
+                            </div>
+
+                            <p className="mt-1 text-[11px] text-(--color-muted) line-clamp-2">
+                              {item.message}
+                            </p>
+
+                            <div className="mt-2 flex items-center justify-between text-[10px] text-(--color-muted)">
+                              <span>{getRelativeTime(item.createdAt)}</span>
+                              <button
+                                type="button"
+                                onClick={() => {
+                                  setIsNotificationsOpen(false);
+                                  setActiveTab("ringkasan");
+                                  setSupportFilter("didukung");
+                                  const targetRep = reports.find(
+                                    (r) => r.id === item.reportId,
+                                  );
+                                  if (targetRep) {
+                                    handleOpenSupporters(targetRep);
+                                  }
+                                }}
+                                className="font-semibold text-(--color-coral-deep) hover:underline cursor-pointer"
+                              >
+                                Lihat detail laporan →
+                              </button>
+                            </div>
+                          </div>
+                        );
+                      })
+                    )}
+                  </div>
+
+                  {/* Footer Notifikasi */}
+                  <div className="p-2.5 bg-slate-50 border-t border-[var(--color-line)] text-center">
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setIsNotificationsOpen(false);
+                        setActiveTab("ringkasan");
+                        setSupportFilter("didukung");
+                      }}
+                      className="text-xs font-bold text-(--color-coral-deep) hover:underline cursor-pointer"
+                    >
+                      Lihat Semua Laporan Didukung Warga
+                    </button>
+                  </div>
+                </div>
+              )}
+            </div>
+
             <Link
               to="/"
               className="hidden sm:inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-medium bg-white/10 hover:bg-white/20 text-white/80 hover:text-white border border-white/10 transition-all"
@@ -559,6 +834,185 @@ export default function AdminDashboard({ currentUser, onLogout }) {
               </div>
             )}
 
+            {/* ── Widget Analisis: Dukungan Terbanyak per Wilayah ── */}
+            {wilayahStats.length > 0 && (
+              <div className="rounded-2xl bg-white border border-[var(--color-line)] p-4 sm:p-5 shadow-xs">
+                <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 mb-3.5">
+                  <div className="flex items-center gap-2">
+                    <div className="p-1.5 rounded-lg bg-[#FFF5EE] text-[var(--color-coral-deep)] border border-[var(--color-coral)]/30">
+                      <MapPin className="w-4 h-4" />
+                    </div>
+                    <div>
+                      <h4 className="text-xs sm:text-sm font-bold text-[var(--color-ink)]">
+                        Dukungan Terbanyak per Wilayah
+                      </h4>
+                      <p className="text-[11px] text-[var(--color-muted)]">
+                        Pilih wilayah untuk melihat aspirasi warga yang paling mendesak di daerah tersebut
+                      </p>
+                    </div>
+                  </div>
+
+                  {selectedWilayah !== "Semua" && (
+                    <button
+                      type="button"
+                      onClick={() => setSelectedWilayah("Semua")}
+                      className="text-xs font-bold text-[var(--color-coral-deep)] bg-[#FFF5EE] hover:bg-[#FFE8DC] px-3 py-1.5 rounded-xl border border-[var(--color-coral)]/40 transition cursor-pointer self-start sm:self-auto"
+                    >
+                      Reset Filter Wilayah (Tampilkan Semua)
+                    </button>
+                  )}
+                </div>
+
+                {/* Cards Wilayah Terbanyak */}
+                <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-3">
+                  {wilayahStats.slice(0, 4).map((w, idx) => {
+                    const isSelected = selectedWilayah === w.name;
+                    return (
+                      <button
+                        key={w.name}
+                        type="button"
+                        onClick={() =>
+                          setSelectedWilayah(isSelected ? "Semua" : w.name)
+                        }
+                        className={`p-3.5 rounded-xl border text-left transition-all cursor-pointer flex flex-col justify-between ${
+                          isSelected
+                            ? "bg-[#FFF5EE] border-2 border-[var(--color-coral-deep)] ring-2 ring-[var(--color-coral)]/30 shadow-xs"
+                            : "bg-[var(--color-surface)] border-[var(--color-line)] hover:border-[var(--color-coral)]/60 hover:bg-white"
+                        }`}
+                      >
+                        <div className="flex items-center justify-between gap-1 mb-2">
+                          <span className="text-xs font-bold text-[var(--color-ink)] flex items-center gap-1 truncate">
+                            {idx === 0 && w.totalSupports > 0 ? "🏆 " : "📍 "}
+                            {w.name}
+                          </span>
+                          <span
+                            className={`text-[10px] font-bold px-2 py-0.5 rounded-full whitespace-nowrap ${
+                              w.totalSupports > 0
+                                ? "bg-[#FCE8D3] text-[#984732] border border-[#F5C7A5]"
+                                : "bg-white text-[var(--color-muted)] border border-[var(--color-line)]"
+                            }`}
+                          >
+                            👥 {w.totalSupports} dukungan
+                          </span>
+                        </div>
+
+                        {w.topReport && w.totalSupports > 0 ? (
+                          <div className="pt-2 border-t border-[var(--color-line)]/60">
+                            <span className="text-[10px] text-[var(--color-muted)] block">
+                              Masalah Utama:
+                            </span>
+                            <p className="text-[11px] font-semibold text-[var(--color-ink)] truncate">
+                              "{w.topReport.title}"
+                            </p>
+                          </div>
+                        ) : (
+                          <div className="pt-2 border-t border-[var(--color-line)]/60 text-[10px] text-[var(--color-muted)]">
+                            {w.reportCount} laporan masyarakat
+                          </div>
+                        )}
+                      </button>
+                    );
+                  })}
+                </div>
+              </div>
+            )}
+
+            {/* ── Toolbar Filter Kanban (Dukungan Warga & Wilayah) ── */}
+            <div className="flex flex-wrap items-center justify-between gap-3 p-3.5 rounded-2xl bg-white border border-[var(--color-line)] shadow-xs">
+              <div className="flex flex-wrap items-center gap-3">
+                {/* Filter 1: Dukungan */}
+                <div className="flex items-center gap-2">
+                  <span className="text-xs font-bold text-[var(--color-ink)] whitespace-nowrap">
+                    Filter Dukungan:
+                  </span>
+                  <div className="flex items-center gap-1.5 bg-[var(--color-surface)] p-1 rounded-xl border border-[var(--color-line)]">
+                    <button
+                      type="button"
+                      onClick={() => setSupportFilter("semua")}
+                      className={`px-3 py-1 rounded-lg text-xs font-semibold transition-all cursor-pointer ${
+                        supportFilter === "semua"
+                          ? "bg-[var(--color-ink)] text-white shadow-xs"
+                          : "text-[var(--color-muted)] hover:text-[var(--color-ink)]"
+                      }`}
+                    >
+                      Semua ({reports.length})
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => setSupportFilter("didukung")}
+                      className={`px-3 py-1 rounded-lg text-xs font-semibold transition-all cursor-pointer flex items-center gap-1 ${
+                        supportFilter === "didukung"
+                          ? "bg-[var(--color-coral-deep)] text-white shadow-xs"
+                          : "text-[var(--color-coral-deep)] hover:bg-[var(--color-coral)]/10"
+                      }`}
+                    >
+                      🔥 Didukung Warga (
+                      {reports.filter((r) => (r.supports_count || 0) > 0).length}
+                      )
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => setSupportFilter("biasa")}
+                      className={`px-3 py-1 rounded-lg text-xs font-semibold transition-all cursor-pointer ${
+                        supportFilter === "biasa"
+                          ? "bg-[var(--color-ink)] text-white shadow-xs"
+                          : "text-[var(--color-muted)] hover:text-[var(--color-ink)]"
+                      }`}
+                    >
+                      Biasa (
+                      {
+                        reports.filter(
+                          (r) => !r.supports_count || r.supports_count === 0,
+                        ).length
+                      }
+                      )
+                    </button>
+                  </div>
+                </div>
+
+                {/* Filter 2: Wilayah Dropdown */}
+                <div className="flex items-center gap-2">
+                  <span className="text-xs font-bold text-[var(--color-ink)] whitespace-nowrap">
+                    Wilayah:
+                  </span>
+                  <div className="relative">
+                    <select
+                      value={selectedWilayah}
+                      onChange={(e) => setSelectedWilayah(e.target.value)}
+                      className="text-xs font-semibold bg-[var(--color-surface)] border border-[var(--color-line)] rounded-xl px-3 py-1.5 pr-8 text-[var(--color-ink)] focus:outline-hidden focus:border-[var(--color-coral-deep)] cursor-pointer"
+                    >
+                      <option value="Semua">Semua Wilayah ({reports.length})</option>
+                      {wilayahStats.map((w) => (
+                        <option key={w.name} value={w.name}>
+                          {w.name} ({w.reportCount} lap · {w.totalSupports} duk.)
+                        </option>
+                      ))}
+                    </select>
+                  </div>
+                </div>
+              </div>
+
+              {/* Status Info Indikator */}
+              {(supportFilter === "didukung" || selectedWilayah !== "Semua") && (
+                <div className="flex items-center gap-2">
+                  <span className="text-[11px] font-semibold text-[var(--color-coral-deep)] bg-[#FFF5EE] px-2.5 py-1 rounded-lg border border-[var(--color-coral)]/30">
+                    {selectedWilayah !== "Semua" ? `Wilayah: "${selectedWilayah}" · ` : ""}
+                    Dukungan terbanyak di atas
+                  </span>
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setSupportFilter("semua");
+                      setSelectedWilayah("Semua");
+                    }}
+                    className="text-[11px] text-[var(--color-muted)] hover:text-[var(--color-ink)] underline cursor-pointer"
+                  >
+                    Reset
+                  </button>
+                </div>
+              )}
+            </div>
+
             {loadingReports ? (
               <div className="py-20 text-center text-sm text-[var(--color-muted)]">
                 <RefreshCw className="w-5 h-5 animate-spin mx-auto mb-2 text-[var(--color-coral)]" />
@@ -567,9 +1021,36 @@ export default function AdminDashboard({ currentUser, onLogout }) {
             ) : (
               <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
                 {KANBAN_COLUMNS.map((col) => {
-                  const colReports = reports.filter(
-                    (r) => r.status === col.status,
-                  );
+                  const colReports = reports
+                    .filter((r) => r.status === col.status)
+                    .filter((r) => {
+                      if (supportFilter === "didukung")
+                        return (r.supports_count || 0) > 0;
+                      if (supportFilter === "biasa")
+                        return (
+                          !r.supports_count || r.supports_count === 0
+                        );
+                      return true;
+                    })
+                    .filter((r) => {
+                      if (selectedWilayah === "Semua") return true;
+                      return (r.location || "")
+                        .toLowerCase()
+                        .includes(selectedWilayah.toLowerCase());
+                    })
+                    .sort((a, b) => {
+                      // Prioritaskan urutan dukungan terbanyak
+                      if (
+                        supportFilter === "didukung" ||
+                        selectedWilayah !== "Semua"
+                      ) {
+                        return (
+                          (b.supports_count || 0) -
+                          (a.supports_count || 0)
+                        );
+                      }
+                      return 0;
+                    });
                   const isDropTarget = dragOverColumn === col.status;
 
                   return (
@@ -665,9 +1146,23 @@ export default function AdminDashboard({ currentUser, onLogout }) {
                                   <span className="text-[10px] font-bold px-2 py-0.5 rounded bg-[var(--color-cream)] text-[var(--color-coral-deep)] border border-[var(--color-line)]">
                                     {report.category}
                                   </span>
-                                  <span className="text-[10px] text-[var(--color-muted)]">
-                                    {new Date(report.created_at).toLocaleDateString("id-ID", { day: "numeric", month: "short" })}
-                                  </span>
+                                  {report.supports_count > 0 ? (
+                                    <button
+                                      type="button"
+                                      onClick={(e) => {
+                                        e.stopPropagation();
+                                        handleOpenSupporters(report);
+                                      }}
+                                      className="inline-flex items-center gap-1 text-[10px] font-bold px-1.5 py-0.5 rounded-full bg-[#FCE8D3] text-[#984732] border border-[#F5C7A5] hover:bg-[#FCD7B6] cursor-pointer transition-colors"
+                                      title="Lihat rincian warga pendukung laporan ini"
+                                    >
+                                      👥 {report.supports_count} dukungan
+                                    </button>
+                                  ) : (
+                                    <span className="text-[10px] text-[var(--color-muted)]">
+                                      {new Date(report.created_at).toLocaleDateString("id-ID", { day: "numeric", month: "short" })}
+                                    </span>
+                                  )}
                                 </div>
 
                                 <h4 className="text-xs font-bold text-[var(--color-ink)] line-clamp-2 mb-1">
@@ -815,6 +1310,47 @@ export default function AdminDashboard({ currentUser, onLogout }) {
                     </button>
                   ))}
                 </div>
+
+                {/* Filter Dukungan */}
+                <div className="flex items-center gap-1 bg-[var(--color-surface)] border border-[var(--color-line)] p-0.5 rounded-xl">
+                  <button
+                    onClick={() => setSupportFilter("semua")}
+                    className={`px-2.5 py-1 text-[11px] rounded-lg font-medium transition-all cursor-pointer ${
+                      supportFilter === "semua"
+                        ? "bg-[var(--color-coral)] text-[var(--color-ink)] shadow-xs font-bold"
+                        : "text-[var(--color-muted)] hover:text-[var(--color-ink)]"
+                    }`}
+                  >
+                    Semua
+                  </button>
+                  <button
+                    onClick={() => setSupportFilter("didukung")}
+                    className={`px-2.5 py-1 text-[11px] rounded-lg font-medium transition-all cursor-pointer ${
+                      supportFilter === "didukung"
+                        ? "bg-[var(--color-coral-deep)] text-white shadow-xs font-bold"
+                        : "text-[var(--color-coral-deep)] hover:bg-[var(--color-coral)]/10"
+                    }`}
+                  >
+                    🔥 Didukung
+                  </button>
+                </div>
+
+                {/* Filter Wilayah Dropdown in Table */}
+                <div className="flex items-center gap-1.5 bg-[var(--color-surface)] border border-[var(--color-line)] p-1 rounded-xl">
+                  <MapPin className="w-3.5 h-3.5 text-[var(--color-muted)] ml-1" />
+                  <select
+                    value={selectedWilayah}
+                    onChange={(e) => setSelectedWilayah(e.target.value)}
+                    className="text-xs font-semibold bg-transparent text-[var(--color-ink)] focus:outline-hidden cursor-pointer pr-1"
+                  >
+                    <option value="Semua">Semua Wilayah ({reports.length})</option>
+                    {wilayahStats.map((w) => (
+                      <option key={w.name} value={w.name}>
+                        {w.name} ({w.reportCount} lap · {w.totalSupports} duk.)
+                      </option>
+                    ))}
+                  </select>
+                </div>
               </div>
 
               {/* CSV Export */}
@@ -851,6 +1387,7 @@ export default function AdminDashboard({ currentUser, onLogout }) {
                       <th className="py-3 px-4">Judul & Lokasi</th>
                       <th className="py-3 px-4">Kategori</th>
                       <th className="py-3 px-4">Tanggal</th>
+                      <th className="py-3 px-4">Dukungan</th>
                       <th className="py-3 px-4">Status</th>
                       <th className="py-3 px-4 text-right">Aksi</th>
                     </tr>
@@ -876,6 +1413,20 @@ export default function AdminDashboard({ currentUser, onLogout }) {
                           </td>
                           <td className="py-3 px-4 text-[var(--color-muted)]">
                             {new Date(report.created_at).toLocaleDateString("id-ID", { day: "numeric", month: "short", year: "numeric" })}
+                          </td>
+                          <td className="py-3 px-4">
+                            {report.supports_count > 0 ? (
+                              <button
+                                type="button"
+                                onClick={() => handleOpenSupporters(report)}
+                                className="inline-flex items-center gap-1 text-[10px] font-bold px-2 py-0.5 rounded-full bg-[#FCE8D3] text-[#984732] border border-[#F5C7A5] hover:bg-[#FCD7B6] cursor-pointer"
+                                title="Lihat warga yang mendukung"
+                              >
+                                👥 {report.supports_count} dukungan
+                              </button>
+                            ) : (
+                              <span className="text-[11px] text-[var(--color-muted)]">-</span>
+                            )}
                           </td>
                           <td className="py-3 px-4">
                             <span className={`inline-flex items-center gap-1 text-[10px] font-semibold px-2.5 py-1 rounded-full whitespace-nowrap ${
@@ -1106,6 +1657,103 @@ export default function AdminDashboard({ currentUser, onLogout }) {
             <p className="text-xs text-[var(--color-muted)]">
               Lokasi: {adminSelectedPhoto.location}
             </p>
+          </div>
+        </div>
+      )}
+
+      {/* ── Modal Daftar Warga Pendukung Laporan ──────────────── */}
+      {activeSupportersReport && (
+        <div
+          className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-xs p-4"
+          role="dialog"
+          aria-modal="true"
+        >
+          <div className="relative max-w-lg w-full bg-white rounded-3xl p-6 border border-[var(--color-line)] shadow-2xl flex flex-col max-h-[90vh] animate-in fade-in zoom-in-95 duration-150">
+            {/* Modal Header */}
+            <div className="flex items-start justify-between pb-3.5 border-b border-[var(--color-line)]">
+              <div>
+                <span className="text-[10px] font-bold uppercase tracking-wider text-[var(--color-coral-deep)] bg-[#FFF5EE] px-2 py-0.5 rounded-md border border-[var(--color-coral)]/30">
+                  Dukungan Warga
+                </span>
+                <h3 className="mt-1.5 text-base font-extrabold text-[var(--color-ink)] line-clamp-1">
+                  {activeSupportersReport.title}
+                </h3>
+                <p className="text-xs text-[var(--color-muted)] flex items-center gap-1 mt-0.5">
+                  <MapPin className="w-3 h-3 text-[#984732]" />
+                  {activeSupportersReport.location}
+                </p>
+              </div>
+              <button
+                type="button"
+                onClick={() => setActiveSupportersReport(null)}
+                className="rounded-full p-1.5 text-[var(--color-muted)] hover:text-[var(--color-ink)] hover:bg-[var(--color-cream)] transition cursor-pointer"
+              >
+                <X className="w-5 h-5" />
+              </button>
+            </div>
+
+            {/* Total Badge */}
+            <div className="my-3.5 p-3 rounded-2xl bg-[#FDF1E6] border border-[#F5DAC2] flex items-center justify-between">
+              <span className="text-xs font-semibold text-(--color-ink)">
+                Total Akun yang Mendukung:
+              </span>
+              <span className="text-base font-extrabold text-[var(--color-coral-deep)]">
+                👥 {activeSupportersReport.supports_count || supportersList.length} Warga
+              </span>
+            </div>
+
+            {/* List Supporters */}
+            <div className="flex-1 overflow-y-auto space-y-2 max-h-72 pr-1">
+              {loadingSupporters ? (
+                <div className="py-8 text-center text-xs text-[var(--color-muted)]">
+                  <RefreshCw className="w-4 h-4 animate-spin mx-auto mb-2 text-[var(--color-coral)]" />
+                  Memuat data warga pendukung...
+                </div>
+              ) : supportersList.length === 0 ? (
+                <div className="py-8 text-center text-xs text-[var(--color-muted)]">
+                  Belum ada data warga terperinci untuk laporan ini.
+                </div>
+              ) : (
+                supportersList.map((sup, idx) => (
+                  <div
+                    key={sup.id || idx}
+                    className="p-3 rounded-xl bg-[var(--color-surface)] border border-[var(--color-line)] flex items-center justify-between"
+                  >
+                    <div className="flex items-center gap-2.5">
+                      <div className="w-8 h-8 rounded-full bg-[var(--color-coral)]/20 text-[var(--color-coral-deep)] font-bold text-xs flex items-center justify-center">
+                        {(sup.name || "W")[0].toUpperCase()}
+                      </div>
+                      <div>
+                        <h5 className="text-xs font-bold text-[var(--color-ink)]">
+                          {sup.name}
+                        </h5>
+                        <p className="text-[10px] text-[var(--color-muted)]">
+                          {sup.email || "Pengguna Terverifikasi"}
+                        </p>
+                      </div>
+                    </div>
+                    <span className="text-[10px] text-[var(--color-muted)] font-medium">
+                      {new Date(sup.supportedAt).toLocaleDateString("id-ID", {
+                        day: "numeric",
+                        month: "short",
+                        year: "numeric",
+                      })}
+                    </span>
+                  </div>
+                ))
+              )}
+            </div>
+
+            {/* Modal Footer */}
+            <div className="mt-4 pt-3 border-t border-[var(--color-line)] flex justify-end">
+              <button
+                type="button"
+                onClick={() => setActiveSupportersReport(null)}
+                className="px-4 py-2 rounded-xl bg-[var(--color-ink)] text-white text-xs font-bold hover:bg-black transition cursor-pointer"
+              >
+                Tutup
+              </button>
+            </div>
           </div>
         </div>
       )}
