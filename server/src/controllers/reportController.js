@@ -388,19 +388,29 @@ export async function getPublicReports(req, res) {
   try {
     let { data, error } = await db
       .from("reports")
-      .select("id, title, category, description, location, status, image_url, latitude, longitude, province, created_at")
+      .select("id, title, category, description, location, status, image_url, latitude, longitude, province, status_timeline, created_at, updated_at")
       .order("created_at", { ascending: false })
-      .limit(100);
+      .limit(200);
 
     if (error) {
-      // Fallback jika kolom latitude belum ada
+      // Fallback jika kolom baru belum ada
       const retry = await db
         .from("reports")
-        .select("id, title, category, description, location, status, image_url, created_at")
+        .select("id, title, category, description, location, status, image_url, latitude, longitude, province, created_at, updated_at")
         .order("created_at", { ascending: false })
-        .limit(100);
-      data = retry.data || [];
-      error = retry.error;
+        .limit(200);
+      if (retry.error) {
+        const retry2 = await db
+          .from("reports")
+          .select("id, title, category, description, location, status, image_url, created_at")
+          .order("created_at", { ascending: false })
+          .limit(200);
+        data = retry2.data || [];
+        error = retry2.error;
+      } else {
+        data = retry.data || [];
+        error = null;
+      }
     }
 
     // Pastikan setiap laporan memiliki koordinat yang valid untuk pin peta
@@ -446,7 +456,9 @@ export async function getPublicReports(req, res) {
         longitude: lng,
         province: province || "Indonesia",
         region,
+        statusTimeline: rep.status_timeline || [],
         createdAt: rep.created_at,
+        updatedAt: rep.updated_at || rep.created_at,
       };
     });
 

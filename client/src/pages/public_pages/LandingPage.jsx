@@ -226,6 +226,9 @@ export default function LandingPage() {
             <Link to="/peta" className="hover:text-[var(--color-ink)] flex items-center gap-1 transition-colors">
               Peta
             </Link>
+            <Link to="/statistik" className="hover:text-[var(--color-ink)] flex items-center gap-1 transition-colors">
+              Statistik
+            </Link>
             <a href="#peringkat" className="hover:text-[var(--color-ink)] transition-colors">
               Peringkat
             </a>
@@ -287,6 +290,7 @@ export default function LandingPage() {
             <a href="#beranda" onClick={closeMenu}>Beranda</a>
             <a href="#laporan" onClick={closeMenu}>Laporan</a>
             <Link to="/peta" onClick={closeMenu}>Peta Laporan</Link>
+            <Link to="/statistik" onClick={closeMenu}>Statistik Laporan</Link>
             <a href="#peringkat" onClick={closeMenu}>Papan Peringkat</a>
             <a href="#tentang" onClick={closeMenu}>Tentang Kami</a>
             <a href="#cara-melapor" onClick={closeMenu}>Bantuan</a>
@@ -831,6 +835,7 @@ export default function LandingPage() {
               <li><a href="#beranda" className="hover:text-[var(--color-coral)]">Beranda</a></li>
               <li><Link to="/laporan" className="hover:text-[var(--color-coral)]">Daftar Laporan</Link></li>
               <li><Link to="/peta" className="hover:text-[var(--color-coral)]">Peta Interaktif</Link></li>
+              <li><Link to="/statistik" className="hover:text-[var(--color-coral)]">Statistik Laporan</Link></li>
               <li><a href="#peringkat" className="hover:text-[var(--color-coral)]">Papan Peringkat</a></li>
             </ul>
           </div>

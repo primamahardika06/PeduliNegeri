@@ -322,7 +322,7 @@ export default function RiwayatLaporan({ currentUser }) {
             <h1 className="text-2xl sm:text-3xl font-extrabold text-[#1E2430] tracking-tight">
               Riwayat Laporan Anda
             </h1>
-            <p className="mt-1.5 text-xs sm:text-sm text-slate-600 leading-relaxed">
+            <p className="mt-1.5 text-xs sm:text-sm text-black leading-relaxed">
               Seluruh laporan yang pernah Anda kirim, lengkap dengan tahap penanganannya.
               Buka satu laporan untuk melihat rincian dan bukti foto.
             </p>
@@ -387,7 +387,7 @@ export default function RiwayatLaporan({ currentUser }) {
               className={`px-4 py-2 rounded-xl text-xs font-bold transition cursor-pointer min-h-11 flex items-center ${
                 viewMode === "kategori"
                   ? "bg-[#1E2430] text-white shadow-xs"
-                  : "bg-white text-slate-700 border border-slate-300 hover:bg-slate-50"
+                  : "bg-white text-black border border-slate-300 hover:bg-slate-50"
               }`}
             >
               Per kategori
@@ -398,7 +398,7 @@ export default function RiwayatLaporan({ currentUser }) {
               className={`px-4 py-2 rounded-xl text-xs font-bold transition cursor-pointer min-h-11 flex items-center ${
                 viewMode === "terbaru"
                   ? "bg-[#1E2430] text-white shadow-xs"
-                  : "bg-white text-slate-700 border border-slate-300 hover:bg-slate-50"
+                  : "bg-white text-black border border-slate-300 hover:bg-slate-50"
               }`}
             >
               Urut terbaru
@@ -413,7 +413,7 @@ export default function RiwayatLaporan({ currentUser }) {
               className={`inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-semibold transition border cursor-pointer min-h-11 ${
                 activeCategory === "Semua"
                   ? "bg-[#1E2430] text-white border-[#1E2430]"
-                  : "bg-white text-slate-700 border-slate-300 hover:bg-slate-50"
+                  : "bg-white text-black border-slate-300 hover:bg-slate-50"
               }`}
             >
               <span>Semua</span>
@@ -428,7 +428,7 @@ export default function RiwayatLaporan({ currentUser }) {
                 className={`inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-semibold transition border cursor-pointer min-h-11 ${
                   activeCategory === cat
                     ? "bg-[#1E2430] text-white border-[#1E2430]"
-                    : "bg-white text-slate-700 border-slate-300 hover:bg-slate-50"
+                    : "bg-white text-black border-slate-300 hover:bg-slate-50"
                 }`}
               >
                 <span>{cat}</span>
@@ -599,7 +599,7 @@ export default function RiwayatLaporan({ currentUser }) {
             {/* Tengah: Rincian Info Laporan */}
             <div className="flex-1 min-w-0 space-y-1">
               <div className="flex flex-wrap items-center gap-2 text-xs">
-                <span className="px-2 py-0.5 rounded-md border border-slate-300 font-semibold text-slate-700 text-[11px]">
+                <span className="px-2 py-0.5 rounded-md border border-slate-300 font-semibold text-black text-[11px]">
                   {report.category || "Lainnya"}
                 </span>
                 <span className="font-mono text-slate-400 text-[11px]">
@@ -611,7 +611,7 @@ export default function RiwayatLaporan({ currentUser }) {
                 {report.title}
               </h3>
 
-              <p className="text-xs sm:text-sm text-slate-600 line-clamp-2 leading-relaxed">
+              <p className="text-xs sm:text-sm text-black line-clamp-2 leading-relaxed">
                 {report.description}
               </p>
 
@@ -669,7 +669,7 @@ export default function RiwayatLaporan({ currentUser }) {
             <button
               type="button"
               onClick={() => toggleAccordion(report.id)}
-              className="inline-flex min-h-11 items-center justify-center gap-1.5 px-3.5 py-1.5 rounded-xl border border-slate-300 text-xs font-semibold text-slate-700 hover:bg-slate-50 transition w-full sm:w-auto cursor-pointer"
+              className="inline-flex min-h-11 items-center justify-center gap-1.5 px-3.5 py-1.5 rounded-xl border border-slate-300 text-xs font-semibold text-black hover:bg-slate-50 transition w-full sm:w-auto cursor-pointer"
             >
               <span>{isExpanded ? "Tutup rincian" : "Lihat rincian"}</span>
               {isExpanded ? (
@@ -752,7 +752,7 @@ export default function RiwayatLaporan({ currentUser }) {
                         location: report.location,
                       })
                     }
-                    className="inline-flex items-center gap-2 px-3 py-1.5 rounded-lg bg-white border border-slate-300 text-xs font-semibold text-slate-700 hover:bg-slate-50 cursor-pointer shadow-2xs"
+                    className="inline-flex items-center gap-2 px-3 py-1.5 rounded-lg bg-white border border-slate-300 text-xs font-semibold text-black hover:bg-slate-50 cursor-pointer shadow-2xs"
                   >
                     <Eye className="w-3.5 h-3.5" />
                     <span>Buka Foto Penuh</span>

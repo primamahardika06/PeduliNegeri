@@ -33,7 +33,10 @@ export async function getTestimonials(req, res) {
 
     // Ambil data profile pelapor untuk setiap testimoni (jika ada)
     const userIds = [...new Set((data || []).map((t) => t.user_id).filter(Boolean))];
+    const reportIds = [...new Set((data || []).map((t) => t.report_id).filter(Boolean))];
     let profileMap = {};
+    let reportMap = {};
+
     if (userIds.length > 0) {
       const { data: profiles } = await db
         .from("profiles")
@@ -47,9 +50,24 @@ export async function getTestimonials(req, res) {
       }
     }
 
+    // Ambil kategori & lokasi laporan yang terkait dengan testimoni
+    if (reportIds.length > 0) {
+      const { data: reports } = await db
+        .from("reports")
+        .select("id, category, title, location, province")
+        .in("id", reportIds);
+
+      if (reports) {
+        reports.forEach((r) => {
+          reportMap[r.id] = r;
+        });
+      }
+    }
+
     // Format data publik (tanpa mengekspos ID sensitif)
     const formatted = (data || []).map((item) => {
       const userProf = profileMap[item.user_id];
+      const linkedReport = reportMap[item.report_id];
       let authorName = "Warga Peduli";
       if (userProf) {
         if (userProf.leaderboard_display_type === "username" && userProf.leaderboard_username) {
@@ -66,6 +84,10 @@ export async function getTestimonials(req, res) {
         content: item.content,
         rating: item.rating || 5,
         author: authorName,
+        category: linkedReport?.category || null,
+        reportTitle: linkedReport?.title || null,
+        reportLocation: linkedReport?.location || null,
+        reportProvince: linkedReport?.province || null,
         createdAt: item.created_at,
       };
     });
