@@ -5,6 +5,7 @@ import {
   forgotPassword,
   getAllProfiles,
   updateLeaderboardSettings,
+  syncOAuthUser,
 } from "../controllers/authController.js";
 import { requireUser } from "../middlewares/requireUser.js";
 
@@ -15,6 +16,9 @@ router.post("/register", register);
 
 // Endpoint login (user dan admin)
 router.post("/login", login);
+
+// Endpoint sinkronisasi sesi Google OAuth
+router.post("/oauth-sync", syncOAuthUser);
 
 // Endpoint lupa password
 router.post("/forgot-password", forgotPassword);

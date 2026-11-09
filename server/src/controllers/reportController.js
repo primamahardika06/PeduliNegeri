@@ -1,4 +1,8 @@
 import { supabaseAdmin, supabase } from "../config/supabase.js";
+import {
+  sendReportCreatedNotification,
+  sendReportStatusNotification,
+} from "../services/emailService.js";
 
 const REPORT_CATEGORIES = [
   "Infrastruktur",
@@ -218,6 +222,23 @@ export async function createReport(req, res) {
       });
     }
 
+    // Kirim konfirmasi penerimaan laporan ke email pelapor secara asynchronous
+    if (req.authUser?.email) {
+      const authorEmail = req.authUser.email;
+      const authorName =
+        req.authUser.user_metadata?.full_name ||
+        req.authUser.user_metadata?.name ||
+        "";
+
+      sendReportCreatedNotification({
+        userEmail: authorEmail,
+        userName: authorName,
+        report: data,
+      }).catch((emailErr) => {
+        console.error("Gagal mengirim email konfirmasi laporan:", emailErr);
+      });
+    }
+
     return res.status(201).json({ success: true, data });
   } catch {
     return res.status(500).json({
@@ -280,7 +301,7 @@ export async function updateReportStatus(req, res) {
     // Ambil data laporan lama untuk melacak timeline riwayat perubahan status
     const { data: existingReport } = await db
       .from("reports")
-      .select("id, status, created_at, status_timeline")
+      .select("id, user_id, title, location, category, status, created_at, status_timeline")
       .eq("id", req.params.id)
       .maybeSingle();
 
@@ -329,6 +350,54 @@ export async function updateReportStatus(req, res) {
       return res
         .status(404)
         .json({ success: false, message: "Laporan tidak ditemukan." });
+    }
+
+    // Kirim notifikasi perkembangan status ke email pelapor secara asynchronous jika status berubah
+    if (
+      existingReport &&
+      existingReport.status !== status &&
+      existingReport.user_id
+    ) {
+      (async () => {
+        try {
+          // Cari email dan nama pemilik laporan dari tabel profiles
+          const { data: profile } = await db
+            .from("profiles")
+            .select("email, full_name")
+            .eq("id", existingReport.user_id)
+            .maybeSingle();
+
+          let targetEmail = profile?.email;
+          let targetName = profile?.full_name || "";
+
+          // Fallback jika belum tersimpan di profiles, cari di auth.users via admin client
+          if (!targetEmail && supabaseAdmin) {
+            const { data: authUser } =
+              await supabaseAdmin.auth.admin.getUserById(existingReport.user_id);
+            if (authUser?.user?.email) {
+              targetEmail = authUser.user.email;
+              if (!targetName) {
+                targetName =
+                  authUser.user.user_metadata?.full_name ||
+                  authUser.user.user_metadata?.name ||
+                  "";
+              }
+            }
+          }
+
+          if (targetEmail) {
+            await sendReportStatusNotification({
+              userEmail: targetEmail,
+              userName: targetName,
+              report: data,
+              newStatus: status,
+              previousStatus: existingReport.status,
+            });
+          }
+        } catch (err) {
+          console.error("Gagal mengirim email notifikasi status:", err);
+        }
+      })();
     }
 
     return res.status(200).json({ success: true, data });

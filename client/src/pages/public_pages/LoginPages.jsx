@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useNavigate, Link } from "react-router-dom";
 import {
   Camera,
@@ -7,10 +7,35 @@ import {
   AlertCircle,
   CheckCircle2,
   LoaderCircle,
+  MapPin,
 } from "lucide-react";
 import { authService } from "../../services/authService";
+import { reportService } from "../../services/reportService";
+import { supabase } from "../../config/supabaseClient";
 import logoPeduliNegeri from "../../assets/PeduliNegeri (4).png";
 
+function GoogleIcon({ className = "w-4 h-4" }) {
+  return (
+    <svg className={className} viewBox="0 0 24 24" aria-hidden="true">
+      <path
+        fill="#4285F4"
+        d="M23.745 12.27c0-.7-.06-1.4-.19-2.07H12v4.51h6.6c-.29 1.52-1.14 2.8-2.4 3.66v3.05h3.88c2.27-2.09 3.665-5.17 3.665-9.15z"
+      />
+      <path
+        fill="#34A853"
+        d="M12 24c3.24 0 5.95-1.08 7.93-2.91l-3.88-3.05c-1.08.72-2.45 1.16-4.05 1.16-3.12 0-5.77-2.1-6.72-4.93H1.25v3.15C3.26 21.36 7.33 24 12 24z"
+      />
+      <path
+        fill="#FBBC05"
+        d="M5.28 14.27c-.25-.72-.38-1.49-.38-2.27s.13-1.55.38-2.27V6.58H1.25C.45 8.16 0 9.97 0 12s.45 3.84 1.25 5.42l4.03-3.15z"
+      />
+      <path
+        fill="#EA4335"
+        d="M12 4.75c1.77 0 3.35.61 4.6 1.8l3.42-3.42C17.95 1.19 15.24 0 12 0 7.33 0 3.26 2.64 1.25 6.58l4.03 3.15c.95-2.83 3.6-4.98 6.72-4.98z"
+      />
+    </svg>
+  );
+}
 
 export default function LoginPages({ onLoginSuccess }) {
   const navigate = useNavigate();
@@ -38,8 +63,201 @@ export default function LoginPages({ onLoginSuccess }) {
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
   const [loading, setLoading] = useState(false);
+  const [googleLoading, setGoogleLoading] = useState(false);
   const [errorMessage, setErrorMessage] = useState("");
   const [successMessage, setSuccessMessage] = useState("");
+
+  // State slider foto laporan warga (konsep persis Landing Page)
+  const [reportSlides, setReportSlides] = useState([]);
+  const [currentSlideIndex, setCurrentSlideIndex] = useState(0);
+
+  // Auto-switch slide setiap 5 detik persis seperti landing page
+  useEffect(() => {
+    if (reportSlides.length <= 1) return;
+    const interval = setInterval(() => {
+      setCurrentSlideIndex((prev) => (prev + 1) % reportSlides.length);
+    }, 5000);
+    return () => clearInterval(interval);
+  }, [reportSlides.length]);
+
+  // Ambil laporan publik dari database untuk card foto di sisi kiri
+  useEffect(() => {
+    let isMounted = true;
+    async function loadPublicReports() {
+      try {
+        const publicReps = await reportService.getPublicReports();
+        if (isMounted && Array.isArray(publicReps) && publicReps.length > 0) {
+          // Prioritaskan laporan yang memiliki foto bukti
+          const withPhotos = publicReps.filter((r) =>
+            Boolean(r.imageUrl || r.image_url),
+          );
+          const chosen =
+            withPhotos.length > 0
+              ? withPhotos.slice(0, 5)
+              : publicReps.slice(0, 5);
+
+          const slides = chosen.map((r) => ({
+            id: r.id,
+            title: r.title,
+            category: r.category,
+            location: r.location,
+            status: r.status,
+            imageUrl: r.imageUrl || r.image_url || null,
+          }));
+
+          if (slides.length > 0) {
+            setReportSlides(slides);
+          }
+        }
+      } catch {
+        // Fallback anggun jika server belum dapat dijangkau
+      }
+    }
+
+    loadPublicReports();
+    return () => {
+      isMounted = false;
+    };
+  }, []);
+
+  // Cek callback redirect setelah user login dengan Google OAuth
+  useEffect(() => {
+    let isMounted = true;
+
+    async function handleOAuthCallback() {
+      const hash = window.location.hash || "";
+      const search = window.location.search || "";
+      const hasOAuthParams =
+        hash.includes("access_token") ||
+        hash.includes("error") ||
+        search.includes("code=") ||
+        search.includes("error");
+
+      // PENTING: Hanya jalankan sinkronisasi jika URL benar-benar berasal dari redirect OAuth Google
+      if (!hasOAuthParams) {
+        return;
+      }
+
+      // 1. Cek bila Google/Supabase mengembalikan parameter error
+      if (hash.includes("error") || search.includes("error")) {
+        const hashParams = new URLSearchParams(hash.replace(/^#/, ""));
+        const searchParams = new URLSearchParams(search);
+        const errorDesc =
+          hashParams.get("error_description") ||
+          searchParams.get("error_description") ||
+          "Gagal masuk dengan akun Google.";
+        setErrorMessage(decodeURIComponent(errorDesc.replace(/\+/g, " ")));
+        window.history.replaceState({}, document.title, window.location.pathname);
+        return;
+      }
+
+      // 2. Cek sesi Supabase dari hasil redirect OAuth
+      if (!supabase) return;
+
+      try {
+        const {
+          data: { session },
+          error,
+        } = await supabase.auth.getSession();
+
+        if (error) throw error;
+
+        if (session && session.user) {
+          setGoogleLoading(true);
+          const { user: userData } =
+            await authService.handleOAuthSession(session);
+
+          if (isMounted) {
+            setSuccessMessage(
+              `Selamat datang, ${userData.fullName || userData.email}!`,
+            );
+
+            if (onLoginSuccess) {
+              onLoginSuccess(userData);
+            }
+
+            // Bersihkan parameter hash / query URL agar reload tidak memicu auto-login
+            window.history.replaceState(
+              {},
+              document.title,
+              window.location.pathname,
+            );
+
+            setTimeout(() => {
+              if (userData.role === "admin") {
+                navigate("/admin");
+              } else {
+                navigate("/reportPage");
+              }
+            }, 600);
+          }
+        }
+      } catch (err) {
+        if (isMounted) {
+          setErrorMessage(
+            err.message || "Gagal memproses autentikasi dengan akun Google.",
+          );
+          window.history.replaceState(
+            {},
+            document.title,
+            window.location.pathname,
+          );
+        }
+      } finally {
+        if (isMounted) {
+          setGoogleLoading(false);
+        }
+      }
+    }
+
+    handleOAuthCallback();
+
+    return () => {
+      isMounted = false;
+    };
+  }, [navigate, onLoginSuccess]);
+
+  const DEFAULT_SLIDE = {
+    id: "default-slide",
+    title: "Perbaikan Lampu Jalan Rusak di Jl. Pemuda",
+    category: "Infrastruktur",
+    location: "Kec. Sukajadi, Kota Bandung",
+    status: "Petugas Dikirim ke Lokasi",
+    imageUrl: null,
+  };
+
+  const activeSlide =
+    reportSlides.length > 0 ? reportSlides[currentSlideIndex] : DEFAULT_SLIDE;
+
+  const isSlideResolved =
+    activeSlide.status === "Laporan Selesai" || activeSlide.status === "Selesai";
+  const slideStepNum = isSlideResolved
+    ? 4
+    : activeSlide.status === "Petugas Dikirim ke Lokasi"
+      ? 3
+      : activeSlide.status === "Laporan Diproses" ||
+        activeSlide.status === "Sedang Diverifikasi"
+        ? 2
+        : 1;
+
+  const slideProgressPercent =
+    slideStepNum === 4
+      ? 100
+      : slideStepNum === 3
+        ? 75
+        : slideStepNum === 2
+          ? 50
+          : 25;
+
+  const slideStatusLabel =
+    activeSlide.status === "Laporan Selesai" || activeSlide.status === "Selesai"
+      ? "Laporan Selesai"
+      : activeSlide.status === "Petugas Dikirim ke Lokasi"
+        ? "Sedang Ditangani"
+        : activeSlide.status === "Laporan Diproses" ||
+          activeSlide.status === "Sedang Diverifikasi"
+          ? "Sedang Diverifikasi"
+          : "Laporan Diterima";
 
   const switchMode = (mode) => {
     setAuthMode(mode);
@@ -90,7 +308,8 @@ export default function LoginPages({ onLoginSuccess }) {
       }, 600);
     } catch (err) {
       setErrorMessage(
-        err.message || "Gagal masuk. Periksa kembali email/nomor HP dan kata sandi Anda.",
+        err.message ||
+        "Gagal masuk. Periksa kembali email/nomor HP dan kata sandi Anda.",
       );
     } finally {
       setLoading(false);
@@ -195,11 +414,22 @@ export default function LoginPages({ onLoginSuccess }) {
     }
   };
 
-  // Handle Google Auth (Mock / Placeholder)
-  const handleGoogleAuth = () => {
-    setErrorMessage(
-      "Masuk dengan Google sedang dipersiapkan. Silakan gunakan email dan kata sandi.",
-    );
+  // Handle Google Auth: Mengalihkan ke OAuth Provider Google via Supabase
+  const handleGoogleAuth = async () => {
+    setErrorMessage("");
+    setSuccessMessage("");
+    setGoogleLoading(true);
+
+    try {
+      await authService.signInWithGoogle();
+      // Supabase akan mengarahkan browser ke akun Google secara otomatis
+    } catch (err) {
+      setGoogleLoading(false);
+      setErrorMessage(
+        err.message ||
+        "Gagal menghubungkan ke layanan Google. Pastikan Google Provider sudah diaktifkan di Supabase Dashboard.",
+      );
+    }
   };
 
   return (
@@ -227,21 +457,117 @@ export default function LoginPages({ onLoginSuccess }) {
           </Link>
         </div>
 
-        {/* Card Foto Mockup & Headline */}
-        <div className="my-8 lg:my-10 space-y-6">
-          <div
-            className="rounded-3xl p-8 sm:p-12 flex flex-col items-center justify-center text-center aspect-4/3 max-w-md mx-auto w-full shadow-xs transition-transform hover:scale-[1.01]"
-            style={{
-              backgroundColor: "#FADDBA",
-              border: "1px solid rgba(240, 196, 154, 0.6)",
-            }}
-          >
-            <div className="p-3.5 rounded-2xl bg-[#EB936E]/20 text-[#1E2430] mb-3">
-              <Camera className="w-8 h-8 stroke-[1.7]" />
+        {/* Card Foto Mockup & Headline (Persis konsep Landing Page) */}
+        <div className="my-6 lg:my-8 space-y-6">
+          <div className="rounded-2xl border border-[#1E2430]/15 bg-white p-3.5 sm:p-4 shadow-xl max-w-md mx-auto w-full transition-all">
+            {/* Foto Display / Slider (Ganti tiap 5 detik) */}
+            {activeSlide.imageUrl ? (
+              <div className="relative w-full h-44 sm:h-48 rounded-xl overflow-hidden bg-black/10 border border-slate-200/80 group">
+                <img
+                  src={activeSlide.imageUrl}
+                  alt={activeSlide.title}
+                  className="w-full h-full object-cover transition-transform duration-700 hover:scale-105"
+                />
+                <div className="absolute top-2.5 right-2.5 px-2 py-0.5 rounded-md bg-black/60 backdrop-blur-xs text-white text-[10px] font-semibold flex items-center gap-1 shadow-xs">
+                  <Camera className="w-3 h-3" />
+                  <span>Foto Laporan</span>
+                </div>
+
+                {/* Slider Indicator Dots */}
+                {reportSlides.length > 1 && (
+                  <div className="absolute bottom-2.5 left-1/2 -translate-x-1/2 flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-black/50 backdrop-blur-xs">
+                    {reportSlides.map((_, idx) => (
+                      <button
+                        key={idx}
+                        type="button"
+                        onClick={() => setCurrentSlideIndex(idx)}
+                        className={`h-1.5 rounded-full transition-all cursor-pointer ${idx === currentSlideIndex
+                          ? "w-4 bg-[#EB936E]"
+                          : "w-1.5 bg-white/60 hover:bg-white"
+                          }`}
+                        aria-label={`Lihat laporan ${idx + 1}`}
+                      />
+                    ))}
+                  </div>
+                )}
+              </div>
+            ) : (
+              <div className="relative w-full h-44 sm:h-48 rounded-xl bg-[#FADDBA] flex flex-col items-center justify-center p-4 text-center border border-[#1E2430]/10">
+                <div className="p-2.5 rounded-xl bg-[#EB936E]/20 text-[#1E2430] mb-2">
+                  <Camera className="w-6 h-6 stroke-[1.8]" />
+                </div>
+                <p className="text-xs font-bold text-[#1E2430]">
+                  Foto Bukti Langsung dari Lapangan
+                </p>
+                <p className="text-[11px] text-[#1E2430]/75 mt-1 max-w-xs leading-relaxed">
+                  Kondisi fasilitas publik nyata yang dilaporkan oleh masyarakat.
+                </p>
+
+                {reportSlides.length > 1 && (
+                  <div className="absolute bottom-2.5 left-1/2 -translate-x-1/2 flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-black/15 backdrop-blur-xs">
+                    {reportSlides.map((_, idx) => (
+                      <button
+                        key={idx}
+                        type="button"
+                        onClick={() => setCurrentSlideIndex(idx)}
+                        className={`h-1.5 rounded-full transition-all cursor-pointer ${idx === currentSlideIndex
+                          ? "w-4 bg-[#EB936E]"
+                          : "w-1.5 bg-[#1E2430]/30 hover:bg-[#1E2430]/60"
+                          }`}
+                        aria-label={`Lihat laporan ${idx + 1}`}
+                      />
+                    ))}
+                  </div>
+                )}
+              </div>
+            )}
+
+            {/* Info Rincian Laporan Dinamis */}
+            <div className="mt-3 pt-3 border-t border-slate-100">
+              <div className="flex items-center justify-between text-xs mb-1.5">
+                <span className="font-bold text-[10px] sm:text-[11px] px-2 py-0.5 rounded bg-[#FAF5EE] text-[#EB936E] border border-[#1E2430]/10">
+                  {activeSlide.category || "Infrastruktur"}
+                </span>
+                <span className="text-[10px] font-semibold px-2 py-0.5 rounded-full flex items-center gap-1 bg-emerald-50 text-emerald-800 border border-emerald-200">
+                  <span
+                    className={`w-1.5 h-1.5 rounded-full ${isSlideResolved ? "bg-emerald-600" : "bg-emerald-600 animate-pn-dot"
+                      }`}
+                  />
+                  {slideStatusLabel}
+                </span>
+              </div>
+              <h4 className="text-xs sm:text-sm font-bold text-[#1E2430] line-clamp-1">
+                {activeSlide.title}
+              </h4>
+              <p className="text-[11px] text-[#5C6070] flex items-center gap-1 mt-1 truncate">
+                <MapPin className="w-3 h-3 shrink-0 text-[#EB936E]" />
+                <span>{activeSlide.location}</span>
+              </p>
+
+              {/* Visual Progress Bar Dinamis */}
+              <div className="mt-3">
+                <div className="w-full h-1.5 rounded-full bg-slate-100 overflow-hidden">
+                  <div
+                    className="h-full bg-[#EB936E] transition-all duration-500"
+                    style={{ width: `${slideProgressPercent}%` }}
+                  />
+                </div>
+                <div className="flex justify-between text-[9px] text-[#5C6070] mt-1 font-medium">
+                  <span className={slideStepNum >= 1 ? "font-bold text-[#EB936E]" : ""}>
+                    Diterima
+                  </span>
+                  <span className={slideStepNum >= 2 ? "font-bold text-[#EB936E]" : ""}>
+                    Diproses
+                  </span>
+                  <span className={slideStepNum >= 3 ? "font-bold text-[#EB936E]" : ""}>
+                    Petugas Menuju Lokasi
+                  </span>
+                  <span className={slideStepNum >= 4 ? "font-bold text-emerald-700" : ""}>
+                    Selesai
+                  </span>
+                </div>
+              </div>
             </div>
-            <p className="text-xs sm:text-sm font-medium text-[#1E2430] leading-relaxed max-w-xs">
-              [FOTO: kondisi lapangan nyata atau warga yang sedang melapor]
-            </p>
           </div>
 
           <div>
@@ -315,41 +641,41 @@ export default function LoginPages({ onLoginSuccess }) {
           </Link>
           <div className="ml-auto">
             {authMode === "login" && (
-            <p>
-              Belum punya akun?{" "}
-              <button
-                type="button"
-                onClick={() => switchMode("register")}
-                className="font-semibold text-[#2D3F65] hover:underline ml-1 cursor-pointer"
-              >
-                Daftar Sekarang
-              </button>
-            </p>
-          )}
+              <p>
+                Belum punya akun?{" "}
+                <button
+                  type="button"
+                  onClick={() => switchMode("register")}
+                  className="font-semibold text-[#2D3F65] hover:underline ml-1 cursor-pointer"
+                >
+                  Daftar Sekarang
+                </button>
+              </p>
+            )}
 
-          {authMode === "register" && (
-            <p>
-              Sudah punya akun?{" "}
+            {authMode === "register" && (
+              <p>
+                Sudah punya akun?{" "}
+                <button
+                  type="button"
+                  onClick={() => switchMode("login")}
+                  className="font-semibold text-[#2D3F65] hover:underline ml-1 cursor-pointer"
+                >
+                  Masuk
+                </button>
+              </p>
+            )}
+
+            {authMode === "forgot" && (
               <button
                 type="button"
                 onClick={() => switchMode("login")}
-                className="font-semibold text-[#2D3F65] hover:underline ml-1 cursor-pointer"
+                className="inline-flex items-center gap-1.5 font-semibold text-[#2D3F65] hover:underline cursor-pointer"
               >
-                Masuk
+                <ArrowLeft className="w-4 h-4" />
+                Kembali ke Masuk
               </button>
-            </p>
-          )}
-
-          {authMode === "forgot" && (
-            <button
-              type="button"
-              onClick={() => switchMode("login")}
-              className="inline-flex items-center gap-1.5 font-semibold text-[#2D3F65] hover:underline cursor-pointer"
-            >
-              <ArrowLeft className="w-4 h-4" />
-              Kembali ke Masuk
-            </button>
-          )}
+            )}
           </div>
         </div>
 
@@ -494,9 +820,20 @@ export default function LoginPages({ onLoginSuccess }) {
               <button
                 type="button"
                 onClick={handleGoogleAuth}
-                className="w-full py-3 px-4 rounded-xl border border-[#1E2430] text-[#1E2430] font-semibold text-xs sm:text-sm hover:bg-slate-100/70 transition flex items-center justify-center gap-2 cursor-pointer"
+                disabled={googleLoading || loading}
+                className="w-full py-3 px-4 rounded-xl border border-[#1E2430] bg-white text-[#1E2430] font-semibold text-xs sm:text-sm hover:bg-slate-50 active:scale-[0.99] transition flex items-center justify-center gap-2.5 cursor-pointer disabled:opacity-60 disabled:cursor-not-allowed shadow-2xs"
               >
-                Masuk dengan Google
+                {googleLoading ? (
+                  <>
+                    <LoaderCircle className="w-4 h-4 animate-spin text-[#1E2430]" />
+                    <span>Menghubungkan ke Google...</span>
+                  </>
+                ) : (
+                  <>
+                    <GoogleIcon className="w-4 h-4 shrink-0" />
+                    <span>Masuk dengan Google</span>
+                  </>
+                )}
               </button>
 
               <p className="text-[11px] sm:text-xs text-[#5C6070] text-center mt-6 leading-relaxed">
@@ -649,11 +986,10 @@ export default function LoginPages({ onLoginSuccess }) {
               <button
                 type="submit"
                 disabled={loading || !agreeTerms}
-                className={`w-full py-3.5 px-6 rounded-xl font-bold text-sm sm:text-base text-[#1E2430] shadow-xs flex items-center justify-center gap-2 transition-all mt-2 cursor-pointer ${
-                  agreeTerms && !loading
-                    ? "bg-[#EB936E] hover:bg-[#E58862] active:scale-[0.99]"
-                    : "bg-[#EAC7B6] opacity-75 cursor-not-allowed"
-                }`}
+                className={`w-full py-3.5 px-6 rounded-xl font-bold text-sm sm:text-base text-[#1E2430] shadow-xs flex items-center justify-center gap-2 transition-all mt-2 cursor-pointer ${agreeTerms && !loading
+                  ? "bg-[#EB936E] hover:bg-[#E58862] active:scale-[0.99]"
+                  : "bg-[#EAC7B6] opacity-75 cursor-not-allowed"
+                  }`}
               >
                 {loading ? (
                   <LoaderCircle className="w-5 h-5 animate-spin" />
@@ -677,9 +1013,20 @@ export default function LoginPages({ onLoginSuccess }) {
               <button
                 type="button"
                 onClick={handleGoogleAuth}
-                className="w-full py-3 px-4 rounded-xl border border-[#1E2430] text-[#1E2430] font-semibold text-xs sm:text-sm hover:bg-slate-100/70 transition flex items-center justify-center gap-2 cursor-pointer"
+                disabled={googleLoading || loading}
+                className="w-full py-3 px-4 rounded-xl border border-[#1E2430] bg-white text-[#1E2430] font-semibold text-xs sm:text-sm hover:bg-slate-50 active:scale-[0.99] transition flex items-center justify-center gap-2.5 cursor-pointer disabled:opacity-60 disabled:cursor-not-allowed shadow-2xs"
               >
-                Daftar dengan Google
+                {googleLoading ? (
+                  <>
+                    <LoaderCircle className="w-4 h-4 animate-spin text-[#1E2430]" />
+                    <span>Menghubungkan ke Google...</span>
+                  </>
+                ) : (
+                  <>
+                    <GoogleIcon className="w-4 h-4 shrink-0" />
+                    <span>Daftar dengan Google</span>
+                  </>
+                )}
               </button>
             </form>
           )}

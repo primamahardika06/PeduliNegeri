@@ -1,6 +1,5 @@
 import { useState, useEffect } from "react";
 import { useNavigate, Link } from "react-router-dom";
-import { createClient } from "@supabase/supabase-js";
 import {
   ArrowRight,
   ArrowLeft,
@@ -9,14 +8,8 @@ import {
   LoaderCircle,
   KeyRound,
 } from "lucide-react";
+import { supabase } from "../../config/supabaseClient";
 import logoPeduliNegeri from "../../assets/PeduliNegeri (4).png";
-
-const supabaseUrl = import.meta.env.VITE_SUPABASE_URL || "";
-const supabaseAnonKey = import.meta.env.VITE_SUPABASE_ANON_KEY || "";
-const supabase =
-  supabaseUrl && supabaseAnonKey
-    ? createClient(supabaseUrl, supabaseAnonKey)
-    : null;
 
 export default function ResetPassword() {
   const navigate = useNavigate();

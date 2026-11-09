@@ -449,3 +449,135 @@ export const updateLeaderboardSettings = async (req, res) => {
     return res.status(500).json({ success: false, message: error.message });
   }
 };
+
+/**
+ * Controller untuk Sinkronisasi Pengguna Google OAuth / OAuth Provider
+ * Memvalidasi token Supabase OAuth dan memastikan record profil tersimpan di database
+ */
+export const syncOAuthUser = async (req, res) => {
+  try {
+    const authorization = req.headers.authorization || "";
+    const [scheme, token] = authorization.split(" ");
+    const rawToken = scheme === "Bearer" ? token : req.body.token || "";
+
+    if (!rawToken) {
+      return res.status(400).json({
+        success: false,
+        message: "Token autentikasi diperlukan.",
+      });
+    }
+
+    const clientToUse = supabaseAdmin || supabase;
+    if (!clientToUse) {
+      return res.status(500).json({
+        success: false,
+        message: "Supabase client belum terkonfigurasi pada server.",
+      });
+    }
+
+    // Verifikasi token pengguna ke Supabase
+    const { data: authData, error: authError } =
+      await clientToUse.auth.getUser(rawToken);
+
+    if (authError || !authData?.user) {
+      return res.status(401).json({
+        success: false,
+        message: "Token autentikasi tidak valid atau telah kadaluarsa.",
+      });
+    }
+
+    const user = authData.user;
+    const dbClient = supabaseAdmin || clientToUse;
+
+    // Ambil data profil dari tabel profiles
+    let { data: profile } = await dbClient
+      .from("profiles")
+      .select("*")
+      .eq("id", user.id)
+      .maybeSingle();
+
+    // Fallback pencarian berdasarkan email jika belum terhubung
+    if (!profile && user.email) {
+      const { data: profileByEmail } = await dbClient
+        .from("profiles")
+        .select("*")
+        .eq("email", user.email)
+        .maybeSingle();
+      if (profileByEmail) {
+        profile = profileByEmail;
+      }
+    }
+
+    // Jika belum ada di tabel profiles, buat profil baru
+    if (!profile) {
+      const metaName =
+        user.user_metadata?.full_name ||
+        user.user_metadata?.name ||
+        (user.email ? user.email.split("@")[0] : "Pengguna");
+      const metaAvatar =
+        user.user_metadata?.avatar_url ||
+        user.user_metadata?.picture ||
+        "";
+
+      const { data: newProfile, error: insertError } = await dbClient
+        .from("profiles")
+        .insert({
+          id: user.id,
+          email: user.email,
+          full_name: metaName,
+          phone_number: "",
+          role: "user",
+          avatar_url: metaAvatar,
+        })
+        .select()
+        .single();
+
+      if (insertError) {
+        console.error("Catatan: Pembuatan profil baru OAuth:", insertError.message);
+      }
+
+      profile = newProfile || {
+        id: user.id,
+        email: user.email,
+        full_name: metaName,
+        phone_number: "",
+        role: "user",
+        avatar_url: metaAvatar,
+      };
+    }
+
+    const actualRole = profile?.role || "user";
+
+    return res.status(200).json({
+      success: true,
+      message: "Autentikasi Google berhasil!",
+      data: {
+        user: {
+          id: user.id,
+          email: user.email,
+          fullName:
+            profile?.full_name ||
+            user.user_metadata?.full_name ||
+            user.user_metadata?.name ||
+            "",
+          phoneNumber: profile?.phone_number || "",
+          role: actualRole,
+          avatarUrl:
+            profile?.avatar_url ||
+            user.user_metadata?.avatar_url ||
+            user.user_metadata?.picture ||
+            "",
+        },
+        session: {
+          access_token: rawToken,
+        },
+      },
+    });
+  } catch (error) {
+    console.error("Error saat sync OAuth user:", error);
+    return res.status(500).json({
+      success: false,
+      message: "Terjadi kesalahan pada server saat sinkronisasi Google OAuth.",
+    });
+  }
+};

@@ -192,8 +192,8 @@ export default function ReportPages({ currentUser, onLogout }) {
     };
   }, []);
 
-  const handleLogout = () => {
-    authService.logout();
+  const handleLogout = async () => {
+    await authService.logout();
     if (onLogout) onLogout();
     navigate("/login");
   };

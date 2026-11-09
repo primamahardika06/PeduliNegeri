@@ -71,8 +71,8 @@ export default function AdminDashboard({ currentUser, onLogout }) {
   const [draggedReportId, setDraggedReportId] = useState(null);
   const [dragOverColumn, setDragOverColumn] = useState(null);
 
-  const handleLogout = () => {
-    authService.logout();
+  const handleLogout = async () => {
+    await authService.logout();
     if (onLogout) onLogout();
     navigate("/login");
   };
