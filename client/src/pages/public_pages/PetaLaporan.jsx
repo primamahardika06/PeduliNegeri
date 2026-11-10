@@ -9,6 +9,7 @@ import {
   Menu,
   X,
   Info,
+  ChartAreaIcon,
 } from "lucide-react";
 import { reportService } from "../../services/reportService";
 import { authService } from "../../services/authService";
@@ -198,20 +199,18 @@ export default function PetaLaporan() {
       // Popup Content matching the design
       const popupHtml = `
         <div style="width: 240px; font-family: Inter, sans-serif; padding: 2px;">
-          ${
-            rep.imageUrl
-              ? `<div style="width: 100%; height: 110px; border-radius: 6px; overflow: hidden; margin-bottom: 8px; background: #fdebe0;">
+          ${rep.imageUrl
+          ? `<div style="width: 100%; height: 110px; border-radius: 6px; overflow: hidden; margin-bottom: 8px; background: #fdebe0;">
                   <img src="${rep.imageUrl}" style="width: 100%; height: 100%; object-fit: cover;" alt="Foto Bukti" />
                 </div>`
-              : ""
-          }
+          : ""
+        }
           <div style="display: flex; align-items: center; justify-content: space-between; gap: 6px; margin-bottom: 6px;">
             <span style="font-size: 10px; font-weight: 600; padding: 2px 7px; border-radius: 4px; background: #fdebe0; color: #a14a30;">
               ${rep.category}
             </span>
-            <span style="font-size: 10px; font-weight: 600; padding: 2px 7px; border-radius: 4px; background: ${
-              isResolved ? "#e6f4ea" : "#fcd5a8"
-            }; color: ${isResolved ? "#137333" : "#1f2433"};">
+            <span style="font-size: 10px; font-weight: 600; padding: 2px 7px; border-radius: 4px; background: ${isResolved ? "#e6f4ea" : "#fcd5a8"
+        }; color: ${isResolved ? "#137333" : "#1f2433"};">
               ${isResolved ? "Selesai" : "Dalam proses"}
             </span>
           </div>
@@ -289,6 +288,13 @@ export default function PetaLaporan() {
             {currentUser ? (
               <div className="flex items-center gap-2">
                 <Link
+                  to="/statistik"
+                  className="hidden sm:flex items-center gap-1.5 text-xs font-semibold text-[var(--color-muted)] hover:text-[var(--color-ink)] transition-colors px-3 py-1.5 rounded-md hover:bg-white/50"
+                >
+                  <ChartAreaIcon size={14} className="text-(--color-coral-deep) flex items-center" />
+                  <span>Statistik laporan</span>
+                </Link>
+                <Link
                   to={currentUser.role === "admin" ? "/admin" : "/reportPage"}
                   className="px-3 py-1.5 text-xs font-semibold rounded bg-[var(--color-cream)] border border-[var(--color-line)] hover:bg-[var(--color-apricot)] transition-colors"
                 >
@@ -303,6 +309,12 @@ export default function PetaLaporan() {
               </div>
             ) : (
               <>
+                <Link to="/statistik"
+                  className="hidden sm:flex items-center gap-1.5 text-xs font-semibold text-[var(--color-muted)] hover:text-[var(--color-ink)] transition-colors px-3 py-1.5 rounded-md hover:bg-white/50"
+                >
+                  <ChartAreaIcon size={14} className="text-(--color-coral-deep) flex items-center" />
+                  <span>Statistik laporan</span>
+                </Link>
                 <Link
                   to="/login"
                   className="px-3.5 py-1.5 text-xs font-semibold rounded border border-[var(--color-ink)] hover:bg-[var(--color-cream)] transition-colors"
@@ -393,19 +405,17 @@ export default function PetaLaporan() {
                 <button
                   key={cat}
                   onClick={() => setSelectedCategory(cat)}
-                  className={`px-3 py-1.5 rounded-full font-medium transition-colors flex items-center gap-1.5 ${
-                    isSelected
-                      ? "bg-[var(--color-coral-deep)] text-white shadow-xs"
-                      : "bg-white/80 hover:bg-white text-[var(--color-muted)] border border-[var(--color-line)]"
-                  }`}
+                  className={`px-3 py-1.5 rounded-full font-medium transition-colors flex items-center gap-1.5 ${isSelected
+                    ? "bg-[var(--color-coral-deep)] text-white shadow-xs"
+                    : "bg-white/80 hover:bg-white text-[var(--color-muted)] border border-[var(--color-line)]"
+                    }`}
                 >
                   <span>{cat}</span>
                   <span
-                    className={`px-1.5 py-0.2 rounded-full text-[10px] ${
-                      isSelected
-                        ? "bg-white/20 text-white"
-                        : "bg-[var(--color-cream)] text-[var(--color-muted)]"
-                    }`}
+                    className={`px-1.5 py-0.2 rounded-full text-[10px] ${isSelected
+                      ? "bg-white/20 text-white"
+                      : "bg-[var(--color-cream)] text-[var(--color-muted)]"
+                      }`}
                   >
                     {count}
                   </span>
@@ -424,11 +434,10 @@ export default function PetaLaporan() {
                 <button
                   key={st}
                   onClick={() => setSelectedStatus(st)}
-                  className={`px-2.5 py-1 rounded font-medium transition-colors ${
-                    selectedStatus === st
-                      ? "bg-[var(--color-coral)] text-[var(--color-ink)]"
-                      : "text-[var(--color-muted)] hover:text-[var(--color-ink)]"
-                  }`}
+                  className={`px-2.5 py-1 rounded font-medium transition-colors ${selectedStatus === st
+                    ? "bg-[var(--color-coral)] text-[var(--color-ink)]"
+                    : "text-[var(--color-muted)] hover:text-[var(--color-ink)]"
+                    }`}
                 >
                   {st}
                 </button>
@@ -448,11 +457,10 @@ export default function PetaLaporan() {
               <button
                 key={reg}
                 onClick={() => setSelectedRegion(reg)}
-                className={`px-2.5 py-1 rounded text-xs transition-colors ${
-                  isSelected
-                    ? "bg-[var(--color-ink)] text-white font-semibold"
-                    : "text-[var(--color-muted)] hover:text-[var(--color-ink)] hover:bg-white/60"
-                }`}
+                className={`px-2.5 py-1 rounded text-xs transition-colors ${isSelected
+                  ? "bg-[var(--color-ink)] text-white font-semibold"
+                  : "text-[var(--color-muted)] hover:text-[var(--color-ink)] hover:bg-white/60"
+                  }`}
               >
                 {reg}
               </button>
@@ -465,9 +473,8 @@ export default function PetaLaporan() {
       <div className="flex-1 max-w-7xl w-full mx-auto p-4 sm:p-6 grid grid-cols-1 lg:grid-cols-12 gap-5 min-h-[550px]">
         {/* Map Container */}
         <div
-          className={`${
-            sidebarOpen ? "lg:col-span-8" : "lg:col-span-12"
-          } rounded-xl border border-[var(--color-line)] overflow-hidden shadow-xs relative bg-[var(--color-cream)] flex flex-col h-[520px] lg:h-[620px]`}
+          className={`${sidebarOpen ? "lg:col-span-8" : "lg:col-span-12"
+            } rounded-xl border border-[var(--color-line)] overflow-hidden shadow-xs relative bg-[var(--color-cream)] flex flex-col h-[520px] lg:h-[620px]`}
         >
           {loading && (
             <div className="absolute inset-0 z-20 bg-white/70 backdrop-blur-xs flex items-center justify-center gap-2 text-sm font-semibold">
@@ -547,22 +554,20 @@ export default function PetaLaporan() {
                     <div
                       key={item.id}
                       onClick={() => handleSelectReport(item)}
-                      className={`p-3.5 transition-colors cursor-pointer rounded-lg m-1 hover-lift ${
-                        isSelected
-                          ? "bg-[var(--color-cream)] border-l-4 border-[var(--color-coral-deep)] shadow-xs"
-                          : "hover:bg-[var(--color-surface)]"
-                      }`}
+                      className={`p-3.5 transition-colors cursor-pointer rounded-lg m-1 hover-lift ${isSelected
+                        ? "bg-[var(--color-cream)] border-l-4 border-[var(--color-coral-deep)] shadow-xs"
+                        : "hover:bg-[var(--color-surface)]"
+                        }`}
                     >
                       <div className="flex items-center justify-between gap-2 mb-1.5">
                         <span className="text-[10px] font-semibold px-2 py-0.5 rounded bg-[var(--color-surface)] text-[var(--color-coral-deep)] border border-[var(--color-line)]">
                           {item.category}
                         </span>
                         <span
-                          className={`text-[10px] font-semibold px-2 py-0.5 rounded ${
-                            isResolved
-                              ? "bg-emerald-100 text-emerald-800"
-                              : "bg-[var(--color-apricot)] text-[var(--color-ink)]"
-                          }`}
+                          className={`text-[10px] font-semibold px-2 py-0.5 rounded ${isResolved
+                            ? "bg-emerald-100 text-emerald-800"
+                            : "bg-[var(--color-apricot)] text-[var(--color-ink)]"
+                            }`}
                         >
                           {isResolved ? "Selesai" : "Dalam proses"}
                         </span>
@@ -580,9 +585,9 @@ export default function PetaLaporan() {
                         <span>
                           {item.createdAt
                             ? new Date(item.createdAt).toLocaleDateString("id-ID", {
-                                day: "numeric",
-                                month: "short",
-                              })
+                              day: "numeric",
+                              month: "short",
+                            })
                             : ""}
                         </span>
                       </div>

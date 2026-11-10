@@ -364,8 +364,6 @@ export default function ReportStatistik() {
               <BrandLogo size="md" />
             </Link>
             <div className="hidden sm:flex items-center gap-1 text-xs text-[var(--color-muted)]">
-              <span>/</span>
-              <span className="font-semibold text-[var(--color-ink)]">Statistik Laporan</span>
             </div>
           </div>
 
@@ -436,11 +434,10 @@ export default function ReportStatistik() {
                   key={item}
                   type="button"
                   onClick={() => setPeriod(item)}
-                  className={`px-3.5 py-1.5 text-xs font-semibold rounded-md transition-all cursor-pointer ${
-                    period === item
-                      ? "bg-[#1f2433] text-white shadow-xs"
-                      : "text-[var(--color-muted)] hover:text-[var(--color-ink)]"
-                  }`}
+                  className={`px-3.5 py-1.5 text-xs font-semibold rounded-md transition-all cursor-pointer ${period === item
+                    ? "bg-[#1f2433] text-white shadow-xs"
+                    : "text-[var(--color-muted)] hover:text-[var(--color-ink)]"
+                    }`}
                 >
                   {item}
                 </button>
