@@ -227,7 +227,7 @@ export async function createReport(req, res) {
       });
     }
 
-    // Kirim konfirmasi penerimaan laporan ke email pelapor secara asynchronous
+    // Kirim konfirmasi penerimaan laporan ke email pelapor (harus di-await agar tidak di-freeze oleh serverless Vercel)
     if (req.authUser?.email) {
       const authorEmail = req.authUser.email;
       const authorName =
@@ -235,13 +235,15 @@ export async function createReport(req, res) {
         req.authUser.user_metadata?.name ||
         "";
 
-      sendReportCreatedNotification({
-        userEmail: authorEmail,
-        userName: authorName,
-        report: data,
-      }).catch((emailErr) => {
-        console.error("Gagal mengirim email konfirmasi laporan:", emailErr);
-      });
+      try {
+        await sendReportCreatedNotification({
+          userEmail: authorEmail,
+          userName: authorName,
+          report: data,
+        });
+      } catch (emailErr) {
+        console.error("[ReportController] Gagal mengirim email konfirmasi laporan:", emailErr);
+      }
     }
 
     return res.status(201).json({ success: true, data });
@@ -357,52 +359,50 @@ export async function updateReportStatus(req, res) {
         .json({ success: false, message: "Laporan tidak ditemukan." });
     }
 
-    // Kirim notifikasi perkembangan status ke email pelapor secara asynchronous jika status berubah
+    // Kirim notifikasi perkembangan status ke email pelapor (di-await agar serverless container Vercel tidak suspend sebelum selesai)
     if (
       existingReport &&
       existingReport.status !== status &&
       existingReport.user_id
     ) {
-      (async () => {
-        try {
-          // Cari email dan nama pemilik laporan dari tabel profiles
-          const { data: profile } = await db
-            .from("profiles")
-            .select("email, full_name")
-            .eq("id", existingReport.user_id)
-            .maybeSingle();
+      try {
+        // Cari email dan nama pemilik laporan dari tabel profiles
+        const { data: profile } = await db
+          .from("profiles")
+          .select("email, full_name")
+          .eq("id", existingReport.user_id)
+          .maybeSingle();
 
-          let targetEmail = profile?.email;
-          let targetName = profile?.full_name || "";
+        let targetEmail = profile?.email;
+        let targetName = profile?.full_name || "";
 
-          // Fallback jika belum tersimpan di profiles, cari di auth.users via admin client
-          if (!targetEmail && supabaseAdmin) {
-            const { data: authUser } =
-              await supabaseAdmin.auth.admin.getUserById(existingReport.user_id);
-            if (authUser?.user?.email) {
-              targetEmail = authUser.user.email;
-              if (!targetName) {
-                targetName =
-                  authUser.user.user_metadata?.full_name ||
-                  authUser.user.user_metadata?.name ||
-                  "";
-              }
+        // Fallback jika belum tersimpan di profiles, cari di auth.users via admin client
+        if (!targetEmail && supabaseAdmin) {
+          const { data: authUser } =
+            await supabaseAdmin.auth.admin.getUserById(existingReport.user_id);
+          if (authUser?.user?.email) {
+            targetEmail = authUser.user.email;
+            if (!targetName) {
+              targetName =
+                authUser.user.user_metadata?.full_name ||
+                authUser.user.user_metadata?.name ||
+                "";
             }
           }
-
-          if (targetEmail) {
-            await sendReportStatusNotification({
-              userEmail: targetEmail,
-              userName: targetName,
-              report: data,
-              newStatus: status,
-              previousStatus: existingReport.status,
-            });
-          }
-        } catch (err) {
-          console.error("Gagal mengirim email notifikasi status:", err);
         }
-      })();
+
+        if (targetEmail) {
+          await sendReportStatusNotification({
+            userEmail: targetEmail,
+            userName: targetName,
+            report: data,
+            newStatus: status,
+            previousStatus: existingReport.status,
+          });
+        }
+      } catch (emailErr) {
+        console.error("[ReportController] Gagal mengirim email notifikasi status:", emailErr);
+      }
     }
 
     return res.status(200).json({ success: true, data });
@@ -1027,31 +1027,29 @@ export async function toggleSupport(req, res) {
       .update({ supports_count: newCount, updated_at: new Date().toISOString() })
       .eq("id", id);
 
-    // 4. Periksa apakah mencapai ambang batas dukungan (e.g. 5) untuk notifikasi admin
+    // 4. Periksa apakah mencapai ambang batas dukungan (e.g. 5) untuk notifikasi admin (di-await agar aman di Vercel serverless)
     if (isSupported && newCount >= SUPPORT_NOTIFICATION_THRESHOLD) {
-      (async () => {
-        try {
-          const { data: adminProfiles } = await db
-            .from("profiles")
-            .select("email, full_name")
-            .eq("role", "admin");
+      try {
+        const { data: adminProfiles } = await db
+          .from("profiles")
+          .select("email, full_name")
+          .eq("role", "admin");
 
-          if (adminProfiles && adminProfiles.length > 0) {
-            for (const adm of adminProfiles) {
-              if (adm.email) {
-                await sendSupportThresholdNotification({
-                  adminEmail: adm.email,
-                  adminName: adm.full_name || "Administrator",
-                  report: targetReport,
-                  supportCount: newCount,
-                });
-              }
+        if (adminProfiles && adminProfiles.length > 0) {
+          for (const adm of adminProfiles) {
+            if (adm.email) {
+              await sendSupportThresholdNotification({
+                adminEmail: adm.email,
+                adminName: adm.full_name || "Administrator",
+                report: targetReport,
+                supportCount: newCount,
+              });
             }
           }
-        } catch (notifErr) {
-          console.error("Gagal mengirim email notifikasi threshold admin:", notifErr);
         }
-      })();
+      } catch (notifErr) {
+        console.error("[ReportController] Gagal mengirim email notifikasi threshold admin:", notifErr);
+      }
     }
 
     return res.status(200).json({

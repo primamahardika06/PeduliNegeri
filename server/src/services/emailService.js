@@ -1,9 +1,19 @@
 import "dotenv/config";
 
-const RESEND_API_KEY = process.env.RESEND_API_KEY || "";
-const FROM_EMAIL =
+// Getter dinamis agar selalu membaca variabel lingkungan terbaru di Vercel Serverless
+const getResendApiKey = () => (process.env.RESEND_API_KEY || "").trim();
+const getFromEmail = () =>
   process.env.RESEND_FROM_EMAIL || "Peduli Negeri <onboarding@resend.dev>";
-const CLIENT_URL = process.env.CLIENT_URL || "http://localhost:5173";
+const getClientUrl = () => {
+  if (process.env.CLIENT_URL) return process.env.CLIENT_URL.replace(/\/+$/, "");
+  if (process.env.VERCEL_PROJECT_PRODUCTION_URL) {
+    return `https://${process.env.VERCEL_PROJECT_PRODUCTION_URL}`;
+  }
+  if (process.env.VERCEL_URL) {
+    return `https://${process.env.VERCEL_URL}`;
+  }
+  return "http://localhost:5173";
+};
 
 /**
  * Status mapping untuk warna, label, dan deskripsi ramah pengguna
@@ -94,16 +104,20 @@ function generateStepTimelineHTML(currentStep) {
  * Fungsi inti pengiriman email via Resend API
  */
 export async function sendEmail({ to, subject, html, text }) {
-  if (!RESEND_API_KEY) {
-    console.log(
-      `[EmailService] ℹ️ RESEND_API_KEY belum disetel pada server/.env. Simulasi pengiriman:\n` +
+  const apiKey = getResendApiKey();
+  const fromEmail = getFromEmail();
+
+  if (!apiKey) {
+    console.warn(
+      `[EmailService] ⚠️ RESEND_API_KEY tidak ditemukan pada environment variables. ` +
+        `Pastikan RESEND_API_KEY sudah disetel di Vercel Project Settings > Environment Variables.\n` +
         `-> Kepada : ${to}\n` +
         `-> Subjek : ${subject}\n`
     );
     return {
       success: false,
       simulated: true,
-      message: "RESEND_API_KEY belum dikonfigurasi.",
+      message: "RESEND_API_KEY belum dikonfigurasi di environment variables.",
     };
   }
 
@@ -111,11 +125,11 @@ export async function sendEmail({ to, subject, html, text }) {
     const response = await fetch("https://api.resend.com/emails", {
       method: "POST",
       headers: {
-        Authorization: `Bearer ${RESEND_API_KEY}`,
+        Authorization: `Bearer ${apiKey}`,
         "Content-Type": "application/json",
       },
       body: JSON.stringify({
-        from: FROM_EMAIL,
+        from: fromEmail,
         to: Array.isArray(to) ? to : [to],
         subject,
         html,
@@ -144,6 +158,7 @@ export async function sendEmail({ to, subject, html, text }) {
  * Template Base Wrapper untuk Email Peduli Negeri
  */
 function wrapEmailTemplate({ title, preheader, bodyContent }) {
+  const clientUrl = getClientUrl();
   return `
 <!DOCTYPE html>
 <html lang="id">
@@ -191,7 +206,7 @@ function wrapEmailTemplate({ title, preheader, bodyContent }) {
           <!-- Action Button -->
           <tr>
             <td align="center" style="padding: 0 30px 30px 30px;">
-              <a href="${CLIENT_URL}/laporan" style="display: inline-block; background-color: #EB936E; color: #1E2430; font-size: 14px; font-weight: bold; text-decoration: none; padding: 13px 28px; border-radius: 12px; box-shadow: 0 2px 4px rgba(0,0,0,0.06);">
+              <a href="${clientUrl}/laporan" style="display: inline-block; background-color: #EB936E; color: #1E2430; font-size: 14px; font-weight: bold; text-decoration: none; padding: 13px 28px; border-radius: 12px; box-shadow: 0 2px 4px rgba(0,0,0,0.06);">
                 Lihat Perkembangan Laporan Saya &rarr;
               </a>
             </td>
@@ -278,10 +293,11 @@ export async function sendReportCreatedNotification({
     bodyContent,
   });
 
+  const clientUrl = getClientUrl();
   const text = `Halo ${userName || "Warga Peduli"},\n\n` +
     `Laporan Anda "${report.title}" telah berhasil kami terima dengan nomor tiket #${(report.id || "").slice(0, 8)}.\n` +
     `Lokasi: ${report.location}\nKategori: ${report.category}\n\n` +
-    `Anda dapat memantau perkembangannya melalui: ${CLIENT_URL}/laporan\n\n` +
+    `Anda dapat memantau perkembangannya melalui: ${clientUrl}/laporan\n\n` +
     `Salam,\nTim Peduli Negeri`;
 
   return sendEmail({ to: userEmail, subject, html, text });
@@ -371,11 +387,12 @@ export async function sendReportStatusNotification({
     bodyContent,
   });
 
+  const clientUrl = getClientUrl();
   const text = `Halo ${userName || "Warga Peduli"},\n\n` +
     `Ada pembaruan status pada laporan Anda "${report.title}".\n` +
     `Status Baru: ${newStatus}\n` +
     `Keterangan: ${config.description}\n\n` +
-    `Lihat detail laporan: ${CLIENT_URL}/laporan\n\n` +
+    `Lihat detail laporan: ${clientUrl}/laporan\n\n` +
     `Salam,\nTim Peduli Negeri`;
 
   return sendEmail({ to: userEmail, subject, html, text });
@@ -454,12 +471,13 @@ export async function sendSupportThresholdNotification({
     bodyContent,
   });
 
+  const clientUrl = getClientUrl();
   const text = `Halo ${adminName || "Administrator"},\n\n` +
     `Laporan "${report.title}" telah mencapai ${supportCount} dukungan warga!\n` +
     `Lokasi: ${report.location}\n` +
     `Kategori: ${report.category}\n` +
     `Status Saat Ini: ${report.status}\n\n` +
-    `Tinjau di Admin Dashboard: ${CLIENT_URL}/admin\n\n` +
+    `Tinjau di Admin Dashboard: ${clientUrl}/admin\n\n` +
     `Salam,\nSistem Peduli Negeri`;
 
   return sendEmail({ to: adminEmail, subject, html, text });
