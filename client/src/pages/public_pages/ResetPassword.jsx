@@ -109,9 +109,9 @@ export default function ResetPassword() {
         </div>
 
         {/* Card Ilustrasi & Headline */}
-        <div className="my-8 lg:my-10 space-y-6">
+        <div className="my-8 lg:my-10 space-y-6 reveal-on-scroll">
           <div
-            className="rounded-3xl p-8 sm:p-12 flex flex-col items-center justify-center text-center aspect-4/3 max-w-md mx-auto w-full shadow-xs"
+            className="rounded-3xl p-8 sm:p-12 flex flex-col items-center justify-center text-center aspect-4/3 max-w-md mx-auto w-full shadow-xs hover-lift"
             style={{
               backgroundColor: "#FADDBA",
               border: "1px solid rgba(240, 196, 154, 0.6)",
@@ -134,7 +134,7 @@ export default function ResetPassword() {
         </div>
 
         {/* 3 Pilar Informasi */}
-        <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 pt-6 border-t border-[#1E2430]/20">
+        <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 pt-6 border-t border-[#1E2430]/20 reveal-on-scroll reveal-delay-200">
           <div className="space-y-1">
             <div className="h-0.5 w-12 bg-[#1E2430] mb-2" />
             <h3 className="font-bold text-xs sm:text-sm text-[#1E2430]">
@@ -182,7 +182,7 @@ export default function ResetPassword() {
           </Link>
         </div>
 
-        <div className="max-w-md w-full mx-auto my-auto py-6">
+        <div className="max-w-md w-full mx-auto my-auto py-6 reveal-on-scroll">
           <div className="mb-6">
             <h1 className="text-2xl sm:text-3xl font-extrabold text-[#1E2430] tracking-tight">
               Atur Ulang Kata Sandi
@@ -278,7 +278,7 @@ export default function ResetPassword() {
             <button
               type="submit"
               disabled={loading || !sessionReady}
-              className="w-full py-3.5 px-6 rounded-xl font-bold text-sm sm:text-base text-[#1E2430] shadow-xs flex items-center justify-center gap-2 transition-transform duration-150 active:scale-[0.99] cursor-pointer disabled:opacity-60 disabled:cursor-not-allowed mt-2"
+              className="btn-shimmer w-full py-3.5 px-6 rounded-xl font-bold text-sm sm:text-base text-[#1E2430] shadow-xs flex items-center justify-center gap-2 transition-transform duration-150 active:scale-[0.99] cursor-pointer disabled:opacity-60 disabled:cursor-not-allowed mt-2"
               style={{ backgroundColor: "#EB936E" }}
             >
               {loading ? (

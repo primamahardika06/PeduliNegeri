@@ -240,42 +240,42 @@ export default function LandingPage() {
             </a>
           </div>
 
-          <div className="flex items-center gap-2.5">
+          <div className="flex items-center gap-1.5 sm:gap-2.5">
             {currentUser ? (
-              <div className="flex items-center gap-2">
+              <div className="flex items-center gap-1.5 sm:gap-2">
                 <Link
                   to={currentUser.role === "admin" ? "/admin" : "/reportPage"}
-                  className="px-3.5 py-1.5 text-xs font-semibold rounded bg-[var(--color-cream)] border border-[var(--color-line)] hover:bg-[var(--color-apricot)] transition-colors"
+                  className="hidden sm:inline-flex px-3.5 py-1.5 text-xs font-semibold rounded bg-[var(--color-cream)] border border-[var(--color-line)] hover:bg-[var(--color-apricot)] transition-colors whitespace-nowrap"
                 >
                   Dashboard Saya
                 </Link>
                 <Link
                   to="/laporan/baru"
-                  className="px-3.5 py-1.5 text-xs font-semibold rounded bg-[var(--color-coral)] hover:bg-[#f39770] text-[var(--color-ink)] transition-colors"
+                  className="px-3 sm:px-3.5 py-1.5 text-xs font-semibold rounded bg-[var(--color-coral)] hover:bg-[#f39770] text-[var(--color-ink)] transition-colors whitespace-nowrap"
                 >
                   Laporkan
                 </Link>
               </div>
             ) : (
-              <>
+              <div className="flex items-center gap-1.5 sm:gap-2">
                 <Link
-                  className="px-4 py-1.5 text-xs font-semibold rounded border border-[var(--color-ink)] hover:bg-[var(--color-cream)] transition-colors"
+                  className="px-3 sm:px-4 py-1.5 text-xs font-semibold rounded border border-[var(--color-ink)] hover:bg-[var(--color-cream)] transition-colors whitespace-nowrap"
                   to="/login"
                 >
                   Masuk
                 </Link>
                 <Link
-                  className="px-4 py-1.5 text-xs font-semibold rounded bg-[var(--color-coral)] hover:bg-[#f39770] text-[var(--color-ink)] transition-colors"
+                  className="px-3 sm:px-4 py-1.5 text-xs font-semibold rounded bg-[var(--color-coral)] hover:bg-[#f39770] text-[var(--color-ink)] transition-colors whitespace-nowrap"
                   to="/login"
                 >
                   Daftar
                 </Link>
-              </>
+              </div>
             )}
 
             <button
               aria-label={menuOpen ? "Tutup menu" : "Buka menu"}
-              className="md:hidden p-2 rounded text-[var(--color-ink)]"
+              className="md:hidden p-2 rounded text-[var(--color-ink)] hover:bg-black/5 transition-colors cursor-pointer shrink-0"
               onClick={() => setMenuOpen((open) => !open)}
               type="button"
             >
@@ -287,6 +287,27 @@ export default function LandingPage() {
         {/* Mobile menu */}
         {menuOpen && (
           <div className="md:hidden px-4 py-3 bg-[var(--color-cream)] border-b border-[var(--color-line)] flex flex-col gap-2.5 text-sm font-medium">
+            {currentUser && (
+              <div className="flex flex-col gap-2 pb-2.5 mb-1 border-b border-[var(--color-line)]">
+                <Link
+                  to={currentUser.role === "admin" ? "/admin" : "/reportPage"}
+                  className="font-bold text-[var(--color-coral-deep)] flex items-center justify-between"
+                  onClick={closeMenu}
+                >
+                  <span>Dashboard Saya</span>
+                  <span className="text-xs bg-[var(--color-surface)] px-2 py-0.5 rounded border border-[var(--color-line)]">
+                    {currentUser.role === "admin" ? "Admin" : "Warga"}
+                  </span>
+                </Link>
+                <Link
+                  to="/laporan/baru"
+                  className="font-bold text-[var(--color-ink)]"
+                  onClick={closeMenu}
+                >
+                  + Buat Laporan Baru
+                </Link>
+              </div>
+            )}
             <a href="#beranda" onClick={closeMenu}>Beranda</a>
             <a href="#laporan" onClick={closeMenu}>Laporan</a>
             <Link to="/peta" onClick={closeMenu}>Peta Laporan</Link>

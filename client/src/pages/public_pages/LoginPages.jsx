@@ -806,7 +806,7 @@ export default function LoginPages({ onLoginSuccess }) {
               <button
                 type="submit"
                 disabled={loading}
-                className="w-full py-3.5 px-6 rounded-xl font-bold text-sm sm:text-base text-[#1E2430] shadow-xs flex items-center justify-center gap-2 transition-transform duration-150 active:scale-[0.99] cursor-pointer disabled:opacity-60 disabled:cursor-not-allowed mt-2"
+                className="btn-shimmer w-full py-3.5 px-6 rounded-xl font-bold text-sm sm:text-base text-[#1E2430] shadow-xs flex items-center justify-center gap-2 transition-transform duration-150 active:scale-[0.99] cursor-pointer disabled:opacity-60 disabled:cursor-not-allowed mt-2"
                 style={{ backgroundColor: "#EB936E" }}
               >
                 {loading ? (
@@ -997,7 +997,7 @@ export default function LoginPages({ onLoginSuccess }) {
               <button
                 type="submit"
                 disabled={loading || !agreeTerms}
-                className={`w-full py-3.5 px-6 rounded-xl font-bold text-sm sm:text-base text-[#1E2430] shadow-xs flex items-center justify-center gap-2 transition-all mt-2 cursor-pointer ${agreeTerms && !loading
+                className={`btn-shimmer w-full py-3.5 px-6 rounded-xl font-bold text-sm sm:text-base text-[#1E2430] shadow-xs flex items-center justify-center gap-2 transition-all mt-2 cursor-pointer ${agreeTerms && !loading
                   ? "bg-[#EB936E] hover:bg-[#E58862] active:scale-[0.99]"
                   : "bg-[#EAC7B6] opacity-75 cursor-not-allowed"
                   }`}
@@ -1066,7 +1066,7 @@ export default function LoginPages({ onLoginSuccess }) {
               <button
                 type="submit"
                 disabled={loading}
-                className="w-full py-3.5 px-6 rounded-xl font-bold text-sm sm:text-base text-[#1E2430] shadow-xs flex items-center justify-center gap-2 transition-transform duration-150 active:scale-[0.99] cursor-pointer disabled:opacity-60 disabled:cursor-not-allowed mt-2"
+                className="btn-shimmer w-full py-3.5 px-6 rounded-xl font-bold text-sm sm:text-base text-[#1E2430] shadow-xs flex items-center justify-center gap-2 transition-transform duration-150 active:scale-[0.99] cursor-pointer disabled:opacity-60 disabled:cursor-not-allowed mt-2"
                 style={{ backgroundColor: "#EB936E" }}
               >
                 {loading ? (

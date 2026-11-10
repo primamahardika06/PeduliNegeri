@@ -266,7 +266,7 @@ export default function DuplicatAlert({ currentUser }) {
                 <button
                   type="button"
                   onClick={() => navigate("/laporan")}
-                  className="px-5 py-2.5 rounded-xl bg-(--color-coral) text-(--color-ink) text-xs font-bold shadow-xs hover:opacity-90 transition-all cursor-pointer"
+                  className="btn-shimmer px-5 py-2.5 rounded-xl bg-(--color-coral) text-(--color-ink) text-xs font-bold shadow-xs hover:opacity-90 transition-all cursor-pointer"
                 >
                   Lihat Riwayat Laporan
                 </button>
@@ -521,7 +521,7 @@ export default function DuplicatAlert({ currentUser }) {
                     <button
                       type="button"
                       onClick={() => navigate("/laporan")}
-                      className="px-5 py-2.5 rounded-xl bg-(--color-ink) text-white text-xs font-bold shadow-xs hover:bg-black transition-all cursor-pointer"
+                      className="btn-shimmer px-5 py-2.5 rounded-xl bg-(--color-ink) text-white text-xs font-bold shadow-xs hover:bg-black transition-all cursor-pointer"
                     >
                       Selesai
                     </button>
@@ -560,7 +560,7 @@ export default function DuplicatAlert({ currentUser }) {
                       type="button"
                       onClick={handleProceedSubmitNewReport}
                       disabled={isSubmittingNew}
-                      className="px-5 py-2.5 rounded-xl bg-(--color-coral) text-(--color-ink) text-xs font-bold shadow-xs hover:opacity-90 transition-all cursor-pointer flex items-center gap-1.5"
+                      className="btn-shimmer px-5 py-2.5 rounded-xl bg-(--color-coral) text-(--color-ink) text-xs font-bold shadow-xs hover:opacity-90 transition-all cursor-pointer flex items-center gap-1.5"
                     >
                       {isSubmittingNew ? (
                         <>

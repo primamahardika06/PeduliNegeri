@@ -367,7 +367,7 @@ export default function ReportStatistik() {
             </div>
           </div>
 
-          <div className="flex items-center gap-3">
+          <div className="flex items-center gap-2 sm:gap-3">
             <Link
               to="/peta"
               className="hidden sm:flex items-center gap-1.5 text-xs font-semibold text-[var(--color-muted)] hover:text-[var(--color-ink)] transition-colors px-3 py-1.5 rounded-md hover:bg-white/50"
@@ -379,14 +379,15 @@ export default function ReportStatistik() {
             {currentUser ? (
               <Link
                 to={currentUser.role === "admin" ? "/admin" : "/reportPage"}
-                className="px-3.5 py-1.5 text-xs font-semibold rounded-lg bg-[var(--color-cream)] border border-[var(--color-line)] hover:bg-[var(--color-apricot)] transition-colors shadow-2xs"
+                className="px-2.5 sm:px-3.5 py-1.5 text-xs font-semibold rounded-lg bg-[var(--color-cream)] border border-[var(--color-line)] hover:bg-[var(--color-apricot)] transition-colors shadow-2xs whitespace-nowrap"
               >
-                Dashboard Saya
+                <span className="hidden sm:inline">Dashboard Saya</span>
+                <span className="sm:hidden">Dashboard</span>
               </Link>
             ) : (
               <Link
                 to="/login"
-                className="px-3.5 py-1.5 text-xs font-semibold rounded-lg border border-[var(--color-ink)] hover:bg-[var(--color-cream)] transition-colors shadow-2xs"
+                className="px-3 sm:px-3.5 py-1.5 text-xs font-semibold rounded-lg border border-[var(--color-ink)] hover:bg-[var(--color-cream)] transition-colors shadow-2xs whitespace-nowrap"
               >
                 Masuk
               </Link>
@@ -394,7 +395,7 @@ export default function ReportStatistik() {
 
             <Link
               to="/laporan/baru"
-              className="px-3.5 py-1.5 text-xs font-bold rounded-lg bg-[var(--color-coral)] hover:bg-[#f39770] text-[var(--color-ink)] transition-colors flex items-center gap-1 shadow-2xs"
+              className="px-2.5 sm:px-3.5 py-1.5 text-xs font-bold rounded-lg bg-[var(--color-coral)] hover:bg-[#f39770] text-[var(--color-ink)] transition-colors flex items-center gap-1 shadow-2xs whitespace-nowrap"
             >
               <Plus size={14} />
               <span>Laporkan</span>
@@ -869,8 +870,8 @@ export default function ReportStatistik() {
             </section>
 
             {/* Bottom CTA Banner */}
-            <section className="mt-6">
-              <div className="rounded-xl bg-[#182230] text-white p-5 sm:p-6 flex flex-col md:flex-row items-start md:items-center justify-between gap-5 shadow-lg">
+            <section className="mt-6 reveal-on-scroll">
+              <div className="rounded-xl bg-[#182230] text-white p-5 sm:p-6 flex flex-col md:flex-row items-start md:items-center justify-between gap-5 shadow-lg hover-lift">
                 <div className="max-w-xl">
                   <h3 className="text-base sm:text-lg font-bold text-white tracking-tight">
                     Lihat di mana masalah terjadi
@@ -891,7 +892,7 @@ export default function ReportStatistik() {
                   </Link>
                   <Link
                     to="/laporan/baru"
-                    className="flex-1 md:flex-initial inline-flex items-center justify-center gap-1.5 px-4 py-2.5 rounded-lg bg-[var(--color-coral)] hover:bg-[#f39770] text-[#1f2433] text-xs font-bold transition-colors shadow-sm"
+                    className="btn-shimmer flex-1 md:flex-initial inline-flex items-center justify-center gap-1.5 px-4 py-2.5 rounded-lg bg-[var(--color-coral)] hover:bg-[#f39770] text-[#1f2433] text-xs font-bold transition-colors shadow-sm"
                   >
                     <Plus size={14} />
                     <span>Buat Laporan Baru</span>

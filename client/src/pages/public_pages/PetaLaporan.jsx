@@ -284,9 +284,9 @@ export default function PetaLaporan() {
             <BrandLogo size="md" />
           </Link>
 
-          <div className="flex items-center gap-2.5">
+          <div className="flex items-center gap-1.5 sm:gap-2.5">
             {currentUser ? (
-              <div className="flex items-center gap-2">
+              <div className="flex items-center gap-1.5 sm:gap-2">
                 <Link
                   to="/statistik"
                   className="hidden sm:flex items-center gap-1.5 text-xs font-semibold text-[var(--color-muted)] hover:text-[var(--color-ink)] transition-colors px-3 py-1.5 rounded-md hover:bg-white/50"
@@ -296,19 +296,20 @@ export default function PetaLaporan() {
                 </Link>
                 <Link
                   to={currentUser.role === "admin" ? "/admin" : "/reportPage"}
-                  className="px-3 py-1.5 text-xs font-semibold rounded bg-[var(--color-cream)] border border-[var(--color-line)] hover:bg-[var(--color-apricot)] transition-colors"
+                  className="px-2.5 sm:px-3 py-1.5 text-xs font-semibold rounded bg-[var(--color-cream)] border border-[var(--color-line)] hover:bg-[var(--color-apricot)] transition-colors whitespace-nowrap"
                 >
-                  Dashboard Saya
+                  <span className="hidden sm:inline">Dashboard Saya</span>
+                  <span className="sm:hidden">Dashboard</span>
                 </Link>
                 <Link
                   to="/laporan/baru"
-                  className="hidden sm:inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-semibold rounded bg-[var(--color-coral)] hover:bg-[#f39770] text-[var(--color-ink)] transition-colors"
+                  className="hidden sm:inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-semibold rounded bg-[var(--color-coral)] hover:bg-[#f39770] text-[var(--color-ink)] transition-colors whitespace-nowrap"
                 >
                   <PlusCircle size={14} /> Buat Laporan
                 </Link>
               </div>
             ) : (
-              <>
+              <div className="flex items-center gap-1.5 sm:gap-2">
                 <Link to="/statistik"
                   className="hidden sm:flex items-center gap-1.5 text-xs font-semibold text-[var(--color-muted)] hover:text-[var(--color-ink)] transition-colors px-3 py-1.5 rounded-md hover:bg-white/50"
                 >
@@ -317,22 +318,22 @@ export default function PetaLaporan() {
                 </Link>
                 <Link
                   to="/login"
-                  className="px-3.5 py-1.5 text-xs font-semibold rounded border border-[var(--color-ink)] hover:bg-[var(--color-cream)] transition-colors"
+                  className="px-3 sm:px-3.5 py-1.5 text-xs font-semibold rounded border border-[var(--color-ink)] hover:bg-[var(--color-cream)] transition-colors whitespace-nowrap"
                 >
                   Masuk
                 </Link>
                 <Link
                   to="/login"
-                  className="px-3.5 py-1.5 text-xs font-semibold rounded bg-[var(--color-coral)] hover:bg-[#f39770] text-[var(--color-ink)] transition-colors"
+                  className="px-3 sm:px-3.5 py-1.5 text-xs font-semibold rounded bg-[var(--color-coral)] hover:bg-[#f39770] text-[var(--color-ink)] transition-colors whitespace-nowrap"
                 >
                   Daftar
                 </Link>
-              </>
+              </div>
             )}
 
             <button
               onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
-              className="md:hidden p-2 rounded text-[var(--color-ink)] hover:bg-[var(--color-cream)]"
+              className="md:hidden p-2 rounded text-[var(--color-ink)] hover:bg-[var(--color-cream)] shrink-0 cursor-pointer"
               aria-label="Toggle menu"
             >
               {mobileMenuOpen ? <X size={20} /> : <Menu size={20} />}
@@ -343,6 +344,24 @@ export default function PetaLaporan() {
         {/* Mobile dropdown */}
         {mobileMenuOpen && (
           <div className="md:hidden px-4 py-3 bg-[var(--color-cream)] border-b border-[var(--color-line)] flex flex-col gap-2 text-sm">
+            {currentUser && (
+              <div className="flex flex-col gap-2 pb-2 mb-1 border-b border-[var(--color-line)]">
+                <Link
+                  to={currentUser.role === "admin" ? "/admin" : "/reportPage"}
+                  className="font-bold text-[var(--color-coral-deep)]"
+                  onClick={() => setMobileMenuOpen(false)}
+                >
+                  Dashboard Saya
+                </Link>
+                <Link
+                  to="/laporan/baru"
+                  className="font-bold text-[var(--color-ink)]"
+                  onClick={() => setMobileMenuOpen(false)}
+                >
+                  + Buat Laporan Baru
+                </Link>
+              </div>
+            )}
             <Link to="/" onClick={() => setMobileMenuOpen(false)}>
               Beranda
             </Link>

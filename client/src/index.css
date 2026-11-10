@@ -3,7 +3,30 @@
 @import 'leaflet/dist/leaflet.css';
 
 *{
+  box-sizing: border-box;
+}
+
+html {
+  overflow-x: hidden;
+  max-width: 100vw;
   scroll-behavior: smooth;
+}
+
+body {
+  overflow-x: hidden;
+  max-width: 100vw;
+  width: 100%;
+  margin: 0;
+  padding: 0;
+  position: relative;
+  -webkit-font-smoothing: antialiased;
+}
+
+#root {
+  overflow-x: hidden;
+  max-width: 100vw;
+  width: 100%;
+  min-height: 100vh;
 }
 
 /* Design tokens: change a colour here and the whole site follows. */
@@ -279,6 +302,18 @@ button:disabled,
 .reveal-slide-right.is-revealed {
   opacity: 1;
   transform: translateX(0);
+}
+
+/* Pada layar mobile/tablet kecil, hindari translasi sumbu X agar tidak memicu horizontal scrolling */
+@media (max-width: 768px) {
+  .reveal-slide-left,
+  .reveal-slide-right {
+    transform: translateY(20px);
+  }
+  .reveal-slide-left.is-revealed,
+  .reveal-slide-right.is-revealed {
+    transform: translateY(0);
+  }
 }
 
 /* Stagger Delays untuk List/Grid */

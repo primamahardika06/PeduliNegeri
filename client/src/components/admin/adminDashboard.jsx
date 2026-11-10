@@ -691,26 +691,26 @@ export default function AdminDashboard({ currentUser, onLogout }) {
       </nav>
 
       <main className="max-w-7xl mx-auto px-4 sm:px-6 py-6 space-y-6">
-        <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
-          <div className="p-4 rounded-2xl bg-white border border-[var(--color-line)] shadow-xs">
+        <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 reveal-on-scroll">
+          <div className="p-4 rounded-2xl bg-white border border-[var(--color-line)] shadow-xs hover-lift">
             <p className="text-[11px] text-[var(--color-muted)] font-medium">Total Laporan</p>
             <p className="text-2xl font-extrabold text-[var(--color-ink)] mt-1">{totalReports}</p>
           </div>
-          <div className="p-4 rounded-2xl bg-white border border-[var(--color-line)] shadow-xs">
+          <div className="p-4 rounded-2xl bg-white border border-[var(--color-line)] shadow-xs hover-lift">
             <p className="text-[11px] text-[var(--color-muted)] font-medium">Dalam Proses</p>
             <p className="text-2xl font-extrabold text-[var(--color-coral-deep)] mt-1">{inProgressReports}</p>
           </div>
-          <div className="p-4 rounded-2xl bg-white border border-[var(--color-line)] shadow-xs">
+          <div className="p-4 rounded-2xl bg-white border border-[var(--color-line)] shadow-xs hover-lift">
             <p className="text-[11px] text-[var(--color-muted)] font-medium">Selesai</p>
             <p className="text-2xl font-extrabold text-[var(--color-periwinkle-deep)] mt-1">{completedReports}</p>
           </div>
-          <div className="p-4 rounded-2xl bg-white border border-[var(--color-line)] shadow-xs">
+          <div className="p-4 rounded-2xl bg-white border border-[var(--color-line)] shadow-xs hover-lift">
             <p className="text-[11px] text-[var(--color-muted)] font-medium">Total Akun</p>
             <p className="text-2xl font-extrabold text-[var(--color-ink)] mt-1">{totalUsers}</p>
           </div>
         </div>
 
-        <div className="flex items-center justify-between">
+        <div className="flex items-center justify-between reveal-on-scroll">
           <h2 className="text-lg sm:text-xl font-extrabold text-[var(--color-ink)] tracking-tight">
             {activeTab === "ringkasan" && "Papan Kanban Laporan"}
             {activeTab === "laporan" && "Tabel Laporan Masyarakat"}
@@ -719,7 +719,7 @@ export default function AdminDashboard({ currentUser, onLogout }) {
           <button
             onClick={() => { fetchUsers(); fetchReports(); }}
             disabled={loadingUsers || loadingReports}
-            className="flex items-center gap-2 px-4 py-2 rounded-xl bg-[var(--color-ink)] hover:bg-black text-white text-xs font-semibold transition-all cursor-pointer"
+            className="btn-shimmer flex items-center gap-2 px-4 py-2 rounded-xl bg-[var(--color-ink)] hover:bg-black text-white text-xs font-semibold transition-all cursor-pointer"
           >
             <RefreshCw className={`w-3.5 h-3.5 ${loadingUsers || loadingReports ? "animate-spin" : ""}`} />
             Sinkronisasi
@@ -732,9 +732,9 @@ export default function AdminDashboard({ currentUser, onLogout }) {
         {activeTab === "ringkasan" && (
           <>
             {/* ── 3 Analitik Cards (Sesuai Gambar 2) ────────────────── */}
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-4 reveal-on-scroll">
               {/* Card 1: Laporan per bulan */}
-              <div className="p-4 sm:p-5 rounded-2xl bg-white border border-[var(--color-line)] shadow-xs flex flex-col justify-between">
+              <div className="p-4 sm:p-5 rounded-2xl bg-white border border-[var(--color-line)] shadow-xs hover-lift flex flex-col justify-between">
                 <div>
                   <p className="text-xs text-[var(--color-muted)] font-medium mb-1">
                     Laporan per bulan
@@ -776,7 +776,7 @@ export default function AdminDashboard({ currentUser, onLogout }) {
               </div>
 
               {/* Card 2: Tingkat penyelesaian */}
-              <div className="p-4 sm:p-5 rounded-2xl bg-white border border-[var(--color-line)] shadow-xs flex flex-col justify-between">
+              <div className="p-4 sm:p-5 rounded-2xl bg-white border border-[var(--color-line)] shadow-xs hover-lift flex flex-col justify-between">
                 <div>
                   <p className="text-xs text-[var(--color-muted)] font-medium mb-1">
                     Tingkat penyelesaian
@@ -807,7 +807,7 @@ export default function AdminDashboard({ currentUser, onLogout }) {
               </div>
 
               {/* Card 3: Kategori terbanyak */}
-              <div className="p-4 sm:p-5 rounded-2xl bg-white border border-[var(--color-line)] shadow-xs flex flex-col justify-between">
+              <div className="p-4 sm:p-5 rounded-2xl bg-white border border-[var(--color-line)] shadow-xs hover-lift flex flex-col justify-between">
                 <div>
                   <p className="text-xs text-[var(--color-muted)] font-medium mb-3">
                     Kategori terbanyak
@@ -836,7 +836,7 @@ export default function AdminDashboard({ currentUser, onLogout }) {
 
             {/* ── Widget Analisis: Dukungan Terbanyak per Wilayah ── */}
             {wilayahStats.length > 0 && (
-              <div className="rounded-2xl bg-white border border-[var(--color-line)] p-4 sm:p-5 shadow-xs">
+              <div className="rounded-2xl bg-white border border-[var(--color-line)] p-4 sm:p-5 shadow-xs reveal-on-scroll">
                 <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 mb-3.5">
                   <div className="flex items-center gap-2">
                     <div className="p-1.5 rounded-lg bg-[#FFF5EE] text-[var(--color-coral-deep)] border border-[var(--color-coral)]/30">
@@ -874,7 +874,7 @@ export default function AdminDashboard({ currentUser, onLogout }) {
                         onClick={() =>
                           setSelectedWilayah(isSelected ? "Semua" : w.name)
                         }
-                        className={`p-3.5 rounded-xl border text-left transition-all cursor-pointer flex flex-col justify-between ${
+                        className={`p-3.5 rounded-xl border text-left transition-all cursor-pointer flex flex-col justify-between hover-lift ${
                           isSelected
                             ? "bg-[#FFF5EE] border-2 border-[var(--color-coral-deep)] ring-2 ring-[var(--color-coral)]/30 shadow-xs"
                             : "bg-[var(--color-surface)] border-[var(--color-line)] hover:border-[var(--color-coral)]/60 hover:bg-white"
@@ -918,7 +918,7 @@ export default function AdminDashboard({ currentUser, onLogout }) {
             )}
 
             {/* ── Toolbar Filter Kanban (Dukungan Warga & Wilayah) ── */}
-            <div className="flex flex-wrap items-center justify-between gap-3 p-3.5 rounded-2xl bg-white border border-[var(--color-line)] shadow-xs">
+            <div className="flex flex-wrap items-center justify-between gap-3 p-3.5 rounded-2xl bg-white border border-[var(--color-line)] shadow-xs reveal-on-scroll">
               <div className="flex flex-wrap items-center gap-3">
                 {/* Filter 1: Dukungan */}
                 <div className="flex items-center gap-2">
@@ -1136,7 +1136,7 @@ export default function AdminDashboard({ currentUser, onLogout }) {
                                   setDraggedReportId(null);
                                   setDragOverColumn(null);
                                 }}
-                                className={`p-3 rounded-xl border transition-all select-none cursor-grab active:cursor-grabbing ${
+                                className={`p-3 rounded-xl border transition-all select-none cursor-grab active:cursor-grabbing hover-lift ${
                                   isBeingDragged
                                     ? "opacity-35 scale-95 border-dashed border-[var(--color-coral)] bg-white shadow-md"
                                     : "border-[var(--color-line)] bg-[var(--color-surface)] hover:border-[var(--color-coral)]/60 hover:shadow-xs"
@@ -1278,7 +1278,7 @@ export default function AdminDashboard({ currentUser, onLogout }) {
         {/* TAB 2: LAPORAN TABLE                                      */}
         {/* ══════════════════════════════════════════════════════════ */}
         {activeTab === "laporan" && (
-          <div className="rounded-2xl border border-[var(--color-line)] bg-white p-5 sm:p-6 shadow-xs">
+          <div className="rounded-2xl border border-[var(--color-line)] bg-white p-5 sm:p-6 shadow-xs reveal-on-scroll">
             {/* Table Controls */}
             <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-5">
               <div className="flex flex-wrap items-center gap-2">
@@ -1488,20 +1488,20 @@ export default function AdminDashboard({ currentUser, onLogout }) {
         {activeTab === "pengguna" && (
           <div className="space-y-5">
             {/* User Stats */}
-            <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
-              <div className="p-4 rounded-2xl bg-white border border-[var(--color-line)] shadow-xs">
+            <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 reveal-on-scroll">
+              <div className="p-4 rounded-2xl bg-white border border-[var(--color-line)] shadow-xs hover-lift">
                 <p className="text-[11px] text-[var(--color-muted)] font-medium">Total Akun</p>
                 <p className="text-2xl font-extrabold text-[var(--color-ink)] mt-1">{totalUsers}</p>
               </div>
-              <div className="p-4 rounded-2xl bg-white border border-[var(--color-line)] shadow-xs">
+              <div className="p-4 rounded-2xl bg-white border border-[var(--color-line)] shadow-xs hover-lift">
                 <p className="text-[11px] text-[var(--color-muted)] font-medium">Pengguna Biasa</p>
                 <p className="text-2xl font-extrabold text-[var(--color-coral-deep)] mt-1">{totalRegularUsers}</p>
               </div>
-              <div className="p-4 rounded-2xl bg-white border border-[var(--color-line)] shadow-xs">
+              <div className="p-4 rounded-2xl bg-white border border-[var(--color-line)] shadow-xs hover-lift">
                 <p className="text-[11px] text-[var(--color-muted)] font-medium">Administrator</p>
                 <p className="text-2xl font-extrabold text-[var(--color-periwinkle-deep)] mt-1">{totalAdmins}</p>
               </div>
-              <div className="p-4 rounded-2xl bg-white border border-[var(--color-line)] shadow-xs flex flex-col justify-center">
+              <div className="p-4 rounded-2xl bg-white border border-[var(--color-line)] shadow-xs hover-lift flex flex-col justify-center">
                 <p className="text-[11px] text-[var(--color-muted)] font-medium">Sumber Data</p>
                 <div className="flex items-center gap-1.5 mt-1">
                   <span className="w-2 h-2 rounded-full bg-[var(--color-periwinkle)] animate-pulse" />
@@ -1511,7 +1511,7 @@ export default function AdminDashboard({ currentUser, onLogout }) {
             </div>
 
             {/* User Table */}
-            <div className="rounded-2xl border border-[var(--color-line)] bg-white p-5 sm:p-6 shadow-xs">
+            <div className="rounded-2xl border border-[var(--color-line)] bg-white p-5 sm:p-6 shadow-xs reveal-on-scroll">
               <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-5">
                 <h3 className="text-sm font-bold text-[var(--color-ink)] flex items-center gap-2">
                   <Users className="w-4 h-4 text-[var(--color-coral)]" />
