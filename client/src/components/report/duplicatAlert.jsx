@@ -335,7 +335,7 @@ export default function DuplicatAlert({ currentUser }) {
                   return (
                     <div
                       key={report.id}
-                      className="rounded-2xl bg-white p-4 sm:p-5 border border-[var(--color-line)] shadow-xs transition-all hover:border-[var(--color-coral)]/40 flex flex-col md:flex-row gap-4 justify-between"
+                      className="rounded-2xl bg-white p-4 sm:p-5 border border-[var(--color-line)] shadow-xs transition-all hover-lift reveal-on-scroll flex flex-col md:flex-row gap-4 justify-between"
                     >
                       {/* Left Side: Thumbnail + Report Details */}
                       <div className="flex items-start gap-3.5 flex-1 min-w-0">
@@ -598,7 +598,7 @@ export default function DuplicatAlert({ currentUser }) {
         <div className="space-y-4">
           {/* Card 1: Ringkasan "Laporan Anda" */}
           {pendingReport && (
-            <div className="rounded-2xl bg-white p-5 border border-[var(--color-line)] shadow-xs">
+            <div className="rounded-2xl bg-white p-5 border border-[var(--color-line)] shadow-xs hover-lift transition-all">
               <div className="flex items-center justify-between pb-2 mb-2 border-b border-[var(--color-line)]">
                 <div>
                   <h3 className="text-xs font-bold text-(--color-ink)">Laporan Anda</h3>
@@ -645,7 +645,7 @@ export default function DuplicatAlert({ currentUser }) {
           )}
 
           {/* Card 2: Informasi "Apa arti mendukung laporan?" */}
-          <div className="rounded-2xl bg-[#FCD8BA]/60 p-5 border border-[#F3BF9B] shadow-xs">
+          <div className="rounded-2xl bg-[#FCD8BA]/60 p-5 border border-[#F3BF9B] shadow-xs hover-lift transition-all">
             <h3 className="text-xs font-extrabold text-(--color-ink) mb-2.5">
               Apa arti mendukung laporan?
             </h3>

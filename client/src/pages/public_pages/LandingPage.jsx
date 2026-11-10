@@ -302,7 +302,7 @@ export default function LandingPage() {
         {/* Hero Section */}
         <section className="bg-[var(--color-cream)] py-14 sm:py-20 border-b border-[var(--color-line)]" id="beranda">
           <div className="max-w-7xl mx-auto px-4 sm:px-6 grid grid-cols-1 lg:grid-cols-12 items-center gap-10">
-            <div className="lg:col-span-7">
+            <div className="lg:col-span-7 reveal-slide-left">
               <p className="text-xs sm:text-sm font-bold text-[var(--color-coral-deep)] tracking-wide uppercase mb-3">
                 Suara Anda, Perubahan untuk Negeri
               </p>
@@ -316,13 +316,13 @@ export default function LandingPage() {
               </p>
               <div className="flex flex-wrap items-center gap-3">
                 <Link
-                  className="px-5 py-2.5 text-xs sm:text-sm font-bold rounded bg-[var(--color-coral)] hover:bg-[#f39770] text-[var(--color-ink)] inline-flex items-center gap-2 shadow-xs transition-transform hover:-translate-y-0.5"
+                  className="btn-shimmer px-5 py-2.5 text-xs sm:text-sm font-bold rounded-xl bg-[var(--color-coral)] hover:bg-[#f39770] text-[var(--color-ink)] inline-flex items-center gap-2 shadow-xs transition-all hover:-translate-y-0.5 active:translate-y-0"
                   to="/laporan/baru"
                 >
                   Laporkan Sekarang <ArrowRight size={16} />
                 </Link>
                 <Link
-                  className="px-5 py-2.5 text-xs sm:text-sm font-bold rounded border border-[var(--color-ink)] hover:bg-white/60 inline-flex items-center gap-2 transition-transform hover:-translate-y-0.5"
+                  className="px-5 py-2.5 text-xs sm:text-sm font-bold rounded-xl border border-[var(--color-ink)] hover:bg-white/60 inline-flex items-center gap-2 transition-all hover:-translate-y-0.5 active:translate-y-0"
                   to="/peta"
                 >
                   <MapIcon size={16} /> Buka Peta Interaktif
@@ -331,24 +331,35 @@ export default function LandingPage() {
             </div>
 
             {/* Interactive Preview Mockup Card / Photo Slider */}
-            <div className="lg:col-span-5 max-w-md mx-auto w-full">
-              <div className="rounded-xl border border-[var(--color-line)] bg-white p-4 shadow-xl transition-all">
-                {/* Photo Display / Slider (Ganti tiap 5 detik) */}
-                {activeSlide.imageUrl ? (
-                  <div className="relative w-full h-48 sm:h-52 rounded-lg overflow-hidden bg-black/10 border border-[var(--color-line)]/50 group">
-                    <img
-                      src={activeSlide.imageUrl}
-                      alt={activeSlide.title}
-                      className="w-full h-full object-cover transition-transform duration-700 hover:scale-105"
-                    />
-                    <div className="absolute top-2.5 right-2.5 px-2 py-0.5 rounded-md bg-black/60 backdrop-blur-xs text-white text-[10px] font-semibold flex items-center gap-1 shadow-xs">
+            <div className="lg:col-span-5 max-w-md mx-auto w-full reveal-slide-right">
+              <div className="rounded-2xl border border-[var(--color-line)] bg-white p-4 shadow-xl hover-lift transition-all">
+                {/* Photo Display / Smooth Crossfade Slider */}
+                {heroSlides.length > 0 && heroSlides.some((s) => s.imageUrl) ? (
+                  <div className="relative w-full h-48 sm:h-52 rounded-xl overflow-hidden bg-black/10 border border-[var(--color-line)]/50 group">
+                    {heroSlides.map((slide, idx) => (
+                      <div
+                        key={slide.id || idx}
+                        className={`absolute inset-0 slider-photo-fade ${
+                          idx === currentSlideIndex
+                            ? "opacity-100 scale-100 z-10"
+                            : "opacity-0 scale-105 z-0 pointer-events-none"
+                        }`}
+                      >
+                        <img
+                          src={slide.imageUrl}
+                          alt={slide.title}
+                          className="w-full h-full object-cover transition-transform duration-1000"
+                        />
+                      </div>
+                    ))}
+                    <div className="absolute top-2.5 right-2.5 px-2 py-0.5 rounded-md bg-black/60 backdrop-blur-xs text-white text-[10px] font-semibold flex items-center gap-1 shadow-xs z-20">
                       <Camera size={11} />
                       <span>Foto Laporan</span>
                     </div>
 
                     {/* Slider Indicator Dots */}
                     {heroSlides.length > 1 && (
-                      <div className="absolute bottom-2.5 left-1/2 -translate-x-1/2 flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-black/50 backdrop-blur-xs">
+                      <div className="absolute bottom-2.5 left-1/2 -translate-x-1/2 flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-black/50 backdrop-blur-xs z-20">
                         {heroSlides.map((_, idx) => (
                           <button
                             key={idx}
@@ -366,7 +377,7 @@ export default function LandingPage() {
                     )}
                   </div>
                 ) : (
-                  <div className="relative w-full h-48 sm:h-52 rounded-lg bg-[var(--color-apricot)] flex flex-col items-center justify-center p-4 text-center border border-[var(--color-line)]/50">
+                  <div className="relative w-full h-48 sm:h-52 rounded-xl bg-[var(--color-apricot)] flex flex-col items-center justify-center p-4 text-center border border-[var(--color-line)]/50">
                     <Camera size={28} className="text-[var(--color-coral-deep)] mb-2" />
                     <p className="text-xs font-semibold text-[var(--color-ink)]">
                       Foto Bukti Langsung dari Lapangan
@@ -396,7 +407,7 @@ export default function LandingPage() {
                 )}
 
                 {/* Info Rincian Laporan Dinamis */}
-                <div className="mt-3.5 pt-3 border-t border-[var(--color-line)]">
+                <div className="mt-3.5 pt-3 border-t border-[var(--color-line)] transition-all duration-500">
                   <div className="flex items-center justify-between text-xs mb-1.5">
                     <span className="font-bold text-[11px] px-2 py-0.5 rounded bg-[var(--color-cream)] text-[var(--color-coral-deep)] border border-[var(--color-line)]">
                       {activeSlide.category || "Infrastruktur"}
@@ -430,7 +441,7 @@ export default function LandingPage() {
                   <div className="mt-3">
                     <div className="w-full h-1.5 rounded-full bg-[var(--color-line)] overflow-hidden">
                       <div
-                        className="h-full bg-[var(--color-coral-deep)] transition-all duration-500"
+                        className="h-full bg-[var(--color-coral-deep)] transition-all duration-700 ease-out"
                         style={{ width: `${slideProgressPercent}%` }}
                       />
                     </div>
@@ -456,7 +467,7 @@ export default function LandingPage() {
         </section>
 
         {/* Stats Bar */}
-        <section className="bg-[var(--color-apricot)] border-b border-[var(--color-coral-deep)]/20 py-6" aria-label="Statistik platform">
+        <section className="bg-[var(--color-apricot)] border-b border-[var(--color-coral-deep)]/20 py-6 reveal-on-scroll" aria-label="Statistik platform">
           <div className="max-w-7xl mx-auto px-4 sm:px-6 grid grid-cols-2 sm:grid-cols-4 gap-4 divide-y sm:divide-y-0 sm:divide-x divide-[var(--color-coral-deep)]/15">
             <div className="text-center pt-2 sm:pt-0">
               <strong className="block text-2xl sm:text-3xl font-extrabold text-[var(--color-ink)]">
@@ -496,7 +507,7 @@ export default function LandingPage() {
         {/* Trending Issues Section */}
         <section className="py-14 sm:py-20 border-b border-[var(--color-line)]" id="laporan">
           <div className="max-w-7xl mx-auto px-4 sm:px-6">
-            <div className="flex flex-col sm:flex-row sm:items-end justify-between gap-4 mb-8">
+            <div className="flex flex-col sm:flex-row sm:items-end justify-between gap-4 mb-8 reveal-on-scroll">
               <div>
                 <h2 className="text-2xl sm:text-3xl font-extrabold text-[var(--color-ink)] tracking-tight">
                   Isu yang Sedang Jadi Perhatian
@@ -510,7 +521,7 @@ export default function LandingPage() {
               </Link>
             </div>
 
-            <div className="rounded-xl border border-[var(--color-line)] bg-white divide-y divide-[var(--color-line)] overflow-hidden shadow-xs">
+            <div className="rounded-2xl border border-[var(--color-line)] bg-white divide-y divide-[var(--color-line)] overflow-hidden shadow-xs reveal-scale hover-lift">
               {trendingReports.length === 0 ? (
                 <div className="p-8 text-center text-xs text-[var(--color-muted)]">
                   Belum ada laporan publik untuk ditampilkan saat ini.
@@ -566,7 +577,7 @@ export default function LandingPage() {
         {/* Leaderboard Section (FEATURE #1) */}
         <section className="bg-[var(--color-cream)] py-14 sm:py-20 border-b border-[var(--color-line)]" id="peringkat">
           <div className="max-w-7xl mx-auto px-4 sm:px-6">
-            <div className="text-center max-w-2xl mx-auto mb-10">
+            <div className="text-center max-w-2xl mx-auto mb-10 reveal-on-scroll">
               <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-amber-100 border border-amber-300 text-amber-900 text-xs font-bold mb-2">
                 <Trophy size={13} className="text-amber-600" /> Papan Peringkat Pelapor
               </span>
@@ -578,7 +589,7 @@ export default function LandingPage() {
               </p>
             </div>
 
-            <div className="max-w-4xl mx-auto rounded-xl border border-[var(--color-line)] bg-white overflow-hidden shadow-xs">
+            <div className="max-w-4xl mx-auto rounded-2xl border border-[var(--color-line)] bg-white overflow-hidden shadow-xs reveal-scale hover-lift">
               <div className="overflow-x-auto">
                 <table className="w-full text-left text-xs">
                   <thead className="bg-[var(--color-surface)] border-b border-[var(--color-line)] text-[var(--color-muted)] uppercase tracking-wider text-[10px]">
@@ -646,7 +657,7 @@ export default function LandingPage() {
               </div>
             </div>
 
-            <div className="text-center mt-5 text-xs text-[var(--color-muted)]">
+            <div className="text-center mt-5 text-xs text-[var(--color-muted)] reveal-on-scroll">
               <span>Ingin nama/username Anda tampil di sini? </span>
               <Link to="/reportPage" className="text-[var(--color-coral-deep)] font-bold hover:underline">
                 Atur Opsi Privasi di Halaman Laporan Saya →
@@ -659,7 +670,7 @@ export default function LandingPage() {
         <section className="py-14 sm:py-20 border-b border-[var(--color-line)]" id="tentang">
           <div className="max-w-7xl mx-auto px-4 sm:px-6">
             <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-center">
-              <div className="lg:col-span-5">
+              <div className="lg:col-span-5 reveal-slide-left">
                 <h2 className="text-2xl sm:text-3xl font-extrabold text-[var(--color-ink)] tracking-tight">
                   Tentang Peduli Negeri
                 </h2>
@@ -667,26 +678,26 @@ export default function LandingPage() {
                   Peduli Negeri adalah jembatan digital antara masyarakat dan instansi pemerintah dalam mendeteksi serta menindaklanjuti kerusakan infrastruktur, kebersihan lingkungan, dan sarana publik.
                 </p>
                 <div className="mt-5">
-                  <a href="#cara-melapor" className="inline-flex items-center gap-1.5 px-4 py-2 text-xs font-bold rounded bg-[var(--color-ink)] text-white hover:bg-black transition-colors">
+                  <a href="#cara-melapor" className="btn-shimmer inline-flex items-center gap-1.5 px-4 py-2 text-xs font-bold rounded-xl bg-[var(--color-ink)] text-white hover:bg-black transition-all hover:-translate-y-0.5">
                     Pelajari Alur Laporan <ArrowRight size={14} />
                   </a>
                 </div>
               </div>
 
-              <div className="lg:col-span-7 grid grid-cols-1 sm:grid-cols-3 gap-4">
-                <div className="p-5 rounded-xl border border-[var(--color-line)] bg-white shadow-xs">
+              <div className="lg:col-span-7 grid grid-cols-1 sm:grid-cols-3 gap-4 reveal-slide-right">
+                <div className="p-5 rounded-2xl border border-[var(--color-line)] bg-white shadow-xs hover-lift">
                   <h4 className="text-sm font-bold text-[var(--color-ink)] mb-1">Mudah Digunakan</h4>
                   <p className="text-xs text-[var(--color-muted)] leading-relaxed">
                     Formulir pelaporan dirancang ringkas dengan dukungan upload foto bukti kamera langsung.
                   </p>
                 </div>
-                <div className="p-5 rounded-xl border border-[var(--color-line)] bg-white shadow-xs">
+                <div className="p-5 rounded-2xl border border-[var(--color-line)] bg-white shadow-xs hover-lift">
                   <h4 className="text-sm font-bold text-[var(--color-ink)] mb-1">Transparan & Akuntabel</h4>
                   <p className="text-xs text-[var(--color-muted)] leading-relaxed">
                     Setiap laporan memiliki 4 tahapan status yang dapat dipantau perkembangannya secara live.
                   </p>
                 </div>
-                <div className="p-5 rounded-xl border border-[var(--color-line)] bg-white shadow-xs">
+                <div className="p-5 rounded-2xl border border-[var(--color-line)] bg-white shadow-xs hover-lift">
                   <h4 className="text-sm font-bold text-[var(--color-ink)] mb-1">Bersama Bangun Negeri</h4>
                   <p className="text-xs text-[var(--color-muted)] leading-relaxed">
                     Aspirasi warga langsung dipetakan ke koordinat wilayah untuk tindakan cepat.
@@ -700,7 +711,7 @@ export default function LandingPage() {
         {/* 5-Step Guide: Cara Melapor */}
         <section className="bg-[var(--color-ink)] text-[#fff6ef] py-14 sm:py-20" id="cara-melapor">
           <div className="max-w-7xl mx-auto px-4 sm:px-6">
-            <div className="text-center max-w-xl mx-auto mb-12">
+            <div className="text-center max-w-xl mx-auto mb-12 reveal-on-scroll">
               <h2 className="text-2xl sm:text-3xl font-extrabold tracking-tight">
                 Cara Melapor di Peduli Negeri
               </h2>
@@ -711,7 +722,7 @@ export default function LandingPage() {
 
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-4">
               {steps.map(([title, desc], idx) => (
-                <div key={title} className="p-5 rounded-xl bg-white/5 border border-white/10 flex flex-col justify-between">
+                <div key={title} className="p-5 rounded-2xl bg-white/5 border border-white/10 flex flex-col justify-between hover-lift reveal-scale">
                   <div>
                     <span className="text-2xl font-extrabold text-[var(--color-coral)] block mb-3">
                       0{idx + 1}
@@ -728,7 +739,7 @@ export default function LandingPage() {
         {/* Testimonials (FEATURE #4: Ulasan Laporan yang Telah Selesai) */}
         <section className="py-14 sm:py-20 bg-[var(--color-surface)] border-b border-[var(--color-line)]" id="testimoni">
           <div className="max-w-7xl mx-auto px-4 sm:px-6">
-            <div className="flex flex-col sm:flex-row sm:items-end justify-between gap-4 mb-10">
+            <div className="flex flex-col sm:flex-row sm:items-end justify-between gap-4 mb-10 reveal-on-scroll">
               <div>
                 <span className="text-xs font-bold text-[var(--color-coral-deep)] uppercase tracking-wide">
                   Ulasan & Testimoni
@@ -747,7 +758,7 @@ export default function LandingPage() {
 
             <div className="grid grid-cols-1 md:grid-cols-3 gap-5">
               {testimonials.map((t) => (
-                <div key={t.id} className="p-5 rounded-xl border border-[var(--color-line)] bg-white shadow-xs flex flex-col justify-between">
+                <div key={t.id} className="p-5 rounded-2xl border border-[var(--color-line)] bg-white shadow-xs flex flex-col justify-between hover-lift reveal-on-scroll">
                   <div>
                     <div className="flex items-center gap-1 text-amber-500 mb-3">
                       {[...Array(t.rating || 5)].map((_, i) => (
@@ -779,12 +790,12 @@ export default function LandingPage() {
         {/* Kenapa Memilih Peduli Negeri */}
         <section className="py-14 sm:py-20 border-b border-[var(--color-line)] bg-[var(--color-cream)]">
           <div className="max-w-7xl mx-auto px-4 sm:px-6">
-            <h2 className="text-2xl sm:text-3xl font-extrabold text-[var(--color-ink)] tracking-tight text-center mb-10">
+            <h2 className="text-2xl sm:text-3xl font-extrabold text-[var(--color-ink)] tracking-tight text-center mb-10 reveal-on-scroll">
               Kenapa Memilih Peduli Negeri?
             </h2>
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
               {benefits.map(([title, desc], idx) => (
-                <div key={title} className="p-5 rounded-xl border border-[var(--color-line)] bg-white shadow-xs">
+                <div key={title} className="p-5 rounded-2xl border border-[var(--color-line)] bg-white shadow-xs hover-lift reveal-scale">
                   <div className="w-8 h-8 rounded-lg bg-[var(--color-cream)] text-[var(--color-coral-deep)] flex items-center justify-center mb-3">
                     {idx === 0 ? <ClipboardList size={18} /> : idx === 1 ? <ShieldCheck size={18} /> : idx === 2 ? <CheckCircle2 size={18} /> : <Users size={18} />}
                   </div>
@@ -797,7 +808,7 @@ export default function LandingPage() {
         </section>
 
         {/* Bottom CTA Banner */}
-        <section className="bg-[var(--color-coral)] py-10">
+        <section className="bg-[var(--color-coral)] py-10 reveal-scale">
           <div className="max-w-7xl mx-auto px-4 sm:px-6 flex flex-col md:flex-row items-center justify-between gap-6">
             <div>
               <h2 className="text-xl sm:text-2xl font-extrabold text-[var(--color-ink)]">

@@ -266,7 +266,7 @@ export default function FormLaporan({ currentUser }) {
       </header>
 
       {/* ── Tombol Kembali ke Beranda ───────────────────────── */}
-      <div className="mx-auto max-w-5xl mb-4">
+      <div className="mx-auto max-w-5xl mb-4 reveal-on-scroll">
         <Link
           to="/reportPage"
           className="inline-flex items-center gap-1.5 text-xs font-semibold transition-colors hover:underline"
@@ -278,7 +278,7 @@ export default function FormLaporan({ currentUser }) {
       </div>
 
       {/* ── Judul Halaman & Subtitle ───────────────────────── */}
-      <div className="mx-auto max-w-5xl mb-7">
+      <div className="mx-auto max-w-5xl mb-7 reveal-on-scroll">
         <h1
           className="text-3xl sm:text-4xl font-extrabold tracking-tight"
           style={{ color: "var(--color-ink, #1f2433)" }}
@@ -299,7 +299,7 @@ export default function FormLaporan({ currentUser }) {
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-7 items-start">
           {/* ── Sisi Kiri: Form Card Putih ───────────────────── */}
           <section
-            className="lg:col-span-8 rounded-lg sm:rounded-xl bg-white p-5 sm:p-7 shadow-xs"
+            className="lg:col-span-8 rounded-lg sm:rounded-xl bg-white p-5 sm:p-7 shadow-xs reveal-on-scroll hover-lift"
             style={{ border: "1px solid var(--color-line, #ecd6c8)" }}
           >
             {error && (
@@ -630,7 +630,7 @@ export default function FormLaporan({ currentUser }) {
                 <button
                   type="submit"
                   disabled={isSubmitting || photoLoading}
-                  className="inline-flex items-center gap-2 rounded-md px-5 py-2 text-xs sm:text-sm font-bold shadow-xs transition hover:brightness-95 disabled:opacity-60 disabled:cursor-not-allowed cursor-pointer"
+                  className="btn-shimmer inline-flex items-center gap-2 rounded-md px-5 py-2 text-xs sm:text-sm font-bold shadow-xs transition hover:brightness-95 disabled:opacity-60 disabled:cursor-not-allowed cursor-pointer"
                   style={{
                     backgroundColor: "var(--color-coral, #f7a581)",
                     color: "var(--color-ink, #1f2433)",
@@ -656,7 +656,7 @@ export default function FormLaporan({ currentUser }) {
           <aside className="lg:col-span-4 space-y-6">
             {/* Box 1: Setelah laporan dikirim */}
             <div
-              className="rounded-lg sm:rounded-xl p-5 sm:p-6 shadow-xs"
+              className="rounded-lg sm:rounded-xl p-5 sm:p-6 shadow-xs reveal-on-scroll hover-lift"
               style={{
                 backgroundColor: "var(--color-apricot, #fcd5a8)",
               }}
@@ -728,7 +728,7 @@ export default function FormLaporan({ currentUser }) {
             </div>
 
             {/* Box 2: Agar cepat ditangani */}
-            <div className="px-1">
+            <div className="px-1 reveal-on-scroll reveal-delay-200">
               <h4
                 className="font-bold text-xs sm:text-sm mb-3"
                 style={{ color: "var(--color-ink, #1f2433)" }}

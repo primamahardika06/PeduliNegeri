@@ -44,6 +44,55 @@ export default function App() {
     };
   }, [currentUser]);
 
+  // Global On-Scroll Reveal Observer untuk semua halaman
+  useEffect(() => {
+    const observerCallback = (entries, observer) => {
+      entries.forEach((entry) => {
+        if (entry.isIntersecting) {
+          entry.target.classList.add("is-revealed");
+          observer.unobserve(entry.target);
+        }
+      });
+    };
+
+    const observer = new IntersectionObserver(observerCallback, {
+      root: null,
+      threshold: 0.08,
+      rootMargin: "0px 0px -30px 0px",
+    });
+
+    const initObserver = () => {
+      const targets = document.querySelectorAll(
+        ".reveal-on-scroll, .reveal-fade, .reveal-scale, .reveal-slide-left, .reveal-slide-right, [data-reveal]",
+      );
+      targets.forEach((el) => {
+        const rect = el.getBoundingClientRect();
+        if (
+          rect.top <=
+          (window.innerHeight || document.documentElement.clientHeight)
+        ) {
+          el.classList.add("is-revealed");
+        } else {
+          observer.observe(el);
+        }
+      });
+    };
+
+    initObserver();
+    const timer = setTimeout(initObserver, 250);
+
+    const mutationObserver = new MutationObserver(() => {
+      initObserver();
+    });
+    mutationObserver.observe(document.body, { childList: true, subtree: true });
+
+    return () => {
+      observer.disconnect();
+      mutationObserver.disconnect();
+      clearTimeout(timer);
+    };
+  }, []);
+
   return (
     <BrowserRouter>
       <Routes>

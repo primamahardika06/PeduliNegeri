@@ -355,7 +355,7 @@ export default function PetaLaporan() {
       </header>
 
       {/* Title & Filter Header */}
-      <section className="bg-[var(--color-cream)] border-b border-[var(--color-line)] px-4 sm:px-6 py-5">
+      <section className="bg-[var(--color-cream)] border-b border-[var(--color-line)] px-4 sm:px-6 py-5 reveal-on-scroll">
         <div className="max-w-7xl mx-auto flex flex-col md:flex-row md:items-center justify-between gap-4">
           <div>
             <h1 className="text-xl sm:text-2xl font-extrabold tracking-tight">
@@ -547,7 +547,7 @@ export default function PetaLaporan() {
                     <div
                       key={item.id}
                       onClick={() => handleSelectReport(item)}
-                      className={`p-3.5 transition-colors cursor-pointer rounded-lg m-1 ${
+                      className={`p-3.5 transition-colors cursor-pointer rounded-lg m-1 hover-lift ${
                         isSelected
                           ? "bg-[var(--color-cream)] border-l-4 border-[var(--color-coral-deep)] shadow-xs"
                           : "hover:bg-[var(--color-surface)]"

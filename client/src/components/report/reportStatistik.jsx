@@ -478,14 +478,14 @@ export default function ReportStatistik() {
         {!loading && !isEmpty && (
           <>
             {/* Top 4 Metrics Cards */}
-            <section aria-label="Ringkasan Utama" className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mt-6">
+            <section aria-label="Ringkasan Utama" className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mt-6 reveal-on-scroll">
               {[
                 { icon: FileText, label: "Total Laporan", value: stats.total, sub: "Seluruh laporan pada periode ini" },
                 { icon: Clock, label: "Dalam Proses", value: stats.inProgress, sub: `${stats.inProgressPct}% dari total` },
                 { icon: CheckCircle2, label: "Selesai", value: stats.resolved, sub: `${stats.resolvedPct}% dari total` },
                 { icon: Timer, label: "Rata-rata Waktu Penyelesaian", value: stats.avgDays, sub: "Dari dibuat hingga selesai", suffix: stats.avgDays !== "—" ? "hari" : null },
               ].map((card) => (
-                <div key={card.label} className="rounded-xl border border-[var(--color-line)] bg-white p-4 shadow-2xs hover:shadow-xs transition-shadow">
+                <div key={card.label} className="rounded-xl border border-[var(--color-line)] bg-white p-4 shadow-2xs hover-lift hover:shadow-xs transition-shadow">
                   <div className="flex items-center gap-2.5">
                     <div className="w-8 h-8 rounded-lg bg-[var(--color-cream)] text-[var(--color-coral-deep)] flex items-center justify-center shrink-0">
                       <card.icon size={17} />
@@ -502,9 +502,9 @@ export default function ReportStatistik() {
             </section>
 
             {/* Row 2: Kategori & Status Penyelesaian */}
-            <section className="grid grid-cols-1 lg:grid-cols-2 gap-5 mt-5">
+            <section className="grid grid-cols-1 lg:grid-cols-2 gap-5 mt-5 reveal-on-scroll">
               {/* Laporan per Kategori — Bar Chart */}
-              <div className="rounded-xl border border-[var(--color-line)] bg-white p-5 shadow-2xs">
+              <div className="rounded-xl border border-[var(--color-line)] bg-white p-5 shadow-2xs hover-lift">
                 <div className="flex items-center justify-between">
                   <div>
                     <h3 className="text-sm font-bold text-[var(--color-ink)]">Laporan per Kategori</h3>
@@ -579,7 +579,7 @@ export default function ReportStatistik() {
               </div>
 
               {/* Status Penyelesaian — Donut */}
-              <div className="rounded-xl border border-[var(--color-line)] bg-white p-5 shadow-2xs flex flex-col justify-between">
+              <div className="rounded-xl border border-[var(--color-line)] bg-white p-5 shadow-2xs hover-lift flex flex-col justify-between">
                 <div>
                   <h3 className="text-sm font-bold text-[var(--color-ink)]">Status Penyelesaian</h3>
                   <p className="text-xs text-[var(--color-muted)] mt-0.5">Perbandingan laporan selesai dan masih diproses.</p>
@@ -630,8 +630,8 @@ export default function ReportStatistik() {
             </section>
 
             {/* Row 3: Tren Laporan per Hari */}
-            <section className="mt-5">
-              <div className="rounded-xl border border-[var(--color-line)] bg-white p-5 shadow-2xs">
+            <section className="mt-5 reveal-on-scroll">
+              <div className="rounded-xl border border-[var(--color-line)] bg-white p-5 shadow-2xs hover-lift">
                 <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
                   <div>
                     <h3 className="text-sm font-bold text-[var(--color-ink)] flex items-center gap-1.5">
@@ -737,9 +737,9 @@ export default function ReportStatistik() {
             </section>
 
             {/* Row 4: Wilayah & Kepuasan Warga */}
-            <section className="grid grid-cols-1 lg:grid-cols-2 gap-5 mt-5">
+            <section className="grid grid-cols-1 lg:grid-cols-2 gap-5 mt-5 reveal-on-scroll">
               {/* Laporan per Wilayah */}
-              <div className="rounded-xl border border-[var(--color-line)] bg-white p-5 shadow-2xs">
+              <div className="rounded-xl border border-[var(--color-line)] bg-white p-5 shadow-2xs hover-lift">
                 <h3 className="text-sm font-bold text-[var(--color-ink)]">Laporan per Wilayah</h3>
                 <p className="text-xs text-[var(--color-muted)] mt-0.5">Diurutkan dari yang terbanyak.</p>
 
@@ -785,7 +785,7 @@ export default function ReportStatistik() {
               </div>
 
               {/* Kepuasan Warga */}
-              <div className="rounded-xl border border-[var(--color-line)] bg-white p-5 shadow-2xs flex flex-col justify-between">
+              <div className="rounded-xl border border-[var(--color-line)] bg-white p-5 shadow-2xs hover-lift flex flex-col justify-between">
                 <div>
                   <h3 className="text-sm font-bold text-[var(--color-ink)]">Kepuasan Warga</h3>
                   <p className="text-xs text-[var(--color-muted)] mt-0.5">Penilaian warga untuk laporan yang sudah selesai.</p>

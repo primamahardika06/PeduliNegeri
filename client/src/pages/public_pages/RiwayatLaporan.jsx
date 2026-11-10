@@ -330,7 +330,7 @@ export default function RiwayatLaporan({ currentUser }) {
 
           <Link
             to="/laporan/baru"
-            className="inline-flex min-h-11 items-center justify-center gap-1.5 rounded-xl px-5 py-2.5 text-xs sm:text-sm font-bold text-white shadow-xs transition hover:opacity-95 shrink-0 self-start cursor-pointer"
+            className="btn-shimmer inline-flex min-h-11 items-center justify-center gap-1.5 rounded-xl px-5 py-2.5 text-xs sm:text-sm font-bold text-white shadow-xs transition-all hover:-translate-y-0.5 active:translate-y-0 shrink-0 self-start cursor-pointer"
             style={{ backgroundColor: "#EB936E" }}
           >
             <Plus className="w-4 h-4 stroke-[2.5]" />
@@ -340,7 +340,7 @@ export default function RiwayatLaporan({ currentUser }) {
 
         {/* ── Banner Statistik (Peach / Cream 3 Kolom) ───────── */}
         <section
-          className="rounded-2xl p-5 sm:p-6 grid grid-cols-1 sm:grid-cols-3 gap-4 sm:gap-0 sm:divide-x divide-[#e8be9f]/60"
+          className="rounded-2xl p-5 sm:p-6 grid grid-cols-1 sm:grid-cols-3 gap-4 sm:gap-0 sm:divide-x divide-[#e8be9f]/60 reveal-on-scroll hover-lift"
           style={{
             backgroundColor: "#FADDBA",
             border: "1px solid rgba(240, 196, 154, 0.7)",
@@ -561,7 +561,7 @@ export default function RiwayatLaporan({ currentUser }) {
     return (
       <article
         key={report.id}
-        className="rounded-2xl border border-slate-200/80 bg-white p-4 sm:p-5 shadow-2xs transition hover:shadow-xs"
+        className="rounded-2xl border border-slate-200/80 bg-white p-4 sm:p-5 shadow-2xs hover-lift transition-all duration-300 reveal-on-scroll"
       >
         <div className="flex flex-col sm:flex-row gap-4 items-start justify-between">
           {/* Sisi Kiri: Thumbnail Foto atau Ikon Kamera */}

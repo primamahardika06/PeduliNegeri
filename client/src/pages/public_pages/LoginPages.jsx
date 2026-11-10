@@ -460,22 +460,33 @@ export default function LoginPages({ onLoginSuccess }) {
         {/* Card Foto Mockup & Headline (Persis konsep Landing Page) */}
         <div className="my-6 lg:my-8 space-y-6">
           <div className="rounded-2xl border border-[#1E2430]/15 bg-white p-3.5 sm:p-4 shadow-xl max-w-md mx-auto w-full transition-all">
-            {/* Foto Display / Slider (Ganti tiap 5 detik) */}
-            {activeSlide.imageUrl ? (
+            {/* Foto Display / Smooth Crossfade Slider */}
+            {reportSlides.length > 0 && reportSlides.some((s) => s.imageUrl) ? (
               <div className="relative w-full h-44 sm:h-48 rounded-xl overflow-hidden bg-black/10 border border-slate-200/80 group">
-                <img
-                  src={activeSlide.imageUrl}
-                  alt={activeSlide.title}
-                  className="w-full h-full object-cover transition-transform duration-700 hover:scale-105"
-                />
-                <div className="absolute top-2.5 right-2.5 px-2 py-0.5 rounded-md bg-black/60 backdrop-blur-xs text-white text-[10px] font-semibold flex items-center gap-1 shadow-xs">
+                {reportSlides.map((slide, idx) => (
+                  <div
+                    key={slide.id || idx}
+                    className={`absolute inset-0 slider-photo-fade ${
+                      idx === currentSlideIndex
+                        ? "opacity-100 scale-100 z-10"
+                        : "opacity-0 scale-105 z-0 pointer-events-none"
+                    }`}
+                  >
+                    <img
+                      src={slide.imageUrl}
+                      alt={slide.title}
+                      className="w-full h-full object-cover transition-transform duration-1000"
+                    />
+                  </div>
+                ))}
+                <div className="absolute top-2.5 right-2.5 px-2 py-0.5 rounded-md bg-black/60 backdrop-blur-xs text-white text-[10px] font-semibold flex items-center gap-1 shadow-xs z-20">
                   <Camera className="w-3 h-3" />
                   <span>Foto Laporan</span>
                 </div>
 
                 {/* Slider Indicator Dots */}
                 {reportSlides.length > 1 && (
-                  <div className="absolute bottom-2.5 left-1/2 -translate-x-1/2 flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-black/50 backdrop-blur-xs">
+                  <div className="absolute bottom-2.5 left-1/2 -translate-x-1/2 flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-black/50 backdrop-blur-xs z-20">
                     {reportSlides.map((_, idx) => (
                       <button
                         key={idx}

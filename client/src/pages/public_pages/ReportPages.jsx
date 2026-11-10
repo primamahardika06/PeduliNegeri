@@ -367,7 +367,7 @@ export default function ReportPages({ currentUser, onLogout }) {
           {/* ══════════════════════════════════════════════════════ */}
           {/* ── Left Sidebar (List Laporan) ───────────────────── */}
           {/* ══════════════════════════════════════════════════════ */}
-          <section className="w-full lg:w-84 xl:w-96 shrink-0 flex flex-col gap-4">
+          <section className="w-full lg:w-84 xl:w-96 shrink-0 flex flex-col gap-4 reveal-on-scroll">
             
             {/* Header: Title + Button "+ Baru" */}
             <div className="flex items-center justify-between">
@@ -482,7 +482,7 @@ export default function ReportPages({ currentUser, onLogout }) {
                     <article
                       key={item.id}
                       onClick={() => setSelectedReportId(item.id)}
-                      className={`p-4 rounded-2xl transition-all duration-150 cursor-pointer text-left relative border ${
+                      className={`p-4 rounded-2xl transition-all duration-150 cursor-pointer text-left relative border hover-lift ${
                         isSelected
                           ? "bg-[var(--color-apricot)]/45 border-[var(--color-coral)] shadow-sm"
                           : "bg-white/80 hover:bg-white border-[var(--color-line)] hover:border-[var(--color-coral)]/40 hover:shadow-2xs"
@@ -549,7 +549,7 @@ export default function ReportPages({ currentUser, onLogout }) {
           {/* ══════════════════════════════════════════════════════ */}
           {/* ── Right Column (Detail Laporan & Privasi) ───────── */}
           {/* ══════════════════════════════════════════════════════ */}
-          <section className="flex-1 min-w-0 w-full space-y-6">
+          <section className="flex-1 min-w-0 w-full space-y-6 reveal-on-scroll">
             {selectedReport ? (
               <>
                 {/* ── Header Detail ────────────────────────────── */}
@@ -591,7 +591,7 @@ export default function ReportPages({ currentUser, onLogout }) {
                 </div>
 
                 {/* ── Card 1: Progres Penanganan & Bukti Foto ── */}
-                <div className="bg-white rounded-3xl p-6 sm:p-8 border border-[var(--color-line)] shadow-sm">
+                <div className="bg-white rounded-3xl p-6 sm:p-8 border border-[var(--color-line)] shadow-sm hover-lift">
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-8 items-start">
                     
                     {/* Left: Stepper Progres Penanganan */}
@@ -854,7 +854,7 @@ export default function ReportPages({ currentUser, onLogout }) {
                 </div>
 
                 {/* ── Card 2: Privasi Papan Peringkat ────────── */}
-                <div className="bg-white rounded-3xl p-6 sm:p-8 border border-[var(--color-line)] shadow-sm">
+                <div className="bg-white rounded-3xl p-6 sm:p-8 border border-[var(--color-line)] shadow-sm hover-lift">
                   <div className="mb-6">
                     <h3 className="text-base sm:text-lg font-bold text-[var(--color-ink)]">
                       Privasi Papan Peringkat
